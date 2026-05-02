@@ -1,0 +1,68 @@
+import type { Laboratory } from '~/types'
+
+export const laboratories: Laboratory[] = [
+  {
+    id: 'acoustic-media',
+    name: '音響メディア研究室',
+    professor: '田中 誠一 教授',
+    theme: '音響信号処理・音楽情報検索・聴覚ディスプレイの研究。人間の聴覚特性を活かした次世代音響システムの開発。',
+    pillar: 'media',
+    keywords: ['音響信号処理', '音楽情報検索', '聴覚インタフェース'],
+  },
+  {
+    id: 'image-media',
+    name: '映像メディア研究室',
+    professor: '林 美奈子 准教授',
+    theme: '映像コンテンツの生成・編集・圧縮に関する研究。ディープラーニングを用いた映像超解像・スタイル変換技術。',
+    pillar: 'media',
+    keywords: ['映像処理', '深層学習', 'コンテンツ生成'],
+  },
+  {
+    id: 'xr-interaction',
+    name: 'XRインタラクション研究室',
+    professor: '佐藤 賢二 教授',
+    theme: 'VR/AR/MRを用いた新しい体験設計の研究。身体拡張・遠隔共存・メタバース空間における人間の知覚と行動。',
+    pillar: 'media',
+    keywords: ['VR/AR', 'ヒューマンインタフェース', 'メタバース'],
+  },
+  {
+    id: 'machine-learning',
+    name: '機械学習応用研究室',
+    professor: '山本 浩介 教授',
+    theme: '機械学習・深層学習の実応用研究。自然言語処理、異常検知、推薦システムなど社会課題への応用を探索。',
+    pillar: 'knowledge',
+    keywords: ['機械学習', '自然言語処理', '推薦システム'],
+  },
+  {
+    id: 'knowledge-graph',
+    name: '知識グラフ研究室',
+    professor: '中村 由紀 准教授',
+    theme: '知識グラフ構築・推論・活用に関する研究。企業データや学術情報のセマンティック統合と知識発見。',
+    pillar: 'knowledge',
+    keywords: ['知識グラフ', 'セマンティックWeb', '情報統合'],
+  },
+  {
+    id: 'data-visualization',
+    name: 'データビジュアライゼーション研究室',
+    professor: '川口 隆 教授',
+    theme: '複雑なデータを直感的に理解できる視覚表現の研究。インタラクティブ可視化・情報デザインの融合領域。',
+    pillar: 'design',
+    keywords: ['情報可視化', 'インタラクションデザイン', 'データ分析'],
+  },
+  {
+    id: 'ux-design',
+    name: 'UXデザイン研究室',
+    professor: '伊藤 千鶴 准教授',
+    theme: 'ユーザー体験設計の理論と実践。ユーザー調査・プロトタイピング・ユーザビリティ評価の体系的研究。',
+    pillar: 'design',
+    keywords: ['UXデザイン', 'ユーザー調査', 'プロトタイピング'],
+  },
+  {
+    id: 'communication-design',
+    name: 'コミュニケーションデザイン研究室',
+    professor: '松本 剛 教授',
+    theme: '社会における情報伝達の仕組みと設計の研究。パブリックコミュニケーション・メディアリテラシー・社会的インパクト。',
+    pillar: 'design',
+    keywords: ['情報デザイン', 'メディアリテラシー', '社会的コミュニケーション'],
+  },
+]

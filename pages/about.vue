@@ -1,0 +1,448 @@
+<template>
+  <div class="about-page">
+    <!-- Hero -->
+    <section class="page-hero">
+      <div class="container">
+        <p class="page-hero__label">About</p>
+        <h1 class="page-hero__title">学びの特徴</h1>
+        <p class="page-hero__subtitle">
+          3つの専門領域を横断し、<br />
+          テクノロジーとデザインの交差点を探索する。
+        </p>
+      </div>
+    </section>
+
+    <!-- Philosophy -->
+    <section class="about-philosophy section-padding bg-surface">
+      <div class="container">
+        <div class="about-philosophy__inner">
+          <p class="section-label">Philosophy</p>
+          <div class="about-philosophy__content">
+            <h2 class="about-philosophy__title text-display-md">
+              技術は、人を中心に<br />設計されるべきだ。
+            </h2>
+            <div class="about-philosophy__text">
+              <p>
+                知能メディア工学科は、工学の厳密性とデザインの感性を同時に育む教育を提供します。単なる技術の習得ではなく、「なぜこの技術が必要か」「誰のために使うか」という問いを常に携えながら学ぶことが、私たちの教育の根幹です。
+              </p>
+              <p>
+                メディア・知識・デザインという3つの柱は、それぞれ独立した専門領域でありながら、深いところで繋がっています。音響処理の知識はデータ可視化に活き、AIの理解はUXデザインを変え、デザイン思考は機械学習の問題設定を豊かにします。
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Three Pillars -->
+    <section id="pillars" class="about-pillars section-padding bg-surface-low">
+      <div class="container">
+        <p class="section-label">Three Pillars</p>
+        <h2 class="about-pillars__title text-display-md" style="margin-top: var(--space-md); margin-bottom: var(--space-xl)">
+          3つの専門領域
+        </h2>
+
+        <!-- Pillar: Media Engineering -->
+        <div id="media" class="about-pillar">
+          <div class="about-pillar__accent about-pillar__accent--media" />
+          <div class="about-pillar__body">
+            <div class="about-pillar__header">
+              <span class="tag tag-media">メディア工学</span>
+              <span class="about-pillar__en">Media Engineering</span>
+            </div>
+            <h3 class="about-pillar__name">音・映像・インタラクション</h3>
+            <p class="about-pillar__desc">
+              人間の五感に直接作用するメディアの設計・制作・研究を行います。音響信号処理・映像符号化・XR技術・センサーシステムといった領域を通じて、新しい体験の形を追求します。
+            </p>
+            <div class="about-pillar__topics">
+              <div class="about-pillar__topic" v-for="topic in mediaTopic" :key="topic.name">
+                <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
+                <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pillar: Knowledge Engineering -->
+        <div id="knowledge" class="about-pillar">
+          <div class="about-pillar__accent about-pillar__accent--knowledge" />
+          <div class="about-pillar__body">
+            <div class="about-pillar__header">
+              <span class="tag tag-knowledge">知識工学</span>
+              <span class="about-pillar__en">Knowledge Engineering</span>
+            </div>
+            <h3 class="about-pillar__name">AI・データ・知識</h3>
+            <p class="about-pillar__desc">
+              機械学習・深層学習・自然言語処理・知識グラフなど、AIと知識処理の中核技術を学びます。データから意味を抽出し、世界の仕組みを数学的に記述する能力を養います。
+            </p>
+            <div class="about-pillar__topics">
+              <div class="about-pillar__topic" v-for="topic in knowledgeTopic" :key="topic.name">
+                <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
+                <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pillar: Information Design -->
+        <div id="design" class="about-pillar">
+          <div class="about-pillar__accent about-pillar__accent--design" />
+          <div class="about-pillar__body">
+            <div class="about-pillar__header">
+              <span class="tag tag-design">情報デザイン</span>
+              <span class="about-pillar__en">Information Design</span>
+            </div>
+            <h3 class="about-pillar__name">UX・可視化・コミュニケーション</h3>
+            <p class="about-pillar__desc">
+              情報を人に届けるための設計を学びます。ユーザー体験設計・データ可視化・タイポグラフィ・コミュニケーションデザインを通じ、技術と人間の橋渡し役になる力を磨きます。
+            </p>
+            <div class="about-pillar__topics">
+              <div class="about-pillar__topic" v-for="topic in designTopic" :key="topic.name">
+                <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
+                <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pillar Relationship Diagram (CSS only) -->
+    <section class="about-diagram section-padding bg-surface">
+      <div class="container">
+        <p class="section-label">Integration</p>
+        <h2 class="about-diagram__title text-display-md" style="margin-top: var(--space-md); margin-bottom: var(--space-xl)">
+          3つの力が交わる場所に、<br />知能メディア工学科がある。
+        </h2>
+
+        <div class="diagram">
+          <div class="diagram__node diagram__node--media">
+            <span class="diagram__node-label">メディア工学</span>
+          </div>
+          <div class="diagram__node diagram__node--knowledge">
+            <span class="diagram__node-label">知識工学</span>
+          </div>
+          <div class="diagram__node diagram__node--design">
+            <span class="diagram__node-label">情報デザイン</span>
+          </div>
+          <div class="diagram__center">
+            <span class="diagram__center-label">知能メディア<br />工学科</span>
+          </div>
+          <div class="diagram__connector diagram__connector--mq" />
+          <div class="diagram__connector diagram__connector--md" />
+          <div class="diagram__connector diagram__connector--qd" />
+        </div>
+
+        <div class="about-diagram__caption">
+          <p>
+            3つの専門領域は独立して学ぶのではなく、プロジェクト型授業・合同ゼミ・卒業研究を通じて統合的に組み合わさります。この融合こそが、他学科にはない知能メディア工学科の最大の特色です。
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <CtaSection />
+  </div>
+</template>
+
+<script setup lang="ts">
+useSeoMeta({
+  title: '学びの特徴 | 知能メディア工学科 | 千葉工業大学',
+  description:
+    'メディア工学・知識工学・情報デザインの3つの柱を横断する知能メディア工学科の学びの特徴をご紹介します。',
+})
+
+const mediaTopic = [
+  {
+    name: '音響信号処理',
+    desc: '人間の聴覚特性に基づく音声・音楽の分析・生成・変換技術を習得します。',
+  },
+  {
+    name: '映像メディア工学',
+    desc: '動画圧縮、映像認識、ディープラーニングによるコンテンツ生成まで幅広く学びます。',
+  },
+  {
+    name: 'XR・インタラクション',
+    desc: 'VR/AR/MRを用いた没入体験の設計と実装。身体拡張技術の最前線に触れます。',
+  },
+]
+
+const knowledgeTopic = [
+  {
+    name: '機械学習・深層学習',
+    desc: 'ニューラルネットワークから最新の大規模言語モデルまで、理論と実装の両面から学びます。',
+  },
+  {
+    name: '自然言語処理',
+    desc: 'テキストデータの解析・生成・理解。感情分析、翻訳、対話システムなどを実装します。',
+  },
+  {
+    name: '知識グラフ・推薦システム',
+    desc: '知識の構造化と推論。大規模グラフデータの活用と推薦アルゴリズムの設計。',
+  },
+]
+
+const designTopic = [
+  {
+    name: 'UXデザイン',
+    desc: 'ユーザー調査・プロトタイピング・ユーザビリティ評価の体系的なプロセスを身につけます。',
+  },
+  {
+    name: 'データビジュアライゼーション',
+    desc: '複雑なデータを直感的に理解できるインタラクティブな可視化表現を設計・実装します。',
+  },
+  {
+    name: 'タイポグラフィ・レイアウト',
+    desc: '文字・グリッド・余白の理論。情報の階層と視覚的なリズムを設計する基礎力。',
+  },
+]
+</script>
+
+<style scoped>
+/* Philosophy */
+.about-philosophy__inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.about-philosophy__content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-xl);
+}
+
+@media (min-width: 1024px) {
+  .about-philosophy__content {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.about-philosophy__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.about-philosophy__text p {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.8;
+  color: var(--color-on-surface-muted);
+}
+
+/* Pillars */
+.about-pillar {
+  display: flex;
+  gap: var(--space-lg);
+  padding: var(--space-xl) 0;
+  border-top: 1px solid var(--color-surface);
+}
+
+.about-pillar:last-of-type {
+  border-bottom: 1px solid var(--color-surface);
+}
+
+.about-pillar__accent {
+  width: 3px;
+  flex-shrink: 0;
+  align-self: stretch;
+}
+
+.about-pillar__accent--media { background-color: var(--color-media); }
+.about-pillar__accent--knowledge { background-color: var(--color-knowledge); }
+.about-pillar__accent--design { background-color: var(--color-design); }
+
+.about-pillar__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  flex: 1;
+}
+
+.about-pillar__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.about-pillar__en {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--color-on-surface-faint);
+  letter-spacing: 0.04em;
+}
+
+.about-pillar__name {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, var(--text-3xl));
+  font-weight: 600;
+  color: var(--color-on-surface);
+  letter-spacing: -0.02em;
+}
+
+.about-pillar__desc {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.8;
+  color: var(--color-on-surface-muted);
+  max-width: 60ch;
+}
+
+.about-pillar__topics {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+@media (min-width: 768px) {
+  .about-pillar__topics {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.about-pillar__topic {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-surface-low);
+}
+
+.about-pillar__topic-name {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-on-surface);
+}
+
+.about-pillar__topic-desc {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--color-on-surface-muted);
+  line-height: 1.7;
+}
+
+/* Diagram */
+.about-diagram__title {
+  color: var(--color-on-surface);
+}
+
+.diagram {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 1;
+  margin: 0 auto var(--space-xl);
+}
+
+@media (min-width: 768px) {
+  .diagram {
+    margin-left: 0;
+  }
+}
+
+.diagram__node {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.diagram__node--media {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-media-bg);
+}
+
+.diagram__node--knowledge {
+  bottom: 0;
+  left: 5%;
+  background-color: var(--color-knowledge-bg);
+}
+
+.diagram__node--design {
+  bottom: 0;
+  right: 5%;
+  background-color: var(--color-design-bg);
+}
+
+.diagram__node-label {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-on-surface);
+  line-height: 1.3;
+  text-align: center;
+}
+
+.diagram__center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -20%);
+  width: 100px;
+  height: 100px;
+  background-color: var(--color-on-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.diagram__center-label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fcf9f8;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.diagram__connector {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(to right, var(--color-on-surface-faint), transparent);
+  opacity: 0.3;
+  transform-origin: left center;
+}
+
+.diagram__connector--mq {
+  width: 30%;
+  top: 25%;
+  left: 35%;
+  transform: rotate(45deg);
+}
+
+.diagram__connector--md {
+  width: 30%;
+  top: 25%;
+  left: 35%;
+  transform: rotate(135deg);
+}
+
+.diagram__connector--qd {
+  width: 35%;
+  bottom: 15%;
+  left: 32%;
+}
+
+.about-diagram__caption {
+  max-width: 60ch;
+}
+
+.about-diagram__caption p {
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.8;
+  color: var(--color-on-surface-muted);
+}
+</style>

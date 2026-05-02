@@ -1,0 +1,25 @@
+{
+  "name": "chibatech-adm-hp",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#internal/nuxt/paths": "./scripts/shims/nuxt-internal-paths.mjs"
+  },
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "start": "node .output/server/index.mjs",
+    "postinstall": "nuxt prepare"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^0.7.0",
+    "nuxt": "^3.14.0",
+    "typescript": "^5.7.2",
+    "vue-tsc": "^2.1.10"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0"
+  }
+}
