@@ -6,7 +6,7 @@
         <p class="page-hero__label">Laboratories</p>
         <h1 class="page-hero__title">研究室</h1>
         <p class="page-hero__subtitle">
-          8つの研究室が、それぞれの最前線を開拓する。<br />
+          11の研究室が、それぞれの最前線を開拓する。<br />
           あなたの興味はどこにある？
         </p>
       </div>
@@ -109,7 +109,7 @@ import { laboratories } from '~/data/laboratories'
 
 useSeoMeta({
   title: '研究室 | 知能メディア工学科 | 千葉工業大学',
-  description: '知能メディア工学科の8つの研究室を紹介します。メディア工学・知識工学・情報デザインの最先端研究。',
+  description: '知能メディア工学科の11の研究室を紹介します。メディア工学・知識工学・情報デザインの最先端研究。',
 })
 
 const activeFilter = ref<'media' | 'knowledge' | 'design' | null>(null)

@@ -8,7 +8,7 @@
 
       <ul class="lab-preview__grid">
         <li
-          v-for="(lab, index) in previewLabs"
+          v-for="lab in previewLabs"
           :key="lab.id"
           class="lab-preview__cell"
         >
@@ -16,9 +16,25 @@
             :to="`/laboratories#${lab.id}`"
             class="lab-preview__link"
           >
-            <span class="lab-preview__num">Lab {{ labNum(index) }}</span>
-            <span class="lab-preview__name">{{ lab.name }}</span>
-            <span class="lab-preview__icon" aria-hidden="true">↗</span>
+            <div class="lab-preview__body">
+              <span class="lab-preview__num">{{ lab.professor }}</span>
+              <span class="lab-preview__name">{{ lab.focus }}</span>
+            </div>
+            <span class="lab-preview__icon" aria-hidden="true">
+              <svg
+                class="lab-preview__icon-svg"
+                width="24"
+                height="24"
+                fill="none"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="m12.497 3.002 7.555.001.121.014.088.02.104.034.09.04.063.036.063.042.064.05.063.058.094.11.072.11.053.114.035.105.016.065.01.053.01.148v7.504a1 1 0 0 1-1.993.117l-.007-.117v-5.09L4.706 20.708a1 1 0 0 1-1.32.083l-.094-.083a1 1 0 0 1-.083-1.32l.083-.095L17.583 5.002h-5.086a1 1 0 0 1-.993-.883l-.007-.117a1 1 0 0 1 1-1Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </span>
           </NuxtLink>
         </li>
       </ul>
@@ -37,8 +53,6 @@ import type { Laboratory } from '~/types'
 import { laboratories } from '~/data/laboratories'
 
 const previewLabs: Laboratory[] = laboratories
-
-const labNum = (index: number) => String(index + 1).padStart(2, '0')
 </script>
 
 <style scoped>
@@ -73,15 +87,25 @@ const labNum = (index: number) => String(index + 1).padStart(2, '0')
 }
 
 .lab-preview__link {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: baseline;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-md);
   padding: var(--space-md) 0;
   border-top: 1px solid var(--color-surface-low);
   text-decoration: none;
   color: inherit;
   transition: color 150ms ease, background-color 150ms ease;
+}
+
+.lab-preview__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+  flex: 1;
+  gap: 0.25rem;
 }
 
 @media (min-width: 640px) {
@@ -125,7 +149,6 @@ const labNum = (index: number) => String(index + 1).padStart(2, '0')
   font-weight: 500;
   letter-spacing: 0.06em;
   color: var(--color-on-surface-faint);
-  white-space: nowrap;
 }
 
 .lab-preview__name {
@@ -142,10 +165,15 @@ const labNum = (index: number) => String(index + 1).padStart(2, '0')
 }
 
 .lab-preview__icon {
-  font-size: var(--text-sm);
-  line-height: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--color-on-surface-muted);
-  justify-self: end;
+}
+
+.lab-preview__icon-svg {
+  display: block;
 }
 
 .lab-preview__link:hover .lab-preview__icon {

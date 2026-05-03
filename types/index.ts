@@ -19,6 +19,8 @@ export type Laboratory = {
   id: string
   name: string
   professor: string
+  /** 一覧プレビュー等で教授名の下に表示する専門・テーマの一行 */
+  focus: string
   theme: string
   pillar: 'media' | 'knowledge' | 'design'
   keywords: string[]
