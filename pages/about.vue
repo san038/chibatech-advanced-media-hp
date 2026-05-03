@@ -133,23 +133,7 @@
           3つの力が交わる場所に、<br />知能メディア工学科がある。
         </h2>
 
-        <div class="diagram">
-          <div class="diagram__node diagram__node--media">
-            <span class="diagram__node-label">メディア工学</span>
-          </div>
-          <div class="diagram__node diagram__node--knowledge">
-            <span class="diagram__node-label">知識工学</span>
-          </div>
-          <div class="diagram__node diagram__node--design">
-            <span class="diagram__node-label">情報デザイン</span>
-          </div>
-          <div class="diagram__center">
-            <span class="diagram__center-label">知能メディア<br />工学科</span>
-          </div>
-          <div class="diagram__connector diagram__connector--mq" />
-          <div class="diagram__connector diagram__connector--md" />
-          <div class="diagram__connector diagram__connector--qd" />
-        </div>
+        <DomainDiagram />
 
         <div class="about-diagram__caption">
           <p>
@@ -377,113 +361,6 @@ const designTopic = [
 /* Diagram */
 .about-diagram__title {
   color: var(--color-on-surface);
-}
-
-.diagram {
-  position: relative;
-  width: 100%;
-  max-width: 560px;
-  aspect-ratio: 1;
-  margin: 0 auto var(--space-xl);
-}
-
-@media (min-width: 768px) {
-  .diagram {
-    margin-left: 0;
-  }
-}
-
-.diagram__node {
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.diagram__node--media {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--color-media-bg);
-}
-
-.diagram__node--knowledge {
-  bottom: 0;
-  left: 5%;
-  background-color: var(--color-knowledge-bg);
-}
-
-.diagram__node--design {
-  bottom: 0;
-  right: 5%;
-  background-color: var(--color-design-bg);
-}
-
-.diagram__node-label {
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-on-surface);
-  line-height: 1.3;
-  text-align: center;
-}
-
-.diagram__center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -20%);
-  width: 100px;
-  height: 100px;
-  background-color: var(--color-on-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.diagram__center-label {
-  font-family: var(--font-display);
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #fcf9f8;
-  line-height: 1.4;
-  text-align: center;
-}
-
-.diagram__connector {
-  position: absolute;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    var(--color-on-surface-faint),
-    transparent
-  );
-  opacity: 0.3;
-  transform-origin: left center;
-}
-
-.diagram__connector--mq {
-  width: 30%;
-  top: 25%;
-  left: 35%;
-  transform: rotate(45deg);
-}
-
-.diagram__connector--md {
-  width: 30%;
-  top: 25%;
-  left: 35%;
-  transform: rotate(135deg);
-}
-
-.diagram__connector--qd {
-  width: 35%;
-  bottom: 15%;
-  left: 32%;
 }
 
 .about-diagram__caption {
