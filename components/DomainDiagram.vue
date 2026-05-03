@@ -70,11 +70,16 @@
         @mouseenter="hoveredDomain = dl.domain"
         @mouseleave="hoveredDomain = null"
       >
+        <rect
+          v-bind="domainLabelPillRect(dl)"
+          :fill="domainColor(dl.domain)"
+          class="domain-label-pill"
+        />
         <text
           :x="dl.x"
           :y="dl.y"
           :text-anchor="dl.textAnchor"
-          :fill="domainColor(dl.domain)"
+          fill="#fff"
           class="domain-label-text domain-diagram__domain-label"
         >
           {{ dl.label }}
@@ -108,15 +113,22 @@
       </g>
 
       <!-- Center label -->
-      <text
-        x="500"
-        y="290"
-        text-anchor="middle"
-        fill="#1c1b1b"
-        class="center-label"
-      >
-        知能メディア工学科
-      </text>
+      <g class="center-label-group">
+        <rect
+          v-bind="centerLabelPillRect"
+          fill="#000000"
+          class="center-label-pill"
+        />
+        <text
+          x="500"
+          y="290"
+          text-anchor="middle"
+          fill="#fff"
+          class="center-label"
+        >
+          {{ CENTER_LABEL_TEXT }}
+        </text>
+      </g>
     </svg>
   </div>
 </template>
@@ -357,6 +369,46 @@ const domainLabels: DomainLabelSpec[] = [
     })(),
   },
 ];
+
+/** 円内ドメイン名: text の baseline(y)・text-anchor 中央に合わせた角丸矩形 */
+function domainLabelPillRect(dl: DomainLabelSpec) {
+  const fontPx = 15;
+  const padX = 10;
+  const padY = 4;
+  const ascent = 11;
+  const descent = 4;
+  const charW = fontPx * 0.92;
+  const w = Math.max(dl.label.length * charW + padX * 2, fontPx * 3 + padX * 2);
+  const h = ascent + descent + padY * 2;
+  const x = dl.x - w / 2;
+  const y = dl.y - ascent - padY;
+  return { x, y: y - 2, width: w, height: h, rx: 0 };
+}
+
+const CENTER_LABEL_TEXT = "知能メディア工学科";
+
+const centerLabelPillRect = (() => {
+  const fontPx = 16;
+  const cx = 500;
+  const baselineY = 290;
+  const padX = 12;
+  const padY = 6;
+  const ascent = 12;
+  const descent = 4;
+  const charW = fontPx * 0.92;
+  const w = Math.max(
+    CENTER_LABEL_TEXT.length * charW + padX * 2,
+    fontPx * 5 + padX * 2,
+  );
+  const h = ascent + descent + padY * 2;
+  return {
+    x: cx - w / 2,
+    y: baselineY - ascent - padY - 2,
+    width: w,
+    height: h,
+    rx: 0,
+  };
+})();
 
 function kwXY(kw: Keyword): { x: number; y: number } {
   return polarToXY(kw.angleDeg);
@@ -926,6 +978,10 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
+.domain-label-pill {
+  pointer-events: auto;
+}
+
 .domain-label-text {
   font-family: var(--font-display);
   font-size: 15px;
@@ -937,6 +993,10 @@ onUnmounted(() => {
 /* 円内ドメイン名はホバー判定のためテキストがイベントを受け取る */
 .domain-diagram__domain-label {
   pointer-events: auto;
+}
+
+.center-label-pill {
+  pointer-events: none;
 }
 
 .center-label {
