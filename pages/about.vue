@@ -38,12 +38,15 @@
     <section id="pillars" class="about-pillars section-padding bg-surface-low">
       <div class="container">
         <p class="section-label">Three Pillars</p>
-        <h2 class="about-pillars__title text-display-md" style="margin-top: var(--space-md); margin-bottom: var(--space-xl)">
+        <h2
+          class="about-pillars__title text-display-md"
+          style="margin-top: var(--space-md); margin-bottom: var(--space-xl)"
+        >
           3つの専門領域
         </h2>
 
         <!-- Pillar: Media Engineering -->
-        <div id="media" class="about-pillar">
+        <div id="media" class="about-pillar about-pillar--media">
           <div class="about-pillar__accent about-pillar__accent--media" />
           <div class="about-pillar__body">
             <div class="about-pillar__header">
@@ -52,10 +55,14 @@
             </div>
             <h3 class="about-pillar__name">音・映像・インタラクション</h3>
             <p class="about-pillar__desc">
-              人間の五感に直接作用するメディアの設計・制作・研究を行います。音響信号処理・映像符号化・XR技術・センサーシステムといった領域を通じて、新しい体験の形を追求します。
+              人間の五感信号処理・映像符号化・XR技術・センサーシステムといった領域を通じて、新しい体験の形を追求します。
             </p>
             <div class="about-pillar__topics">
-              <div class="about-pillar__topic" v-for="topic in mediaTopic" :key="topic.name">
+              <div
+                v-for="topic in mediaTopic"
+                :key="topic.name"
+                class="about-pillar__topic"
+              >
                 <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
                 <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
               </div>
@@ -64,7 +71,7 @@
         </div>
 
         <!-- Pillar: Knowledge Engineering -->
-        <div id="knowledge" class="about-pillar">
+        <div id="knowledge" class="about-pillar about-pillar--knowledge">
           <div class="about-pillar__accent about-pillar__accent--knowledge" />
           <div class="about-pillar__body">
             <div class="about-pillar__header">
@@ -76,7 +83,11 @@
               機械学習・深層学習・自然言語処理・知識グラフなど、AIと知識処理の中核技術を学びます。データから意味を抽出し、世界の仕組みを数学的に記述する能力を養います。
             </p>
             <div class="about-pillar__topics">
-              <div class="about-pillar__topic" v-for="topic in knowledgeTopic" :key="topic.name">
+              <div
+                v-for="topic in knowledgeTopic"
+                :key="topic.name"
+                class="about-pillar__topic"
+              >
                 <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
                 <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
               </div>
@@ -85,7 +96,7 @@
         </div>
 
         <!-- Pillar: Information Design -->
-        <div id="design" class="about-pillar">
+        <div id="design" class="about-pillar about-pillar--design">
           <div class="about-pillar__accent about-pillar__accent--design" />
           <div class="about-pillar__body">
             <div class="about-pillar__header">
@@ -97,7 +108,11 @@
               情報を人に届けるための設計を学びます。ユーザー体験設計・データ可視化・タイポグラフィ・コミュニケーションデザインを通じ、技術と人間の橋渡し役になる力を磨きます。
             </p>
             <div class="about-pillar__topics">
-              <div class="about-pillar__topic" v-for="topic in designTopic" :key="topic.name">
+              <div
+                v-for="topic in designTopic"
+                :key="topic.name"
+                class="about-pillar__topic"
+              >
                 <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
                 <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
               </div>
@@ -111,7 +126,10 @@
     <section class="about-diagram section-padding bg-surface">
       <div class="container">
         <p class="section-label">Integration</p>
-        <h2 class="about-diagram__title text-display-md" style="margin-top: var(--space-md); margin-bottom: var(--space-xl)">
+        <h2
+          class="about-diagram__title text-display-md"
+          style="margin-top: var(--space-md); margin-bottom: var(--space-xl)"
+        >
           3つの力が交わる場所に、<br />知能メディア工学科がある。
         </h2>
 
@@ -148,55 +166,55 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: '学びの特徴 | 知能メディア工学科 | 千葉工業大学',
+  title: "学びの特徴 | 知能メディア工学科 | 千葉工業大学",
   description:
-    'メディア工学・知識工学・情報デザインの3つの柱を横断する知能メディア工学科の学びの特徴をご紹介します。',
-})
+    "メディア工学・知識工学・情報デザインの3つの柱を横断する知能メディア工学科の学びの特徴をご紹介します。",
+});
 
 const mediaTopic = [
   {
-    name: '音響信号処理',
-    desc: '人間の聴覚特性に基づく音声・音楽の分析・生成・変換技術を習得します。',
+    name: "音響信号処理",
+    desc: "人間の聴覚特性に基づく音声・音楽の分析・生成・変換技術を習得します。",
   },
   {
-    name: '映像メディア工学',
-    desc: '動画圧縮、映像認識、ディープラーニングによるコンテンツ生成まで幅広く学びます。',
+    name: "映像メディア工学",
+    desc: "動画圧縮、映像認識、ディープラーニングによるコンテンツ生成まで幅広く学びます。",
   },
   {
-    name: 'XR・インタラクション',
-    desc: 'VR/AR/MRを用いた没入体験の設計と実装。身体拡張技術の最前線に触れます。',
+    name: "XR・インタラクション",
+    desc: "VR/AR/MRを用いた没入体験の設計と実装。身体拡張技術の最前線に触れます。",
   },
-]
+];
 
 const knowledgeTopic = [
   {
-    name: '機械学習・深層学習',
-    desc: 'ニューラルネットワークから最新の大規模言語モデルまで、理論と実装の両面から学びます。',
+    name: "機械学習・深層学習",
+    desc: "ニューラルネットワークから最新の大規模言語モデルまで、理論と実装の両面から学びます。",
   },
   {
-    name: '自然言語処理',
-    desc: 'テキストデータの解析・生成・理解。感情分析、翻訳、対話システムなどを実装します。',
+    name: "自然言語処理",
+    desc: "テキストデータの解析・生成・理解。感情分析、翻訳、対話システムなどを実装します。",
   },
   {
-    name: '知識グラフ・推薦システム',
-    desc: '知識の構造化と推論。大規模グラフデータの活用と推薦アルゴリズムの設計。',
+    name: "知識グラフ・推薦システム",
+    desc: "知識の構造化と推論。大規模グラフデータの活用と推薦アルゴリズムの設計。",
   },
-]
+];
 
 const designTopic = [
   {
-    name: 'UXデザイン',
-    desc: 'ユーザー調査・プロトタイピング・ユーザビリティ評価の体系的なプロセスを身につけます。',
+    name: "UXデザイン",
+    desc: "ユーザー調査・プロトタイピング・ユーザビリティ評価の体系的なプロセスを身につけます。",
   },
   {
-    name: 'データビジュアライゼーション',
-    desc: '複雑なデータを直感的に理解できるインタラクティブな可視化表現を設計・実装します。',
+    name: "データビジュアライゼーション",
+    desc: "複雑なデータを直感的に理解できるインタラクティブな可視化表現を設計・実装します。",
   },
   {
-    name: 'タイポグラフィ・レイアウト',
-    desc: '文字・グリッド・余白の理論。情報の階層と視覚的なリズムを設計する基礎力。',
+    name: "タイポグラフィ・レイアウト",
+    desc: "文字・グリッド・余白の理論。情報の階層と視覚的なリズムを設計する基礎力。",
   },
-]
+];
 </script>
 
 <style scoped>
@@ -251,9 +269,15 @@ const designTopic = [
   align-self: stretch;
 }
 
-.about-pillar__accent--media { background-color: var(--color-media); }
-.about-pillar__accent--knowledge { background-color: var(--color-knowledge); }
-.about-pillar__accent--design { background-color: var(--color-design); }
+.about-pillar__accent--media {
+  background-color: var(--color-media);
+}
+.about-pillar__accent--knowledge {
+  background-color: var(--color-knowledge);
+}
+.about-pillar__accent--design {
+  background-color: var(--color-design);
+}
 
 .about-pillar__body {
   display: flex;
@@ -309,20 +333,43 @@ const designTopic = [
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--color-surface-low);
+  padding: var(--space-sm);
+}
+
+.about-pillar--media .about-pillar__topic {
+  background-color: var(--color-media-bg);
+}
+
+.about-pillar--knowledge .about-pillar__topic {
+  background-color: var(--color-knowledge-bg);
+}
+
+.about-pillar--design .about-pillar__topic {
+  background-color: var(--color-design-bg);
 }
 
 .about-pillar__topic-name {
   font-family: var(--font-display);
   font-size: var(--text-base);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-on-surface);
+}
+
+.about-pillar--media .about-pillar__topic-name {
+  color: var(--color-media);
+}
+
+.about-pillar--knowledge .about-pillar__topic-name {
+  color: var(--color-knowledge);
+}
+
+.about-pillar--design .about-pillar__topic-name {
+  color: var(--color-design);
 }
 
 .about-pillar__topic-desc {
   font-family: var(--font-body);
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   color: var(--color-on-surface-muted);
   line-height: 1.7;
 }
@@ -410,7 +457,11 @@ const designTopic = [
 .diagram__connector {
   position: absolute;
   height: 1px;
-  background: linear-gradient(to right, var(--color-on-surface-faint), transparent);
+  background: linear-gradient(
+    to right,
+    var(--color-on-surface-faint),
+    transparent
+  );
   opacity: 0.3;
   transform-origin: left center;
 }
