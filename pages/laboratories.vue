@@ -6,8 +6,7 @@
         <p class="page-hero__label">Laboratories</p>
         <h1 class="page-hero__title">研究室</h1>
         <p class="page-hero__subtitle">
-          11の研究室が、それぞれの最前線を開拓する。<br />
-          あなたの興味はどこにある？
+          11の研究室が、それぞれの最前線を開拓する。
         </p>
       </div>
     </section>
@@ -16,8 +15,14 @@
     <section class="labs-filter bg-surface section-padding-sm">
       <div class="container">
         <div class="labs-filter__inner">
-          <p class="text-label" style="color: var(--color-on-surface-muted)">絞り込み</p>
-          <div class="labs-filter__buttons" role="group" aria-label="専門領域で絞り込み">
+          <p class="text-label" style="color: var(--color-on-surface-muted)">
+            絞り込み
+          </p>
+          <div
+            class="labs-filter__buttons"
+            role="group"
+            aria-label="専門領域で絞り込み"
+          >
             <button
               class="labs-filter__btn"
               :class="{ active: activeFilter === null }"
@@ -55,7 +60,10 @@
     <section class="labs-list section-padding bg-surface-low">
       <div class="container">
         <div class="labs-list__header">
-          <p class="labs-list__count text-label" style="color: var(--color-on-surface-muted)">
+          <p
+            class="labs-list__count text-label"
+            style="color: var(--color-on-surface-muted)"
+          >
             {{ filteredLabs.length }} 研究室
           </p>
         </div>
@@ -63,15 +71,15 @@
         <TransitionGroup name="lab-list" tag="div" class="labs-list__items">
           <div
             v-for="lab in filteredLabs"
-            :key="lab.id"
             :id="lab.id"
+            :key="lab.id"
             class="lab-item"
           >
             <div class="lab-item__header">
+              <span class="lab-item__professor">{{ lab.professor }}</span>
               <span class="tag" :class="pillarTagClass(lab.pillar)">
                 {{ pillarLabel(lab.pillar) }}
               </span>
-              <span class="lab-item__professor">{{ lab.professor }}</span>
             </div>
 
             <h2 class="lab-item__name">{{ lab.name }}</h2>
@@ -89,6 +97,17 @@
                 </li>
               </ul>
             </div>
+
+            <p class="lab-item__site">
+              <a
+                :href="lab.seminarUrl"
+                class="btn btn-primary"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                研究室ウェブサイト
+              </a>
+            </p>
           </div>
         </TransitionGroup>
 
@@ -104,36 +123,37 @@
 </template>
 
 <script setup lang="ts">
-import type { Laboratory } from '~/types'
-import { laboratories } from '~/data/laboratories'
+import type { Laboratory } from "~/types";
+import { laboratories } from "~/data/laboratories";
 
 useSeoMeta({
-  title: '研究室 | 知能メディア工学科 | 千葉工業大学',
-  description: '知能メディア工学科の11の研究室を紹介します。メディア工学・知識工学・情報デザインの最先端研究。',
-})
+  title: "研究室 | 知能メディア工学科 | 千葉工業大学",
+  description:
+    "知能メディア工学科の11の研究室を紹介します。メディア工学・知識工学・情報デザインの最先端研究。",
+});
 
-const activeFilter = ref<'media' | 'knowledge' | 'design' | null>(null)
+const activeFilter = ref<"media" | "knowledge" | "design" | null>(null);
 
 const filteredLabs = computed<Laboratory[]>(() => {
-  if (activeFilter.value === null) return laboratories
-  return laboratories.filter((lab) => lab.pillar === activeFilter.value)
-})
+  if (activeFilter.value === null) return laboratories;
+  return laboratories.filter((lab) => lab.pillar === activeFilter.value);
+});
 
-const pillarTagClass = (pillar: Laboratory['pillar']): string => {
+const pillarTagClass = (pillar: Laboratory["pillar"]): string => {
   return {
-    media: 'tag-media',
-    knowledge: 'tag-knowledge',
-    design: 'tag-design',
-  }[pillar]
-}
+    media: "tag-media",
+    knowledge: "tag-knowledge",
+    design: "tag-design",
+  }[pillar];
+};
 
-const pillarLabel = (pillar: Laboratory['pillar']): string => {
+const pillarLabel = (pillar: Laboratory["pillar"]): string => {
   return {
-    media: 'メディア工学',
-    knowledge: '知識工学',
-    design: '情報デザイン',
-  }[pillar]
-}
+    media: "メディア工学領域",
+    knowledge: "知識工学領域",
+    design: "情報デザイン領域",
+  }[pillar];
+};
 </script>
 
 <style scoped>
@@ -165,7 +185,9 @@ const pillarLabel = (pillar: Laboratory['pillar']): string => {
   background-color: var(--color-surface-low);
   border: none;
   cursor: pointer;
-  transition: background-color 200ms ease, color 200ms ease;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
   border-radius: 0;
 }
 
@@ -220,20 +242,26 @@ const pillarLabel = (pillar: Laboratory['pillar']): string => {
 .lab-item__header {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   flex-wrap: wrap;
+}
+
+.lab-item__header .tag {
+  margin-left: auto;
 }
 
 .lab-item__professor {
   font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-on-surface-faint);
-  margin-left: auto;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-on-surface);
+  line-height: 1.35;
 }
 
 .lab-item__name {
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 3vw, var(--text-3xl));
+  font-size: var(--text-xl);
   font-weight: 600;
   color: var(--color-on-surface);
   letter-spacing: -0.02em;
@@ -241,16 +269,25 @@ const pillarLabel = (pillar: Laboratory['pillar']): string => {
 
 .lab-item__theme {
   font-family: var(--font-body);
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   line-height: 1.8;
   color: var(--color-on-surface-muted);
   max-width: 70ch;
+}
+
+.lab-item__keywords {
+  margin-top: var(--space-xs);
 }
 
 .lab-item__keywords-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.lab-item__site {
+  margin: 0;
+  margin-top: var(--space-md);
 }
 
 /* Empty state */
@@ -267,7 +304,9 @@ const pillarLabel = (pillar: Laboratory['pillar']): string => {
 /* Transition */
 .lab-list-enter-active,
 .lab-list-leave-active {
-  transition: opacity 250ms ease, transform 250ms ease;
+  transition:
+    opacity 250ms ease,
+    transform 250ms ease;
 }
 
 .lab-list-enter-from,

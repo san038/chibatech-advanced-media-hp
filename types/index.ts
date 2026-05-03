@@ -24,6 +24,8 @@ export type Laboratory = {
   theme: string
   pillar: 'media' | 'knowledge' | 'design'
   keywords: string[]
+  /** ゼミ公式サイト等（プレースホルダー可） */
+  seminarUrl: string
 }
 
 export type CareerItem = {
