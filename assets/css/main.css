@@ -11,24 +11,35 @@
   --color-on-surface: #1c1b1b;
   --color-on-surface-muted: #5a5756;
   --color-on-surface-faint: #9a9594;
-  --color-primary: #6a4dff;
-  --color-secondary: #3b82f6;
-  --color-tertiary: #ff7a59;
+  --color-primary: #a14e58;
+  --color-secondary: #3d6b4a;
+  --color-tertiary: #4a6fa3;
   --color-on-primary: #ffffff;
   --color-dark: #1c1b1b;
   --color-dark-surface: #242222;
   --color-dark-muted: #8a8584;
 
-  /* Pillar colors with alpha variants */
-  --color-media: #6a4dff;
-  --color-media-bg: rgba(106, 77, 255, 0.06);
-  --color-media-mid: rgba(106, 77, 255, 0.15);
-  --color-knowledge: #3b82f6;
-  --color-knowledge-bg: rgba(59, 130, 246, 0.06);
-  --color-knowledge-mid: rgba(59, 130, 246, 0.15);
-  --color-design: #ff7a59;
-  --color-design-bg: rgba(255, 122, 89, 0.06);
-  --color-design-mid: rgba(255, 122, 89, 0.15);
+  /* Pillar colors（メディア＝赤系ローズ／知識＝セージ緑／情報デザイン＝ダスティブルー） */
+  --color-media: #a14e58;
+  --color-media-bg: rgba(161, 78, 88, 0.08);
+  --color-media-mid: rgba(161, 78, 88, 0.16);
+  --color-knowledge: #3d6b4a;
+  --color-knowledge-bg: rgba(61, 107, 74, 0.08);
+  --color-knowledge-mid: rgba(61, 107, 74, 0.16);
+  --color-design: #4a6fa3;
+  --color-design-bg: rgba(74, 111, 163, 0.08);
+  --color-design-mid: rgba(74, 111, 163, 0.16);
+
+  /**
+   * 暗背景（#1c1b1b 付近）上の領域アクセント用。白背景用より明るく、彩度も確保。
+   * rgba() で透過を付けるときは *-channel を使用。
+   */
+  --color-media-on-dark: #ea7088;
+  --color-media-on-dark-channel: 234, 112, 136;
+  --color-knowledge-on-dark: #52d49a;
+  --color-knowledge-on-dark-channel: 82, 212, 154;
+  --color-design-on-dark: #7b9bf4;
+  --color-design-on-dark-channel: 123, 155, 244;
 
   /* Typography */
   --font-display: 'Space Grotesk', sans-serif;

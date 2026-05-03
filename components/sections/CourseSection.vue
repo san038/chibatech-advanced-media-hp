@@ -6,17 +6,17 @@
         <div
           class="course-progress__dot"
           :class="{ active: activeIndex === 0 }"
-          style="background-color: var(--color-media)"
+          style="background-color: var(--color-media-on-dark)"
         />
         <div
           class="course-progress__dot"
           :class="{ active: activeIndex === 1 }"
-          style="background-color: var(--color-knowledge)"
+          style="background-color: var(--color-knowledge-on-dark)"
         />
         <div
           class="course-progress__dot"
           :class="{ active: activeIndex === 2 }"
-          style="background-color: var(--color-design)"
+          style="background-color: var(--color-design-on-dark)"
         />
       </div>
     </div>
@@ -339,7 +339,7 @@ onUnmounted(() => {
 .geo-circle {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(106, 77, 255, 0.2);
+  border: 1px solid rgba(var(--color-media-on-dark-channel), 0.4);
 }
 
 .geo-circle--1 {
@@ -361,7 +361,7 @@ onUnmounted(() => {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border-color: rgba(106, 77, 255, 0.35);
+  border-color: rgba(var(--color-media-on-dark-channel), 0.55);
   animation: rotate-slow 12s linear infinite reverse;
 }
 
@@ -373,7 +373,7 @@ onUnmounted(() => {
   height: 40%;
   background: linear-gradient(
     to top,
-    rgba(106, 77, 255, 0.08) 0%,
+    rgba(var(--color-media-on-dark-channel), 0.18) 0%,
     transparent 100%
   );
 }
@@ -384,7 +384,7 @@ onUnmounted(() => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: rgba(59, 130, 246, 0.5);
+  background-color: rgba(var(--color-knowledge-on-dark-channel), 0.65);
 }
 
 .geo-node--1 {
@@ -408,8 +408,8 @@ onUnmounted(() => {
   height: 1px;
   background: linear-gradient(
     to right,
-    rgba(59, 130, 246, 0.3),
-    rgba(59, 130, 246, 0.1)
+    rgba(var(--color-knowledge-on-dark-channel), 0.45),
+    rgba(var(--color-knowledge-on-dark-channel), 0.12)
   );
   transform-origin: left center;
 }
@@ -432,7 +432,7 @@ onUnmounted(() => {
 .geo-rect {
   position: absolute;
   background: transparent;
-  outline: 1px solid rgba(255, 122, 89, 0.2);
+  outline: 1px solid rgba(var(--color-design-on-dark-channel), 0.45);
 }
 
 .geo-rect--1 {
@@ -447,7 +447,7 @@ onUnmounted(() => {
   height: 35%;
   top: 35%;
   left: 45%;
-  background-color: rgba(255, 122, 89, 0.06);
+  background-color: rgba(var(--color-design-on-dark-channel), 0.2);
 }
 
 .geo-rect--3 {
@@ -455,7 +455,7 @@ onUnmounted(() => {
   height: 20%;
   bottom: 20%;
   right: 20%;
-  background-color: rgba(255, 122, 89, 0.04);
+  background-color: rgba(var(--color-design-on-dark-channel), 0.14);
 }
 
 .course-visual__label {

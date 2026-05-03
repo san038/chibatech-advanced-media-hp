@@ -95,13 +95,18 @@
   background:
     radial-gradient(
       ellipse 80% 60% at 20% 50%,
-      rgba(106, 77, 255, 0.08) 0%,
+      rgba(var(--color-media-on-dark-channel), 0.14) 0%,
       transparent 60%
     ),
     radial-gradient(
       ellipse 60% 80% at 80% 20%,
-      rgba(59, 130, 246, 0.06) 0%,
+      rgba(var(--color-knowledge-on-dark-channel), 0.12) 0%,
       transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 50% at 55% 85%,
+      rgba(var(--color-design-on-dark-channel), 0.1) 0%,
+      transparent 55%
     );
 }
 
@@ -122,13 +127,13 @@
 }
 
 .hero__pillar--media {
-  background-color: var(--color-media);
+  background-color: var(--color-media-on-dark);
 }
 .hero__pillar--knowledge {
-  background-color: var(--color-knowledge);
+  background-color: var(--color-knowledge-on-dark);
 }
 .hero__pillar--design {
-  background-color: var(--color-design);
+  background-color: var(--color-design-on-dark);
 }
 
 /* Content */
@@ -198,6 +203,17 @@
   font-weight: 400;
   color: rgba(252, 249, 248, 0.55);
   letter-spacing: 0.02em;
+}
+
+/* ヒーローは暗背景のため、main の pillar ドットより明るい色を上書き */
+.hero :deep(.pillar-dot--media) {
+  background-color: var(--color-media-on-dark);
+}
+.hero :deep(.pillar-dot--knowledge) {
+  background-color: var(--color-knowledge-on-dark);
+}
+.hero :deep(.pillar-dot--design) {
+  background-color: var(--color-design-on-dark);
 }
 
 /* Scroll indicator */

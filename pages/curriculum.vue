@@ -114,17 +114,17 @@ useSeoMeta({
 
 const subjectTypes = [
   { id: 'lecture', label: '講義', color: '#9a9594' },
-  { id: 'workshop', label: '演習・実習', color: '#6a4dff' },
-  { id: 'project', label: 'プロジェクト', color: '#ff7a59' },
-  { id: 'seminar', label: 'セミナー', color: '#3b82f6' },
+  { id: 'workshop', label: '演習・実習', color: '#a14e58' },
+  { id: 'project', label: 'プロジェクト', color: '#4a6fa3' },
+  { id: 'seminar', label: 'セミナー', color: '#3d6b4a' },
 ]
 
 const typeColor = (type: string): string => {
   const colors: Record<string, string> = {
     lecture: '#9a9594',
-    workshop: '#6a4dff',
-    project: '#ff7a59',
-    seminar: '#3b82f6',
+    workshop: '#a14e58',
+    project: '#4a6fa3',
+    seminar: '#3d6b4a',
   }
   return colors[type] ?? '#9a9594'
 }
