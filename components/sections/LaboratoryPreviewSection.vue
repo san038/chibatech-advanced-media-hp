@@ -7,31 +7,23 @@
       </header>
 
       <ul class="lab-preview__grid">
-        <li
-          v-for="lab in previewLabs"
-          :key="lab.id"
-          class="lab-preview__cell"
-        >
-          <NuxtLink
-            :to="`/laboratories#${lab.id}`"
-            class="lab-preview__link"
-          >
+        <li v-for="lab in previewLabs" :key="lab.id" class="lab-preview__cell">
+          <NuxtLink :to="`/laboratories#${lab.id}`" class="lab-preview__link">
             <div class="lab-preview__body">
               <span class="lab-preview__num">{{ lab.professor }}</span>
               <span class="lab-preview__name">{{ lab.focus }}</span>
             </div>
             <span class="lab-preview__icon" aria-hidden="true">
               <svg
-                class="lab-preview__icon-svg"
-                width="24"
-                height="24"
+                width="18"
+                height="18"
                 fill="none"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d="m12.497 3.002 7.555.001.121.014.088.02.104.034.09.04.063.036.063.042.064.05.063.058.094.11.072.11.053.114.035.105.016.065.01.053.01.148v7.504a1 1 0 0 1-1.993.117l-.007-.117v-5.09L4.706 20.708a1 1 0 0 1-1.32.083l-.094-.083a1 1 0 0 1-.083-1.32l.083-.095L17.583 5.002h-5.086a1 1 0 0 1-.993-.883l-.007-.117a1 1 0 0 1 1-1Z"
-                  fill="currentColor"
+                  d="M12.748 3.001h7.554l.1.014.099.028.06.026a.72.72 0 0 1 .219.15l.04.044.061.082.037.065.04.09.018.064.014.064.01.093v7.534a.75.75 0 0 1-1.493.102l-.007-.102V5.559L4.28 20.784a.75.75 0 0 1-.977.073l-.084-.073a.75.75 0 0 1-.073-.976l.073-.084L18.439 4.5l-5.69.001a.75.75 0 0 1-.744-.648l-.007-.102a.75.75 0 0 1 .648-.743L12.748 3Z"
+                  fill="#212121"
                 />
               </svg>
             </span>
@@ -49,10 +41,10 @@
 </template>
 
 <script setup lang="ts">
-import type { Laboratory } from '~/types'
-import { laboratories } from '~/data/laboratories'
+import type { Laboratory } from "~/types";
+import { laboratories } from "~/data/laboratories";
 
-const previewLabs: Laboratory[] = laboratories
+const previewLabs: Laboratory[] = laboratories;
 </script>
 
 <style scoped>
@@ -92,10 +84,13 @@ const previewLabs: Laboratory[] = laboratories
   justify-content: space-between;
   gap: var(--space-md);
   padding: var(--space-md) 0;
+  padding-right: var(--space-xs);
   border-top: 1px solid var(--color-surface-low);
   text-decoration: none;
   color: inherit;
-  transition: color 150ms ease, background-color 150ms ease;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
 }
 
 .lab-preview__body {
@@ -111,7 +106,7 @@ const previewLabs: Laboratory[] = laboratories
 @media (min-width: 640px) {
   .lab-preview__link {
     padding-left: var(--space-xs);
-    padding-right: var(--space-xs);
+    padding-right: var(--space-md);
     margin-left: calc(-1 * var(--space-xs));
     margin-right: calc(-1 * var(--space-xs));
     border-radius: 2px;
