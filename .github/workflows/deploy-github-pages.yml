@@ -14,12 +14,17 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# checkout / setup-node など「アクション自身の JS」が Node 20 で動くと非推奨警告になる。
+# v5 系は Node 24 ランタイム向けに更新済み（https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/）
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
           cache: npm
