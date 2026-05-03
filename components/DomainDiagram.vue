@@ -11,14 +11,18 @@
       <!-- Center(500,285) r=210 → Media(500,75), Knowledge(318,390), Design(682,390) -->
       <circle cx="500" cy="285" r="210" fill="none" stroke="#ccc8c6" stroke-width="1" />
 
-      <!--
-        接続線は linkPaths の更新だけで差し替え（:key で毎回 g を作り直すと
-        opacity 入場アニメが繰り返され、線が「変わらず点滅」して見える）。
-      -->
-      <g class="domain-diagram__links" pointer-events="none" aria-hidden="true">
+      <!-- ランダム接続: 始点→終点へ線が伸びる → ホールド → 縮む → 組み合わせシャッフル（4500ms 周期） -->
+      <g
+        class="domain-diagram__links"
+        :class="linkPhaseClass"
+        pointer-events="none"
+        aria-hidden="true"
+        :style="linkTimingCssVars"
+      >
         <path
           v-for="seg in linkPaths"
-          :key="seg.key"
+          :key="`${seg.key}@${linkAnimEpoch}`"
+          pathLength="1"
           :d="seg.d"
           class="domain-diagram__link-path"
         />
@@ -73,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 type Domain = 'media' | 'knowledge' | 'design' | 'media-knowledge' | 'media-design' | 'all'
 
@@ -222,84 +226,6 @@ function kwXY(kw: Keyword): { x: number; y: number } {
   return polarToXY(kw.angleDeg)
 }
 
-// ── Network links (cubic bezier toward center, reshuffled periodically) ─────
-interface LinkSeg {
-  key: string
-  d: string
-}
-
-const linkPaths = ref<LinkSeg[]>([])
-
-const LINK_INTERVAL_MS = 4500
-
-function shuffleInPlace<T>(arr: T[]): void {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[arr[i], arr[j]] = [arr[j], arr[i]]
-  }
-}
-
-function edgeKey(a: string, b: string): string {
-  return a < b ? `${a}|${b}` : `${b}|${a}`
-}
-
-/** 端点を中心方向へ引っ張った制御点で C 曲線（わずかにランダムで自然な弧） */
-function bezierTowardCenter(from: Keyword, to: Keyword): string {
-  const p0 = kwXY(from)
-  const p3 = kwXY(to)
-  const t1 = 0.4 + Math.random() * 0.16
-  const t2 = 0.4 + Math.random() * 0.16
-  let c1x = p0.x + t1 * (CX - p0.x)
-  let c1y = p0.y + t1 * (CY - p0.y)
-  let c2x = p3.x + t2 * (CX - p3.x)
-  let c2y = p3.y + t2 * (CY - p3.y)
-  const jitter = 2.5 + Math.random() * 3.5
-  c1x += (Math.random() - 0.5) * jitter
-  c1y += (Math.random() - 0.5) * jitter
-  c2x += (Math.random() - 0.5) * jitter
-  c2y += (Math.random() - 0.5) * jitter
-  return `M ${p0.x} ${p0.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p3.x} ${p3.y}`
-}
-
-function regenerateLinks(): void {
-  const seen = new Set<string>()
-  const segs: LinkSeg[] = []
-  const order = [...keywords]
-  shuffleInPlace(order)
-
-  for (const kw of order) {
-    const peers = keywords.filter((k) => k.id !== kw.id)
-    shuffleInPlace(peers)
-    let n = 0
-    for (const t of peers) {
-      if (n >= 3) break
-      const k = edgeKey(kw.id, t.id)
-      if (seen.has(k)) continue
-      seen.add(k)
-      n++
-      segs.push({ key: k, d: bezierTowardCenter(kw, t) })
-    }
-  }
-  linkPaths.value = segs
-}
-
-let linkTimer: ReturnType<typeof setInterval> | null = null
-
-onMounted(() => {
-  const reduceMotion =
-    typeof window !== 'undefined' &&
-    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-
-  regenerateLinks()
-  if (reduceMotion) return
-
-  linkTimer = setInterval(regenerateLinks, LINK_INTERVAL_MS)
-})
-
-onUnmounted(() => {
-  if (linkTimer != null) clearInterval(linkTimer)
-})
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Circle: center(500,285), r=210。各120°弧で頂点間を等分し、ドット間の円弧距離を揃える。
 // ─────────────────────────────────────────────────────────────────────────────
@@ -361,6 +287,138 @@ const keywords: Keyword[] = [
   { id: 'all4', label: 'インテリジェントインタフェースデザイン', angleDeg: angDesignToKnowledge[3], domain: 'all' },
   { id: 'all5', label: 'インタフェースエージェント',            angleDeg: angDesignToKnowledge[4], domain: 'all' },
 ]
+
+// ── 接続線: 各ノードからランダムに最大3本、無向重複なし／一定間隔で作り直し ───
+interface LinkSeg {
+  key: string
+  d: string
+}
+
+const linkPaths = ref<LinkSeg[]>([])
+/** 縮小完了後にインクリメントし path の :key を変えて描画アニメを確実に再発火 */
+const linkAnimEpoch = ref(0)
+const linkPhase = ref<'draw' | 'hold' | 'shrink'>('draw')
+
+/** 1 サイクル = 伸びる + 表示 + 縮む（合計のあと組み合わせ更新） */
+const LINK_CYCLE_MS = 4500
+const LINK_DRAW_MS = 700
+const LINK_SHRINK_MS = 700
+const LINK_HOLD_MS = LINK_CYCLE_MS - LINK_DRAW_MS - LINK_SHRINK_MS
+
+const linkPhaseClass = computed(() => ({
+  'domain-diagram__links--draw': linkPhase.value === 'draw',
+  'domain-diagram__links--hold': linkPhase.value === 'hold',
+  'domain-diagram__links--shrink': linkPhase.value === 'shrink',
+}))
+
+const linkTimingCssVars = computed(() => ({
+  '--link-draw-ms': `${LINK_DRAW_MS}ms`,
+  '--link-shrink-ms': `${LINK_SHRINK_MS}ms`,
+}))
+
+let linkTimeouts: ReturnType<typeof setTimeout>[] = []
+
+function clearLinkTimeouts(): void {
+  linkTimeouts.forEach(clearTimeout)
+  linkTimeouts = []
+}
+
+function afterLinkDelay(ms: number, fn: () => void): void {
+  const id = setTimeout(fn, ms)
+  linkTimeouts.push(id)
+}
+
+function setupAnimatedLinkCycle(): void {
+  clearLinkTimeouts()
+  linkPhase.value = 'draw'
+
+  afterLinkDelay(LINK_DRAW_MS, () => {
+    linkPhase.value = 'hold'
+  })
+
+  afterLinkDelay(LINK_DRAW_MS + LINK_HOLD_MS, () => {
+    linkPhase.value = 'shrink'
+  })
+
+  afterLinkDelay(LINK_CYCLE_MS, () => {
+    linkAnimEpoch.value += 1
+    regenerateLinks()
+    linkPhase.value = 'draw'
+    setupAnimatedLinkCycle()
+  })
+}
+
+function shuffleInPlace<T>(arr: T[]): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+}
+
+function edgeKey(a: string, b: string): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`
+}
+
+/** 端点を中心方向へ引っ張った制御点で C 曲線（わずかにランダムで自然な弧） */
+function bezierTowardCenter(from: Keyword, to: Keyword): string {
+  const p0 = kwXY(from)
+  const p3 = kwXY(to)
+  const t1 = 0.4 + Math.random() * 0.16
+  const t2 = 0.4 + Math.random() * 0.16
+  let c1x = p0.x + t1 * (CX - p0.x)
+  let c1y = p0.y + t1 * (CY - p0.y)
+  let c2x = p3.x + t2 * (CX - p3.x)
+  let c2y = p3.y + t2 * (CY - p3.y)
+  const jitter = 2.5 + Math.random() * 3.5
+  c1x += (Math.random() - 0.5) * jitter
+  c1y += (Math.random() - 0.5) * jitter
+  c2x += (Math.random() - 0.5) * jitter
+  c2y += (Math.random() - 0.5) * jitter
+  return `M ${p0.x} ${p0.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p3.x} ${p3.y}`
+}
+
+function regenerateLinks(): void {
+  const seen = new Set<string>()
+  const segs: LinkSeg[] = []
+  const order = [...keywords]
+  shuffleInPlace(order)
+
+  for (const kw of order) {
+    const peers = keywords.filter((k) => k.id !== kw.id)
+    shuffleInPlace(peers)
+    let n = 0
+    for (const t of peers) {
+      if (n >= 3) break
+      const k = edgeKey(kw.id, t.id)
+      if (seen.has(k)) continue
+      seen.add(k)
+      n++
+      segs.push({ key: k, d: bezierTowardCenter(kw, t) })
+    }
+  }
+  linkPaths.value = segs
+}
+
+let linkTimer: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  const reduceMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
+  regenerateLinks()
+  if (reduceMotion) {
+    linkTimer = setInterval(regenerateLinks, LINK_CYCLE_MS)
+    return
+  }
+
+  setupAnimatedLinkCycle()
+})
+
+onUnmounted(() => {
+  clearLinkTimeouts()
+  if (linkTimer != null) clearInterval(linkTimer)
+})
 </script>
 
 <style scoped>
@@ -375,12 +433,61 @@ const keywords: Keyword[] = [
   display: block;
 }
 
+.domain-diagram__links {
+  --link-draw-ms: 700ms;
+  --link-shrink-ms: 700ms;
+}
+
 .domain-diagram__link-path {
   fill: none;
   stroke: #b8b3b0;
   stroke-width: 0.85;
   stroke-opacity: 0.32;
   stroke-linecap: round;
+  stroke-dasharray: 1;
+}
+
+/* 表示ホールド: アニメ終了後の安定表示 */
+.domain-diagram__links--hold .domain-diagram__link-path {
+  animation: none;
+  stroke-dashoffset: 0;
+}
+
+/* 始点→終点へ線が伸びる */
+.domain-diagram__links--draw .domain-diagram__link-path {
+  stroke-dashoffset: 1;
+  animation: domain-diagram-link-draw var(--link-draw-ms) ease-out forwards;
+}
+
+/* 始点側から収束して消える（終点方向へ縮む） */
+.domain-diagram__links--shrink .domain-diagram__link-path {
+  stroke-dashoffset: 0;
+  animation: domain-diagram-link-shrink var(--link-shrink-ms) ease-in forwards;
+}
+
+@keyframes domain-diagram-link-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes domain-diagram-link-shrink {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .domain-diagram__link-path {
+    stroke-dashoffset: 0 !important;
+    animation: none !important;
+  }
 }
 
 .kw-group {
