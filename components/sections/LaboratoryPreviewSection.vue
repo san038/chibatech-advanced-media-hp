@@ -93,6 +93,15 @@ const labNum = (index: number) => String(index + 1).padStart(2, '0')
     border-radius: 2px;
   }
 
+  /* 2カラム時は列の境で負マージンが向かい合いセル同士が重なるため、内側だけ打ち消す */
+  .lab-preview__cell:nth-child(odd) .lab-preview__link {
+    margin-right: 0;
+  }
+
+  .lab-preview__cell:nth-child(even) .lab-preview__link {
+    margin-left: 0;
+  }
+
   .lab-preview__link:hover {
     background-color: var(--color-surface-low);
   }
