@@ -75,39 +75,60 @@
             :key="lab.id"
             class="lab-item"
           >
-            <div class="lab-item__header">
-              <span class="lab-item__professor">{{ lab.professor }}</span>
-              <span class="tag" :class="pillarTagClass(lab.pillar)">
-                {{ pillarLabel(lab.pillar) }}
-              </span>
-            </div>
-
-            <h2 class="lab-item__name">{{ lab.name }}</h2>
-
-            <p class="lab-item__theme">{{ lab.theme }}</p>
-
-            <div class="lab-item__keywords">
-              <ul class="lab-item__keywords-list">
-                <li
-                  v-for="kw in lab.keywords"
-                  :key="kw"
-                  class="tag tag-neutral"
-                >
-                  {{ kw }}
-                </li>
-              </ul>
-            </div>
-
-            <p class="lab-item__site">
-              <a
-                :href="lab.seminarUrl"
-                class="btn btn-primary"
-                target="_blank"
-                rel="noopener noreferrer"
+            <div class="lab-item__media">
+              <img
+                v-if="lab.imageSrc"
+                :src="lab.imageSrc"
+                class="lab-item__img"
+                :alt="`${lab.name}の写真`"
+                loading="lazy"
+                decoding="async"
+              />
+              <div
+                v-else
+                class="img-placeholder lab-item__media-placeholder"
+                :class="`img-placeholder--${lab.pillar}`"
+                aria-hidden="true"
               >
-                研究室ウェブサイト
-              </a>
-            </p>
+                <span class="img-placeholder__label">Laboratory</span>
+              </div>
+            </div>
+
+            <div class="lab-item__body">
+              <div class="lab-item__header">
+                <span class="lab-item__professor">{{ lab.professor }}</span>
+                <span class="tag" :class="pillarTagClass(lab.pillar)">
+                  {{ pillarLabel(lab.pillar) }}
+                </span>
+              </div>
+
+              <h2 class="lab-item__name">{{ lab.name }}</h2>
+
+              <p class="lab-item__theme">{{ lab.theme }}</p>
+
+              <div class="lab-item__keywords">
+                <ul class="lab-item__keywords-list">
+                  <li
+                    v-for="kw in lab.keywords"
+                    :key="kw"
+                    class="tag tag-neutral"
+                  >
+                    {{ kw }}
+                  </li>
+                </ul>
+              </div>
+
+              <p class="lab-item__site">
+                <a
+                  :href="lab.seminarUrl"
+                  class="btn btn-primary"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  研究室ウェブサイト
+                </a>
+              </p>
+            </div>
           </div>
         </TransitionGroup>
 
@@ -230,9 +251,61 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
   scroll-margin-top: var(--space-xl);
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  align-items: stretch;
+  gap: var(--space-md);
   padding: var(--space-xl) 0;
   border-top: 1px solid var(--color-surface);
+}
+
+@media (min-width: 768px) {
+  .lab-item {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-xl);
+  }
+}
+
+.lab-item__media {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  background-color: var(--color-surface);
+}
+
+@media (min-width: 768px) {
+  .lab-item__media {
+    width: clamp(160px, 22vw, 220px);
+    max-width: 220px;
+  }
+}
+
+.lab-item__img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+/* main.css の 16:9 を上書きし、左カラム用の縦長比率に */
+.lab-item__media-placeholder.img-placeholder {
+  aspect-ratio: 4 / 5;
+  min-height: 140px;
+}
+
+@media (min-width: 768px) {
+  .lab-item__media-placeholder.img-placeholder {
+    min-height: 0;
+  }
+}
+
+.lab-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
 
 .lab-item:last-child {

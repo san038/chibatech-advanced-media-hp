@@ -26,6 +26,8 @@ export type Laboratory = {
   keywords: string[]
   /** ゼミ公式サイト等（プレースホルダー可） */
   seminarUrl: string
+  /** 一覧カード左の画像URL（未設定時は領域色のプレースホルダー） */
+  imageSrc?: string | null
 }
 
 export type CareerItem = {
