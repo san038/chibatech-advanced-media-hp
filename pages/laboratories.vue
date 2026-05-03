@@ -113,7 +113,7 @@
                     :key="kw"
                     class="tag tag-neutral"
                   >
-                    {{ kw }}
+                    #{{ kw }}
                   </li>
                 </ul>
               </div>
@@ -261,7 +261,7 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
   .lab-item {
     flex-direction: row;
     align-items: flex-start;
-    gap: var(--space-xl);
+    gap: var(--space-md);
   }
 }
 
@@ -305,7 +305,7 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
 }
 
 .lab-item:last-child {
@@ -314,7 +314,7 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
 
 .lab-item__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-md);
   flex-wrap: wrap;
 }
@@ -330,11 +330,12 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
   letter-spacing: 0.02em;
   color: var(--color-on-surface);
   line-height: 1.35;
+  margin-bottom: var(--space-sm);
 }
 
 .lab-item__name {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-md);
   font-weight: 600;
   color: var(--color-on-surface);
   letter-spacing: -0.02em;
@@ -355,7 +356,7 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
 .lab-item__keywords-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
 .lab-item__site {
