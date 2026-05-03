@@ -1,7 +1,13 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+const appBaseURL = process.env.NUXT_APP_BASE_URL || '/'
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV === 'development' },
+
+  nitro: {
+    preset: 'static',
+  },
 
   modules: ['@nuxt/eslint'],
 
@@ -15,6 +21,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   app: {
+    baseURL: appBaseURL.endsWith('/') ? appBaseURL : `${appBaseURL}/`,
     head: {
       title: '知能メディア工学科 | 千葉工業大学',
       meta: [

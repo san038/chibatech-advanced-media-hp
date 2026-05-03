@@ -2,13 +2,11 @@
   "name": "chibatech-adm-hp",
   "private": true,
   "type": "module",
-  "imports": {
-    "#internal/nuxt/paths": "./scripts/shims/nuxt-internal-paths.mjs"
-  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "generate:gh-pages": "nuxt generate && cp .output/public/index.html .output/public/404.html",
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
     "postinstall": "nuxt prepare"
