@@ -128,9 +128,9 @@
         <p class="section-label">Integration</p>
         <h2
           class="about-diagram__title text-display-md"
-          style="margin-top: var(--space-md); margin-bottom: var(--space-xl)"
+          style="margin-top: var(--space-md); margin-bottom: 0"
         >
-          3つの力が交わる場所に、<br />知能メディア工学科がある。
+          3つの領域が交わる場所に<br />知能メディア工学科がある。
         </h2>
 
         <DomainDiagram />
@@ -365,6 +365,7 @@ const designTopic = [
 
 .about-diagram__caption {
   max-width: 60ch;
+  margin: 0 auto;
 }
 
 .about-diagram__caption p {
