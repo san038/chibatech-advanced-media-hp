@@ -7,7 +7,8 @@
       "Bash(node:*)",
       "Bash(brew install:*)",
       "Bash(/usr/bin/curl:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npm ci:*)"
     ]
   }
 }
