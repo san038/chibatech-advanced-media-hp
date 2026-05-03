@@ -23,7 +23,7 @@
         >
           Next Step
         </p>
-        <h2 class="cta__headline">実際に見て、 感じてほしい。</h2>
+        <!-- <h2 class="cta__headline">実際に見て、 感じてほしい。</h2> -->
         <p class="cta__body">
           知能メディア工学科の学びを、体験型イベントで確かめてください。<br
             class="br-desktop"
