@@ -6,14 +6,10 @@
 
         <div class="vision__text">
           <p class="vision__line vision__line--1">
-            音楽が感情を動かすように。<br />
-            AIが答えを超えるように。<br />
-            デザインが世界を変えるように。
+            この世界に存在しないものを新しくつくる。<br />そのワクワクを味わってください。
           </p>
           <p class="vision__line vision__line--2">
-            知能メディア工学科は、メディア・知識・デザインの<br class="br-desktop" />
-            3つの力を統合し、まだ存在しない表現と<br class="br-desktop" />
-            コミュニケーションを生み出す人材を育てる。
+            例えばサッカー中継で、ゴールキーパーから見たシュートシーンの音や映像が流れたら、臨場感に溢れ、大いに盛り上がるでしょう。その実現に向けて研究を進めるのが、本学科で取り組む学びのひとつである「メディア工学」と呼ばれる分野です。しかしこれは未来のコミュニケーションの一例に過ぎません。他にもミリオンヒット曲を作曲する人工知能、使うだけで楽しくなるツールのデザインなど、知能メディア工学科の研究には、ワクワクするような未来が詰まっています。一緒に未来が求めるコミュニケーションを創出しましょう。
           </p>
         </div>
       </div>
@@ -21,8 +17,7 @@
   </section>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .vision__inner {
@@ -34,7 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
-  max-width: 680px;
+  max-width: 720px;
   width: 100%;
 }
 

@@ -127,7 +127,6 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-lg);
-  max-width: 860px;
   width: 100%;
 }
 

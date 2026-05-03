@@ -19,10 +19,8 @@
         <p class="hero__label text-label">千葉工業大学 知能メディア工学科</p>
 
         <h1 class="hero__headline">
-          あたらしい<br />コミュニケーションをつくる。
+          あたらしい<br />コミュニケーションを<br />つくろう。
         </h1>
-
-        <p class="hero__sub">音・AI・デザインで未来をひらく</p>
 
         <div class="hero__actions">
           <NuxtLink to="/about" class="btn btn-light">
@@ -32,31 +30,15 @@
             カリキュラムを見る
           </NuxtLink>
         </div>
-
-        <!-- Three pillar tags -->
-        <div class="hero__pillars-label" aria-label="3つの専門領域">
-          <div class="hero__pillar-tag hero__pillar-tag--media">
-            <span class="pillar-dot pillar-dot--media" aria-hidden="true" />
-            メディア工学
-          </div>
-          <div class="hero__pillar-tag hero__pillar-tag--knowledge">
-            <span class="pillar-dot pillar-dot--knowledge" aria-hidden="true" />
-            知識工学
-          </div>
-          <div class="hero__pillar-tag hero__pillar-tag--design">
-            <span class="pillar-dot pillar-dot--design" aria-hidden="true" />
-            情報デザイン
-          </div>
-        </div>
       </div>
     </div>
 
     <!-- Scroll indicator -->
-    <div class="hero__scroll-indicator" aria-hidden="true">
+    <!-- <div class="hero__scroll-indicator" aria-hidden="true">
       <div class="scroll-indicator">
         <div class="scroll-indicator__line" />
       </div>
-    </div>
+    </div> -->
   </section>
 </template>
 
