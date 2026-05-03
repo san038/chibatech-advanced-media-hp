@@ -19,6 +19,9 @@
           <div
             class="img-placeholder projects__card-media"
             :class="`img-placeholder--${project.theme}`"
+            :style="{
+              backgroundImage: `url(/images/img${index + 1}.jpg)`,
+            }"
           >
             <div class="projects__card-overlay">
               <span class="projects__card-tag">{{ project.tag }}</span>
@@ -140,6 +143,9 @@ const previewProjects: PreviewProject[] = [
   min-height: clamp(220px, 36vw, 380px);
   height: 100%;
   aspect-ratio: unset;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .projects__card-overlay {

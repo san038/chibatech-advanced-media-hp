@@ -6,8 +6,8 @@
         <p class="page-hero__label">Curriculum</p>
         <h1 class="page-hero__title">カリキュラム</h1>
         <p class="page-hero__subtitle">
-          4年間で、基礎から応用、そして創造へ。<br />
-          理論と実践を螺旋状に繰り返しながら深化する学びの軌跡。
+          4年間の学びのステップ。<br />
+          専門基礎・専門基幹・専門展開の3つの科目群が、年次とともに織りなす学びの地図。
         </p>
       </div>
     </section>
@@ -18,20 +18,33 @@
         <div class="curriculum-overview__grid">
           <div class="curriculum-overview__text">
             <p class="section-label">Overview</p>
-            <h2 class="curriculum-overview__title text-display-md" style="margin-top: var(--space-md)">
-              理論と実践の<br />螺旋構造
+            <h2
+              class="curriculum-overview__title text-display-md"
+              style="margin-top: var(--space-md)"
+            >
+              4年間の学びのステップ
             </h2>
             <p class="curriculum-overview__body">
-              知能メディア工学科のカリキュラムは、4年間で「広く知る→深く探索する→専門を統合する→社会へ問う」という4段階の深化を設計しています。各年次で理論と実践が交互に出現し、学んだ知識がすぐに手を動かす場所で試されます。
+              1年次は学びの土台と体験的演習、2年次はメディア工学・知識工学・情報デザインの3領域の基礎、3年次は発展科目で専門の方向性を見定めて研究室配属へつなげ、4年次はそれらを卒業研究へ統合します。科目名はカリキュラムマップに基づき、年次ごとの科目群ごとに示しています。
             </p>
           </div>
-          <!-- Subject type legend -->
           <div class="curriculum-overview__legend">
-            <p class="curriculum-overview__legend-title text-label">科目種別</p>
+            <p class="curriculum-overview__legend-title text-label">凡例</p>
             <div class="curriculum-legend__items">
-              <div v-for="type in subjectTypes" :key="type.id" class="curriculum-legend__item">
-                <span class="curriculum-legend__dot" :style="{ backgroundColor: type.color }" />
-                {{ type.label }}
+              <div class="curriculum-legend__item">
+                <span
+                  class="curriculum-legend__mark curriculum-legend__mark--req"
+                  aria-hidden="true"
+                  >■</span
+                >
+                必修科目
+              </div>
+              <div class="curriculum-legend__item">
+                <span
+                  class="curriculum-legend__mark curriculum-legend__mark--el"
+                  aria-hidden="true"
+                />
+                選択科目（■なし）
               </div>
             </div>
           </div>
@@ -48,7 +61,6 @@
             :key="year.year"
             class="timeline__year"
           >
-            <!-- Year marker -->
             <div class="timeline__year-marker">
               <div class="timeline__year-num">
                 <span class="timeline__year-label">{{ year.label }}</span>
@@ -59,24 +71,43 @@
               </div>
             </div>
 
-            <!-- Subjects -->
-            <div class="timeline__subjects">
-              <div
-                v-for="subject in year.subjects"
-                :key="subject.name"
-                class="timeline__subject"
-                :class="`timeline__subject--${subject.type}`"
-              >
-                <span
-                  class="timeline__subject-dot"
-                  :style="{ backgroundColor: typeColor(subject.type) }"
-                />
-                <span class="timeline__subject-name">{{ subject.name }}</span>
+            <div class="timeline__body">
+              <div class="timeline__tracks">
+                <div
+                  v-for="track in year.tracks"
+                  :key="track.id"
+                  class="timeline__track"
+                >
+                  <h3 class="timeline__track-title">{{ track.title }}</h3>
+                  <template v-if="track.courses.length === 0">
+                    <p class="timeline__track-empty">該当科目なし</p>
+                  </template>
+                  <ul v-else class="timeline__course-list">
+                    <li
+                      v-for="(course, ci) in track.courses"
+                      :key="`${track.id}-${ci}-${course.name}`"
+                      class="timeline__course"
+                      :class="{ 'timeline__course--required': course.required }"
+                    >
+                      <span class="timeline__course-marker" aria-hidden="true">
+                        {{ course.required ? "■" : "" }}
+                      </span>
+                      <span class="timeline__course-name">{{
+                        course.name
+                      }}</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
+              <p v-if="year.footnote" class="timeline__footnote">
+                {{ year.footnote }}
+              </p>
             </div>
 
-            <!-- Connector line (not on last year) -->
-            <div v-if="yearIndex < curriculumData.length - 1" class="timeline__connector" />
+            <div
+              v-if="yearIndex < curriculumData.length - 1"
+              class="timeline__connector"
+            />
           </div>
         </div>
       </div>
@@ -86,12 +117,21 @@
     <section class="curriculum-features section-padding bg-surface">
       <div class="container">
         <p class="section-label">Highlights</p>
-        <h2 class="text-display-md" style="margin-top: var(--space-md); margin-bottom: var(--space-xl)">
+        <h2
+          class="text-display-md"
+          style="margin-top: var(--space-md); margin-bottom: var(--space-xl)"
+        >
           学びの特色
         </h2>
         <div class="curriculum-features__grid">
-          <div v-for="feature in features" :key="feature.title" class="curriculum-feature">
-            <span class="curriculum-feature__icon" aria-hidden="true">{{ feature.icon }}</span>
+          <div
+            v-for="feature in features"
+            :key="feature.title"
+            class="curriculum-feature"
+          >
+            <span class="curriculum-feature__icon" aria-hidden="true">{{
+              feature.icon
+            }}</span>
             <h3 class="curriculum-feature__title">{{ feature.title }}</h3>
             <p class="curriculum-feature__desc">{{ feature.desc }}</p>
           </div>
@@ -104,53 +144,39 @@
 </template>
 
 <script setup lang="ts">
-import { curriculumData } from '~/data/curriculum'
+import {
+  curriculumData,
+  curriculumResearchHighlights,
+} from "~/data/curriculum";
 
 useSeoMeta({
-  title: 'カリキュラム | 知能メディア工学科 | 千葉工業大学',
+  title: "カリキュラム | 知能メディア工学科 | 千葉工業大学",
   description:
-    '4年間の学びの軌跡。理論と実践を統合した知能メディア工学科のカリキュラムをご紹介します。',
-})
-
-const subjectTypes = [
-  { id: 'lecture', label: '講義', color: '#9a9594' },
-  { id: 'workshop', label: '演習・実習', color: '#a14e58' },
-  { id: 'project', label: 'プロジェクト', color: '#4a6fa3' },
-  { id: 'seminar', label: 'セミナー', color: '#3d6b4a' },
-]
-
-const typeColor = (type: string): string => {
-  const colors: Record<string, string> = {
-    lecture: '#9a9594',
-    workshop: '#a14e58',
-    project: '#4a6fa3',
-    seminar: '#3d6b4a',
-  }
-  return colors[type] ?? '#9a9594'
-}
+    "4年間の学びのステップ。専門基礎・専門基幹・専門展開科目を、年次ごとにご紹介します。",
+});
 
 const features = [
   {
-    icon: '◼',
-    title: 'プロジェクト型学習',
-    desc: '毎学期、実際の問題を設定してチームで解決するPBL（Project-Based Learning）を実施。理論の実践的な定着を促します。',
+    icon: "◼",
+    title: "知能メディアプロジェクト",
+    desc: "2年次の「知能メディアプロジェクト1・2」で、3領域にまたがる課題にチームで取り組み、設計から実装までの一連の経験を積みます。",
   },
   {
-    icon: '◼',
-    title: '産学連携プログラム',
-    desc: '3・4年次には企業や自治体と連携した実課題プロジェクトに参加できます。在学中から社会との接続を体験します。',
+    icon: "◼",
+    title: "3領域からなる専門教育",
+    desc: "メディア工学・知識工学・情報デザインの基礎から発展までを段階的に学び、高年次で興味に応じた科目を選択できます。",
   },
   {
-    icon: '◼',
-    title: '縦断型ゼミ制度',
-    desc: '2年次から研究室の見学・体験が可能。3年次の研究室配属に向けて段階的に専門性を深められます。',
+    icon: "◼",
+    title: "実験・演習とゼミナール",
+    desc: "メディア工学実験やネットワーク・データ工学実験などの実践科目に加え、ゼミナールで研究室の研究に触れます。",
   },
   {
-    icon: '◼',
-    title: '学際的な演習設計',
-    desc: '同一演習にメディア・知識・デザインの3コースの学生が混在。異なる専門知識を持つ学生との協働で視野が広がります。',
+    icon: "◼",
+    title: "卒業研究への統合",
+    desc: "4年次はゼミナールと卒業研究で、これまでの知識・技術を一つの課題解決へまとめ上げます。",
   },
-]
+];
 </script>
 
 <style scoped>
@@ -208,11 +234,26 @@ const features = [
   color: var(--color-on-surface-muted);
 }
 
-.curriculum-legend__dot {
+.curriculum-legend__mark {
+  flex-shrink: 0;
+  width: 1.25rem;
+  display: inline-flex;
+  justify-content: center;
+  font-size: var(--text-xs);
+}
+
+.curriculum-legend__mark--req {
+  color: #a14e58;
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
+.curriculum-legend__mark--el {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  flex-shrink: 0;
+  border: 1px solid var(--color-on-surface-faint);
+  background: transparent;
 }
 
 /* Timeline */
@@ -232,7 +273,7 @@ const features = [
 
 @media (min-width: 768px) {
   .timeline__year {
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: minmax(11rem, 13rem) 1fr;
     gap: var(--space-lg);
   }
 }
@@ -272,34 +313,139 @@ const features = [
   font-weight: 500;
   color: var(--color-on-surface-muted);
   letter-spacing: -0.01em;
+  line-height: 1.5;
 }
 
-.timeline__subjects {
+.timeline__body {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-md);
+  min-width: 0;
 }
 
-.timeline__subject {
+.timeline__tracks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 960px) {
+  .timeline__tracks {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-sm);
+  }
+}
+
+.timeline__track {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem var(--space-sm);
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
   background-color: var(--color-surface);
+  border: 1px solid
+    color-mix(in srgb, var(--color-on-surface-faint) 25%, transparent);
+  min-height: 4rem;
 }
 
-.timeline__subject-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.timeline__track-title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-on-surface);
+  margin: 0;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid
+    color-mix(in srgb, var(--color-on-surface-faint) 35%, transparent);
 }
 
-.timeline__subject-name {
+.timeline__track-empty {
+  margin: 0;
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  font-weight: 400;
+  color: var(--color-on-surface-faint);
+  font-style: italic;
+}
+
+.timeline__course-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.timeline__course {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: 1.45;
   color: var(--color-on-surface);
+}
+
+@media (min-width: 1100px) {
+  .timeline__course {
+    font-size: var(--text-sm);
+  }
+}
+
+.timeline__course-marker {
+  flex-shrink: 0;
+  width: 0.85rem;
+  text-align: center;
+  font-size: 0.55rem;
+  line-height: 1.6;
+  color: transparent;
+}
+
+.timeline__course--required .timeline__course-marker {
+  color: #a14e58;
+  font-size: var(--text-xs);
+}
+
+.timeline__course-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline__footnote {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  color: var(--color-on-surface-muted);
+}
+
+.timeline__research-callout {
+  margin-top: var(--space-sm);
+  padding: var(--space-md);
+  background: color-mix(in srgb, #a14e58 8%, var(--color-surface));
+  border-left: 3px solid #a14e58;
+}
+
+.timeline__research-title {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.timeline__research-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: 1.65;
+  color: var(--color-on-surface-muted);
+}
+
+@media (min-width: 1100px) {
+  .timeline__research-list {
+    font-size: var(--text-sm);
+  }
 }
 
 .timeline__connector {
@@ -308,7 +454,11 @@ const features = [
   left: 0;
   width: 1px;
   height: var(--space-xl);
-  background: linear-gradient(to bottom, var(--color-on-surface-faint), transparent);
+  background: linear-gradient(
+    to bottom,
+    var(--color-on-surface-faint),
+    transparent
+  );
   opacity: 0.3;
 }
 

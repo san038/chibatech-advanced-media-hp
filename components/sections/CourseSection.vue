@@ -1,26 +1,6 @@
 <template>
   <section ref="sectionRef" class="course-wrapper layer-stack-container">
     <!-- Scroll progress: sticky within section so it stays centered while layers stack -->
-    <div class="course-dots-anchor" aria-hidden="true">
-      <div class="course-progress">
-        <div
-          class="course-progress__dot"
-          :class="{ active: activeIndex === 0 }"
-          style="background-color: var(--color-media-on-dark)"
-        />
-        <div
-          class="course-progress__dot"
-          :class="{ active: activeIndex === 1 }"
-          style="background-color: var(--color-knowledge-on-dark)"
-        />
-        <div
-          class="course-progress__dot"
-          :class="{ active: activeIndex === 2 }"
-          style="background-color: var(--color-design-on-dark)"
-        />
-      </div>
-    </div>
-
     <div class="course-layer-stack">
       <!-- Course Panel: メディア工学 -->
       <div
@@ -29,17 +9,45 @@
       >
         <div class="course-visual course-visual--media">
           <div class="course-visual__inner">
-            <!-- Decorative geometric pattern -->
-            <div
-              class="course-visual__pattern course-visual__pattern--media"
-              aria-hidden="true"
-            >
-              <div class="geo-circle geo-circle--1" />
-              <div class="geo-circle geo-circle--2" />
-              <div class="geo-wave" />
-            </div>
-            <div class="course-visual__label">
-              <span class="course-visual__num">01</span>
+            <div class="course-slideshow">
+              <div class="course-slideshow__slides" aria-hidden="true">
+                <img
+                  v-for="(src, i) in mediaSlideshow.sources"
+                  :key="src"
+                  :src="src"
+                  alt=""
+                  class="course-slideshow__img"
+                  :class="{
+                    'course-slideshow__img--active':
+                      mediaSlideshow.currentIndex === i,
+                  }"
+                  width="1200"
+                  height="800"
+                  decoding="async"
+                />
+              </div>
+              <div
+                class="course-slideshow__gradient course-slideshow__gradient--media"
+                aria-hidden="true"
+              />
+              <div class="course-visual__label">
+                <span class="course-visual__num">01</span>
+              </div>
+              <div
+                class="course-slideshow__dots"
+                role="group"
+                aria-label="メディア工学 スライドの位置"
+              >
+                <span
+                  v-for="(_, i) in mediaSlideshow.sources"
+                  :key="i"
+                  class="course-slideshow__dot"
+                  :class="{
+                    'course-slideshow__dot--active':
+                      mediaSlideshow.currentIndex === i,
+                  }"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -78,25 +86,52 @@
       >
         <div class="course-visual course-visual--knowledge">
           <div class="course-visual__inner">
-            <div
-              class="course-visual__pattern course-visual__pattern--knowledge"
-              aria-hidden="true"
-            >
-              <div class="geo-node geo-node--1" />
-              <div class="geo-node geo-node--2" />
-              <div class="geo-node geo-node--3" />
-              <div class="geo-edge geo-edge--1" />
-              <div class="geo-edge geo-edge--2" />
-            </div>
-            <div class="course-visual__label">
-              <span class="course-visual__num">02</span>
+            <div class="course-slideshow">
+              <div class="course-slideshow__slides" aria-hidden="true">
+                <img
+                  v-for="(src, i) in knowledgeSlideshow.sources"
+                  :key="src"
+                  :src="src"
+                  alt=""
+                  class="course-slideshow__img"
+                  :class="{
+                    'course-slideshow__img--active':
+                      knowledgeSlideshow.currentIndex === i,
+                  }"
+                  width="1200"
+                  height="800"
+                  decoding="async"
+                />
+              </div>
+              <div
+                class="course-slideshow__gradient course-slideshow__gradient--knowledge"
+                aria-hidden="true"
+              />
+              <div class="course-visual__label">
+                <span class="course-visual__num">02</span>
+              </div>
+              <div
+                class="course-slideshow__dots"
+                role="group"
+                aria-label="知識工学 スライドの位置"
+              >
+                <span
+                  v-for="(_, i) in knowledgeSlideshow.sources"
+                  :key="i"
+                  class="course-slideshow__dot"
+                  :class="{
+                    'course-slideshow__dot--active':
+                      knowledgeSlideshow.currentIndex === i,
+                  }"
+                />
+              </div>
             </div>
           </div>
         </div>
         <div class="course-text">
           <div class="course-text__inner">
             <p
-              class="course-text__section-label text-labe"
+              class="course-text__section-label text-label"
               style="color: var(--color-knowledge)"
             >
               Knowledge Engineering
@@ -129,16 +164,45 @@
       >
         <div class="course-visual course-visual--design">
           <div class="course-visual__inner">
-            <div
-              class="course-visual__pattern course-visual__pattern--design"
-              aria-hidden="true"
-            >
-              <div class="geo-rect geo-rect--1" />
-              <div class="geo-rect geo-rect--2" />
-              <div class="geo-rect geo-rect--3" />
-            </div>
-            <div class="course-visual__label">
-              <span class="course-visual__num">03</span>
+            <div class="course-slideshow">
+              <div class="course-slideshow__slides" aria-hidden="true">
+                <img
+                  v-for="(src, i) in designSlideshow.sources"
+                  :key="src"
+                  :src="src"
+                  alt=""
+                  class="course-slideshow__img"
+                  :class="{
+                    'course-slideshow__img--active':
+                      designSlideshow.currentIndex === i,
+                  }"
+                  width="1200"
+                  height="800"
+                  decoding="async"
+                />
+              </div>
+              <div
+                class="course-slideshow__gradient course-slideshow__gradient--design"
+                aria-hidden="true"
+              />
+              <div class="course-visual__label">
+                <span class="course-visual__num">03</span>
+              </div>
+              <div
+                class="course-slideshow__dots"
+                role="group"
+                aria-label="情報デザイン スライドの位置"
+              >
+                <span
+                  v-for="(_, i) in designSlideshow.sources"
+                  :key="i"
+                  class="course-slideshow__dot"
+                  :class="{
+                    'course-slideshow__dot--active':
+                      designSlideshow.currentIndex === i,
+                  }"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -174,6 +238,41 @@
 <script setup lang="ts">
 /** Sticky layer stack: each course is a full-viewport sticky card; the next card slides over
  *  the previous while scaling/dimming it (see code.html reference). */
+
+const SLIDE_INTERVAL_MS = 4800;
+
+function useImageSlideshow(sources: readonly string[]) {
+  const currentIndex = ref(0);
+  let timer: ReturnType<typeof setInterval> | undefined;
+  onMounted(() => {
+    timer = setInterval(() => {
+      currentIndex.value = (currentIndex.value + 1) % sources.length;
+    }, SLIDE_INTERVAL_MS);
+  });
+  onUnmounted(() => {
+    if (timer) clearInterval(timer);
+  });
+  return reactive({
+    currentIndex,
+    sources,
+  });
+}
+
+const mediaSlideshow = useImageSlideshow([
+  "/images/img1.jpg",
+  "/images/img2.jpg",
+  "/images/img3.jpg",
+]);
+const knowledgeSlideshow = useImageSlideshow([
+  "/images/img4.jpg",
+  "/images/img5.jpg",
+  "/images/img6.jpg",
+]);
+const designSlideshow = useImageSlideshow([
+  "/images/img7.jpg",
+  "/images/img8.jpg",
+  "/images/img9.jpg",
+]);
 
 const sectionRef = ref<HTMLElement | null>(null);
 const mediaCardRef = ref<HTMLElement | null>(null);
@@ -323,145 +422,108 @@ onUnmounted(() => {
 .course-visual__inner {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Geometric patterns */
-.course-visual__pattern {
+/* Image slideshow */
+.course-slideshow {
   position: absolute;
   inset: 0;
   overflow: hidden;
 }
 
-/* Media pattern: waves / circles */
-.geo-circle {
+.course-slideshow__slides {
   position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(var(--color-media-on-dark-channel), 0.4);
+  inset: 0;
 }
 
-.geo-circle--1 {
-  width: 60vw;
-  height: 60vw;
-  max-width: 500px;
-  max-height: 500px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: rotate-slow 20s linear infinite;
-}
-
-.geo-circle--2 {
-  width: 40vw;
-  height: 40vw;
-  max-width: 320px;
-  max-height: 320px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border-color: rgba(var(--color-media-on-dark-channel), 0.55);
-  animation: rotate-slow 12s linear infinite reverse;
-}
-
-.geo-wave {
+.course-slideshow__img {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 40%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 900ms ease-in-out;
+  z-index: 0;
+}
+
+.course-slideshow__img--active {
+  opacity: 1;
+  z-index: 1;
+}
+
+/* Course tint over photos (subtle brand gradient) */
+.course-slideshow__gradient {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.course-slideshow__gradient--media {
   background: linear-gradient(
-    to top,
-    rgba(var(--color-media-on-dark-channel), 0.18) 0%,
-    transparent 100%
+    165deg,
+    rgba(var(--color-media-on-dark-channel), 0.22) 0%,
+    transparent 42%,
+    rgba(var(--color-media-on-dark-channel), 0.08) 78%,
+    rgba(14, 12, 26, 0.45) 100%
   );
 }
 
-/* Knowledge pattern: nodes and edges */
-.geo-node {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: rgba(var(--color-knowledge-on-dark-channel), 0.65);
-}
-
-.geo-node--1 {
-  top: 30%;
-  left: 30%;
-  animation: node-pulse 3s ease-in-out infinite;
-}
-.geo-node--2 {
-  top: 60%;
-  left: 55%;
-  animation: node-pulse 3s ease-in-out 1s infinite;
-}
-.geo-node--3 {
-  top: 25%;
-  left: 65%;
-  animation: node-pulse 3s ease-in-out 2s infinite;
-}
-
-.geo-edge {
-  position: absolute;
-  height: 1px;
+.course-slideshow__gradient--knowledge {
   background: linear-gradient(
-    to right,
-    rgba(var(--color-knowledge-on-dark-channel), 0.45),
-    rgba(var(--color-knowledge-on-dark-channel), 0.12)
+    195deg,
+    rgba(var(--color-knowledge-on-dark-channel), 0.2) 0%,
+    transparent 48%,
+    rgba(var(--color-knowledge-on-dark-channel), 0.1) 72%,
+    rgba(7, 13, 26, 0.48) 100%
   );
-  transform-origin: left center;
 }
 
-.geo-edge--1 {
-  width: 25%;
-  top: 33%;
-  left: 31%;
-  transform: rotate(30deg);
+.course-slideshow__gradient--design {
+  background: linear-gradient(
+    180deg,
+    rgba(var(--color-design-on-dark-channel), 0.2) 0%,
+    transparent 45%,
+    rgba(var(--color-design-on-dark-channel), 0.09) 75%,
+    rgba(26, 12, 9, 0.46) 100%
+  );
 }
 
-.geo-edge--2 {
-  width: 30%;
-  top: 45%;
-  left: 42%;
-  transform: rotate(-20deg);
-}
-
-/* Design pattern: rectangles */
-.geo-rect {
+.course-slideshow__dots {
   position: absolute;
-  background: transparent;
-  outline: 1px solid rgba(var(--color-design-on-dark-channel), 0.45);
+  left: 50%;
+  bottom: var(--space-md);
+  transform: translateX(-50%);
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  pointer-events: none;
 }
 
-.geo-rect--1 {
-  width: 45%;
-  height: 55%;
-  top: 20%;
-  left: 15%;
+.course-slideshow__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(252, 249, 248, 0.35);
+  transition:
+    opacity 400ms ease,
+    transform 400ms ease,
+    background-color 400ms ease;
 }
 
-.geo-rect--2 {
-  width: 30%;
-  height: 35%;
-  top: 35%;
-  left: 45%;
-  background-color: rgba(var(--color-design-on-dark-channel), 0.2);
-}
-
-.geo-rect--3 {
-  width: 20%;
-  height: 20%;
-  bottom: 20%;
-  right: 20%;
-  background-color: rgba(var(--color-design-on-dark-channel), 0.14);
+.course-slideshow__dot--active {
+  background: rgba(252, 249, 248, 0.92);
+  transform: scale(1.15);
 }
 
 .course-visual__label {
   position: absolute;
   top: var(--space-lg);
   left: var(--space-lg);
+  z-index: 3;
 }
 
 .course-visual__num {
@@ -611,27 +673,5 @@ onUnmounted(() => {
 .course-progress__dot.active {
   opacity: 1;
   /* transform: scale(1.5); */
-}
-
-/* Animations */
-@keyframes rotate-slow {
-  from {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-@keyframes node-pulse {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    /* transform: scale(1.4); */
-  }
 }
 </style>
