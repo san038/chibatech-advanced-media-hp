@@ -16,17 +16,13 @@
     <!-- Main content - asymmetric, starts at col 4 -->
     <div class="hero__content container">
       <div class="hero__text-area">
-        <p class="hero__label text-label">
-          千葉工業大学 知能メディア工学科
-        </p>
+        <p class="hero__label text-label">千葉工業大学 知能メディア工学科</p>
 
         <h1 class="hero__headline">
-          まだない<br />コミュニケーションを、<br />つくる。
+          あたらしい<br />コミュニケーションをつくる。
         </h1>
 
-        <p class="hero__sub">
-          音・AI・デザインで未来をひらく
-        </p>
+        <p class="hero__sub">音・AI・デザインで未来をひらく</p>
 
         <div class="hero__actions">
           <NuxtLink to="/about" class="btn btn-light">
@@ -64,8 +60,7 @@
   </section>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .hero {
@@ -97,16 +92,17 @@
 .hero__bg-gradient {
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse 80% 60% at 20% 50%,
-    rgba(106, 77, 255, 0.08) 0%,
-    transparent 60%
-  ),
-  radial-gradient(
-    ellipse 60% 80% at 80% 20%,
-    rgba(59, 130, 246, 0.06) 0%,
-    transparent 60%
-  );
+  background:
+    radial-gradient(
+      ellipse 80% 60% at 20% 50%,
+      rgba(106, 77, 255, 0.08) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 60% 80% at 80% 20%,
+      rgba(59, 130, 246, 0.06) 0%,
+      transparent 60%
+    );
 }
 
 /* Pillar accent lines (vertical, right side) */
@@ -125,9 +121,15 @@
   opacity: 0.4;
 }
 
-.hero__pillar--media { background-color: var(--color-media); }
-.hero__pillar--knowledge { background-color: var(--color-knowledge); }
-.hero__pillar--design { background-color: var(--color-design); }
+.hero__pillar--media {
+  background-color: var(--color-media);
+}
+.hero__pillar--knowledge {
+  background-color: var(--color-knowledge);
+}
+.hero__pillar--design {
+  background-color: var(--color-design);
+}
 
 /* Content */
 .hero__content {
@@ -141,12 +143,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  max-width: 720px;
+  max-width: 940px;
 }
 
 @media (min-width: 1024px) {
   .hero__text-area {
-    margin-left: 25%; /* col 4 of 12 ≈ 33%, slightly less */
+    margin-left: 5%; /* col 4 of 12 ≈ 33%, slightly less */
   }
 }
 
