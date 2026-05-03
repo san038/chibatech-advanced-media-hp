@@ -3,20 +3,12 @@
     <div class="cta__marquee" aria-hidden="true">
       <div class="cta__marquee-inner">
         <div class="cta__marquee-segment">
-          <span
-            v-for="i in 12"
-            :key="`a-${i}`"
-            class="cta__marquee-text"
-          >
+          <span v-for="i in 12" :key="`a-${i}`" class="cta__marquee-text">
             ADVANCED MEDIA
           </span>
         </div>
         <div class="cta__marquee-segment">
-          <span
-            v-for="i in 12"
-            :key="`b-${i}`"
-            class="cta__marquee-text"
-          >
+          <span v-for="i in 12" :key="`b-${i}`" class="cta__marquee-text">
             ADVANCED MEDIA
           </span>
         </div>
@@ -25,15 +17,17 @@
 
     <div class="cta__inner container">
       <div class="cta__content">
-        <p class="cta__label text-label" style="color: rgba(252,249,248,0.3)">
+        <p
+          class="cta__label text-label"
+          style="color: rgba(252, 249, 248, 0.3)"
+        >
           Next Step
         </p>
-        <h2 class="cta__headline">
-          まずは、実際に見て<br>
-          感じてほしい。
-        </h2>
+        <h2 class="cta__headline">実際に見て、 感じてほしい。</h2>
         <p class="cta__body">
-          知能メディア工学科の学びを、体験型イベントで確かめてください。<br class="br-desktop">
+          知能メディア工学科の学びを、体験型イベントで確かめてください。<br
+            class="br-desktop"
+          />
           オープンキャンパスでは研究室公開と在学生との対話の場を設けています。
         </p>
         <div class="cta__actions">
@@ -45,7 +39,10 @@
           >
             オープンキャンパスへ
           </a>
-          <NuxtLink to="/about" class="btn btn-ghost-light cta__btn cta__btn--outline">
+          <NuxtLink
+            to="/about"
+            class="btn btn-ghost-light cta__btn cta__btn--outline"
+          >
             学科を理解する
           </NuxtLink>
         </div>
@@ -54,8 +51,7 @@
   </section>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .cta {
@@ -80,7 +76,7 @@
   display: flex;
   width: max-content;
   flex-shrink: 0;
-  animation: cta-marquee-scroll 50s linear infinite;
+  animation: cta-marquee-scroll 120s linear infinite;
   will-change: transform;
 }
 
@@ -131,7 +127,7 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-lg);
-  max-width: 720px;
+  max-width: 860px;
   width: 100%;
 }
 
@@ -153,7 +149,6 @@
   font-size: var(--text-md);
   color: rgba(252, 249, 248, 0.6);
   line-height: 1.8;
-  max-width: 540px;
 }
 
 .cta__actions {
