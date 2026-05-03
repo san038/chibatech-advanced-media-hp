@@ -130,7 +130,7 @@
           class="about-diagram__title text-display-md"
           style="margin-top: var(--space-md); margin-bottom: 0"
         >
-          3つの領域が交わる場所に<br />知能メディア工学科がある。
+          3つの領域の先にある<br />知能メディア工学という挑戦
         </h2>
 
         <DomainDiagram />

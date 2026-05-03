@@ -44,7 +44,7 @@
 
       <!-- ランダム10ノード: 伸びる → 少し待つ → 縮む → 再選択（グレーと同じ太さ） -->
       <g
-        v-if="highlightLinkPaths.length"
+        v-if="highlightRingPathD"
         class="domain-diagram__highlight-links"
         :class="highlightPhaseClass"
         pointer-events="none"
@@ -52,10 +52,9 @@
         :style="highlightTimingCssVars"
       >
         <path
-          v-for="seg in highlightLinkPaths"
-          :key="`${seg.key}@${highlightAnimEpoch}`"
+          :key="highlightAnimEpoch"
           pathLength="1"
-          :d="seg.d"
+          :d="highlightRingPathD"
           class="domain-diagram__highlight-link-path"
           :stroke="`url(#${highlightGradientId})`"
         />
@@ -208,7 +207,8 @@ const highlightGradientId = `domain-diagram-hl-${useId()}`.replace(
 );
 const spotlightActive = ref(false);
 const highlightSelectedIds = ref(new Set<string>());
-const highlightLinkPaths = ref<LinkSeg[]>([]);
+/** 10ノード閉路を一筆の path の d に連結 */
+const highlightRingPathD = ref("");
 const highlightAnimEpoch = ref(0);
 
 /** グレー線ホールド中のスポットライト: 非選択キーワードのみ薄く */
@@ -746,9 +746,11 @@ function buildGrayLinks(): LinkSeg[] {
 
 // ── ハイライト10ノード: 伸びる → 少し待つ → 縮む → 再選択を繰り返し ─────────────
 const highlightPhase = ref<"draw" | "hold" | "shrink">("draw");
-const HIGHLIGHT_DRAW_MS = 700;
-const HIGHLIGHT_WAIT_MS = 900;
-const HIGHLIGHT_SHRINK_MS = 700;
+const HIGHLIGHT_DRAW_MS = 1200;
+const HIGHLIGHT_WAIT_MS = 1200;
+const HIGHLIGHT_SHRINK_MS = 600;
+/** 縮み終わってから次のシャッフルまで */
+const HIGHLIGHT_PAUSE_BEFORE_NEXT_MS = 250;
 
 const highlightPhaseClass = computed(() => ({
   "domain-diagram__highlight-links--draw": highlightPhase.value === "draw",
@@ -779,7 +781,7 @@ function pickRandomHighlightRing(): void {
   const picked = pool.slice(0, n);
   highlightSelectedIds.value = new Set(picked.map((p) => p.id));
   highlightAnimEpoch.value += 1;
-  highlightLinkPaths.value = buildHighlightRing(picked);
+  highlightRingPathD.value = buildHighlightRingAsSinglePath(picked);
 }
 
 function startHighlightCycle(): void {
@@ -798,7 +800,10 @@ function startHighlightCycle(): void {
   });
 
   afterDiagramDelay(
-    HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS + HIGHLIGHT_SHRINK_MS,
+    HIGHLIGHT_DRAW_MS +
+      HIGHLIGHT_WAIT_MS +
+      HIGHLIGHT_SHRINK_MS +
+      HIGHLIGHT_PAUSE_BEFORE_NEXT_MS,
     () => {
       startHighlightCycle();
     },
@@ -835,20 +840,23 @@ function bezierTowardCenterDeterministic(from: Keyword, to: Keyword): string {
   return `M ${p0.x} ${p0.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p3.x} ${p3.y}`;
 }
 
-/** ランダム10ノードを円周角度順に並べ、閉ループで結ぶ */
-function buildHighlightRing(selected: Keyword[]): LinkSeg[] {
-  if (selected.length < 2) return [];
+/** `M x y C ...` から先頭の moveto を除き、前セグメントの終点から続く C コマンドだけにする */
+function stripLeadingMoveTo(d: string): string {
+  return d.replace(/^M\s+[\d.-]+\s+[\d.-]+\s+/, "").trim();
+}
+
+/** ランダム10ノードを円周角度順に並べ、閉ループを1本の path に連結（一筆書き風アニメ用） */
+function buildHighlightRingAsSinglePath(selected: Keyword[]): string {
+  if (selected.length < 2) return "";
   const sorted = sortKeywordsByAngle(selected);
-  const segs: LinkSeg[] = [];
+  const parts: string[] = [];
   for (let i = 0; i < sorted.length; i++) {
     const a = sorted[i]!;
     const b = sorted[(i + 1) % sorted.length]!;
-    segs.push({
-      key: `hl-${edgeKey(a.id, b.id)}`,
-      d: bezierTowardCenterDeterministic(a, b),
-    });
+    const seg = bezierTowardCenterDeterministic(a, b);
+    parts.push(i === 0 ? seg.trim() : stripLeadingMoveTo(seg));
   }
-  return segs;
+  return parts.join(" ");
 }
 
 /** 端点を中心方向へ引っ張った制御点で C 曲線（わずかにランダムで自然な弧） */
