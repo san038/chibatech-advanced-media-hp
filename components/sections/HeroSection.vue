@@ -2,15 +2,8 @@
   <section class="hero">
     <!-- Background visual element -->
     <div class="hero__bg" aria-hidden="true">
-      <div class="hero__bg-grid" />
-      <div class="hero__bg-gradient" />
-    </div>
-
-    <!-- Pillar accent lines (decorative) -->
-    <div class="hero__pillars" aria-hidden="true">
-      <div class="hero__pillar hero__pillar--media" />
-      <div class="hero__pillar hero__pillar--knowledge" />
-      <div class="hero__pillar hero__pillar--design" />
+      <HeroKeywordsBg />
+      <div class="hero__bg-overlay" />
     </div>
 
     <!-- Main content - asymmetric, starts at col 4 -->
@@ -62,66 +55,23 @@
   pointer-events: none;
 }
 
-.hero__bg-grid {
+/* キーワードレイヤー */
+.hero__bg :deep(.hero-kw-bg) {
+  z-index: 0;
+}
+
+/* グラデーションオーバーレイ: 左=完全な黒、右=透明
+   キーワードの上、コンテンツの下に配置 */
+.hero__bg-overlay {
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(252, 249, 248, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(252, 249, 248, 0.03) 1px, transparent 1px);
-  background-size: 80px 80px;
-}
-
-.hero__bg-gradient {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(
-      ellipse 80% 60% at 20% 50%,
-      rgba(var(--color-media-on-dark-channel), 0.14) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 60% 80% at 80% 20%,
-      rgba(var(--color-knowledge-on-dark-channel), 0.12) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 50% 50% at 55% 85%,
-      rgba(var(--color-design-on-dark-channel), 0.1) 0%,
-      transparent 55%
-    );
-}
-
-/* Pillar accent lines (vertical, right side) */
-.hero__pillars {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  gap: 3px;
-  width: 12px;
-}
-
-.hero__pillar {
-  flex: 1;
-  opacity: 0.4;
-}
-
-.hero__pillar--media {
-  background-color: var(--color-media-on-dark);
-}
-.hero__pillar--knowledge {
-  background-color: var(--color-knowledge-on-dark);
-}
-.hero__pillar--design {
-  background-color: var(--color-design-on-dark);
+  z-index: 1;
 }
 
 /* Content */
 .hero__content {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   width: 100%;
   padding-top: 80px; /* header height */
 }
