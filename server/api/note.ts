@@ -1,5 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import type { NoteArticle } from "~/types";
+import { mapRssItemToNoteArticle } from "~/utils/mapNoteRssItem";
 
 // Replace with actual note.com RSS URL for your organization
 const NOTE_RSS_URL = "https://note.com/sannnomiya/rss";
@@ -34,28 +35,17 @@ export default defineEventHandler(async (): Promise<NoteArticle[]> => {
     const parsed = parser.parse(xml) as {
       rss?: {
         channel?: {
-          item?: Array<{
-            title?: string;
-            link?: string;
-            pubDate?: string;
-            description?: string;
-          }>;
+          item?: unknown[] | unknown;
         };
       };
     };
 
-    const items = parsed?.rss?.channel?.item ?? [];
+    const rawItems = parsed?.rss?.channel?.item ?? [];
+    const items = Array.isArray(rawItems) ? rawItems : [rawItems];
 
-    const articles: NoteArticle[] = items.slice(0, 20).map((item) => ({
-      title: String(item.title ?? ""),
-      link: String(item.link ?? ""),
-      pubDate: String(item.pubDate ?? ""),
-      description: item.description
-        ? String(item.description)
-            .replace(/<[^>]*>/g, "")
-            .slice(0, 160)
-        : undefined,
-    }));
+    const articles: NoteArticle[] = items
+      .slice(0, 20)
+      .map((item) => mapRssItemToNoteArticle(item));
 
     // Update cache
     cachedArticles = articles;

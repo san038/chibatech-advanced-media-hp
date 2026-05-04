@@ -3,6 +3,8 @@ export type NoteArticle = {
   link: string
   pubDate: string
   description?: string
+  /** note RSS の media:thumbnail 等（無い記事は undefined） */
+  imageUrl?: string
 }
 
 export type Course = {

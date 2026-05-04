@@ -86,19 +86,36 @@
               class="news-article"
             >
               <div class="news-article__inner">
-                <time
-                  class="news-article__date"
-                  :datetime="formatDateIso(article.pubDate)"
+                <div
+                  v-if="article.imageUrl"
+                  class="news-article__thumb-wrap"
+                  aria-hidden="true"
                 >
-                  {{ formatDate(article.pubDate) }}
-                </time>
-                <h2 class="news-article__title">{{ article.title }}</h2>
-                <p v-if="article.description" class="news-article__desc">
-                  {{ article.description }}
-                </p>
-                <div class="news-article__footer">
-                  <span class="news-article__source">note.com</span>
-                  <span class="news-article__arrow" aria-hidden="true">→</span>
+                  <img
+                    class="news-article__thumb"
+                    :src="article.imageUrl"
+                    alt=""
+                    width="320"
+                    height="200"
+                    loading="lazy"
+                    decoding="async"
+                  >
+                </div>
+                <div class="news-article__body">
+                  <time
+                    class="news-article__date"
+                    :datetime="formatDateIso(article.pubDate)"
+                  >
+                    {{ formatDate(article.pubDate) }}
+                  </time>
+                  <h2 class="news-article__title">{{ article.title }}</h2>
+                  <p v-if="article.description" class="news-article__desc">
+                    {{ article.description }}
+                  </p>
+                  <div class="news-article__footer">
+                    <span class="news-article__source">note.com</span>
+                    <span class="news-article__arrow" aria-hidden="true">→</span>
+                  </div>
                 </div>
               </div>
             </a>
@@ -284,9 +301,49 @@ const formatDateIso = (dateStr: string): string => {
 
 .news-article__inner {
   padding: var(--space-lg) 0;
+  display: grid;
+  grid-template-columns: minmax(0, 160px) 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.news-article__inner:not(:has(.news-article__thumb-wrap)) {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 640px) {
+  .news-article__inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.news-article__thumb-wrap {
+  width: 100%;
+  max-width: 200px;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--color-surface-low);
+}
+
+@media (max-width: 640px) {
+  .news-article__thumb-wrap {
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+.news-article__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.news-article__body {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .news-article__date {

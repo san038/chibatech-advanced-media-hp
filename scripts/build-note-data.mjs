@@ -5,7 +5,13 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createJiti } from 'jiti'
 import { XMLParser } from 'fast-xml-parser'
+
+const jiti = createJiti(import.meta.url)
+const { mapRssItemToNoteArticle } = jiti(
+  join(dirname(fileURLToPath(import.meta.url)), '../utils/mapNoteRssItem.ts'),
+)
 
 const NOTE_RSS_URL = 'https://note.com/sannnomiya/rss'
 
@@ -33,14 +39,7 @@ async function main() {
   const items = parsed?.rss?.channel?.item ?? []
   const list = Array.isArray(items) ? items : [items]
 
-  const articles = list.slice(0, 20).map((item) => ({
-    title: String(item.title ?? ''),
-    link: String(item.link ?? ''),
-    pubDate: String(item.pubDate ?? ''),
-    description: item.description
-      ? String(item.description).replace(/<[^>]*>/g, '').slice(0, 160)
-      : undefined,
-  }))
+  const articles = list.slice(0, 20).map((item) => mapRssItemToNoteArticle(item))
 
   await mkdir(dirname(outFile), { recursive: true })
   await writeFile(outFile, JSON.stringify(articles), 'utf8')
