@@ -15,11 +15,18 @@
     <section class="news-content section-padding bg-surface">
       <div class="container">
         <!-- Loading state -->
-        <div v-if="pending" class="news-loading" aria-live="polite" aria-busy="true">
+        <div
+          v-if="pending"
+          class="news-loading"
+          aria-live="polite"
+          aria-busy="true"
+        >
           <div v-for="i in 6" :key="i" class="news-skeleton">
             <div class="skeleton-line skeleton-line--date" />
             <div class="skeleton-line skeleton-line--title" />
-            <div class="skeleton-line skeleton-line--title skeleton-line--short" />
+            <div
+              class="skeleton-line skeleton-line--title skeleton-line--short"
+            />
             <div class="skeleton-line skeleton-line--desc" />
           </div>
         </div>
@@ -39,7 +46,11 @@
             </a>
             から直接記事をご覧いただけます。
           </p>
-          <button class="btn btn-primary" style="margin-top: var(--space-md)" @click="() => refresh()">
+          <button
+            class="btn btn-primary"
+            style="margin-top: var(--space-md)"
+            @click="() => refresh()"
+          >
             再読み込み
           </button>
         </div>
@@ -118,35 +129,36 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'ニュース | 知能メディア工学科 | 千葉工業大学',
-  description: '知能メディア工学科の最新情報・活動報告・イベント情報をお届けします。',
-})
+  title: "ニュース | 知能メディア工学科 | 千葉工業大学",
+  description:
+    "知能メディア工学科の最新情報・活動報告・イベント情報をお届けします。",
+});
 
-const { articles, pending, error, refresh } = useNoteArticles()
+const { articles, pending, error, refresh } = useNoteArticles();
 
 const formatDate = (dateStr: string): string => {
   try {
-    const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return dateStr
-    return d.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   } catch {
-    return dateStr
+    return dateStr;
   }
-}
+};
 
 const formatDateIso = (dateStr: string): string => {
   try {
-    const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return ''
-    return d.toISOString().split('T')[0]
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
   } catch {
-    return ''
+    return "";
   }
-}
+};
 </script>
 
 <style scoped>
@@ -177,14 +189,29 @@ const formatDateIso = (dateStr: string): string => {
   animation: shimmer 1.5s infinite;
 }
 
-.skeleton-line--date { width: 120px; height: 0.75rem; }
-.skeleton-line--title { width: 100%; height: 1.25rem; }
-.skeleton-line--short { width: 70%; }
-.skeleton-line--desc { width: 85%; height: 0.875rem; }
+.skeleton-line--date {
+  width: 120px;
+  height: 0.75rem;
+}
+.skeleton-line--title {
+  width: 100%;
+  height: 1.25rem;
+}
+.skeleton-line--short {
+  width: 70%;
+}
+.skeleton-line--desc {
+  width: 85%;
+  height: 0.875rem;
+}
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Error */
@@ -272,7 +299,7 @@ const formatDateIso = (dateStr: string): string => {
 .news-article__title {
   font-family: var(--font-display);
   font-size: clamp(1rem, 2vw, var(--text-xl));
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-on-surface);
   line-height: 1.4;
   letter-spacing: -0.01em;
@@ -313,7 +340,9 @@ const formatDateIso = (dateStr: string): string => {
 .news-article__arrow {
   font-size: var(--text-sm);
   color: var(--color-on-surface-faint);
-  transition: transform 200ms ease, color 200ms ease;
+  transition:
+    transform 200ms ease,
+    color 200ms ease;
 }
 
 .news-article:hover .news-article__arrow {

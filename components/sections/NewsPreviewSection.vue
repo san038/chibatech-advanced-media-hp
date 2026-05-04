@@ -7,19 +7,34 @@
       </div>
 
       <!-- Loading state -->
-      <div v-if="pending" class="news-preview__loading" aria-live="polite" aria-busy="true">
+      <div
+        v-if="pending"
+        class="news-preview__loading"
+        aria-live="polite"
+        aria-busy="true"
+      >
         <div v-for="i in 3" :key="i" class="news-preview__skeleton">
           <div class="skeleton-line skeleton-line--date" />
           <div class="skeleton-line skeleton-line--title" />
-          <div class="skeleton-line skeleton-line--title skeleton-line--short" />
+          <div
+            class="skeleton-line skeleton-line--title skeleton-line--short"
+          />
         </div>
       </div>
 
       <!-- Error / fallback state -->
-      <div v-else-if="error || articles.length === 0" class="news-preview__fallback">
+      <div
+        v-else-if="error || articles.length === 0"
+        class="news-preview__fallback"
+      >
         <p class="news-preview__fallback-text">
           現在、記事を取得できません。<br />
-          <a href="https://note.com/chitechime" target="_blank" rel="noopener noreferrer" class="link-arrow">
+          <a
+            href="https://note.com/chitechime"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link-arrow"
+          >
             note.com で記事を読む
           </a>
         </p>
@@ -35,7 +50,10 @@
           rel="noopener noreferrer"
           class="news-preview__item"
         >
-          <time class="news-preview__date" :datetime="formatDateIso(article.pubDate)">
+          <time
+            class="news-preview__date"
+            :datetime="formatDateIso(article.pubDate)"
+          >
             {{ formatDate(article.pubDate) }}
           </time>
           <h3 class="news-preview__article-title">{{ article.title }}</h3>
@@ -47,40 +65,38 @@
       </div>
 
       <div class="news-preview__footer">
-        <NuxtLink to="/news" class="link-arrow">
-          すべての記事を見る
-        </NuxtLink>
+        <NuxtLink to="/news" class="link-arrow"> すべての記事を見る </NuxtLink>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-const { articles, pending, error } = useNoteArticles()
+const { articles, pending, error } = useNoteArticles();
 
 const formatDate = (dateStr: string): string => {
   try {
-    const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return dateStr
-    return d.toLocaleDateString('ja-JP', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   } catch {
-    return dateStr
+    return dateStr;
   }
-}
+};
 
 const formatDateIso = (dateStr: string): string => {
   try {
-    const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return ''
-    return d.toISOString().split('T')[0]
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().split("T")[0];
   } catch {
-    return ''
+    return "";
   }
-}
+};
 </script>
 
 <style scoped>
@@ -141,8 +157,12 @@ const formatDateIso = (dateStr: string): string => {
 }
 
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Fallback */
@@ -198,7 +218,7 @@ const formatDateIso = (dateStr: string): string => {
 .news-preview__article-title {
   font-family: var(--font-display);
   font-size: var(--text-md);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-on-surface);
   line-height: 1.4;
   letter-spacing: -0.01em;
@@ -231,7 +251,9 @@ const formatDateIso = (dateStr: string): string => {
 .news-preview__arrow {
   font-size: var(--text-sm);
   color: var(--color-on-surface-faint);
-  transition: transform 200ms ease, color 200ms ease;
+  transition:
+    transform 200ms ease,
+    color 200ms ease;
   align-self: center;
 }
 

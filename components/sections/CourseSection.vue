@@ -450,8 +450,8 @@ onUnmounted(() => {
 }
 
 .course-slideshow__img--active {
-  opacity: 1;
-  z-index: 1;
+  opacity: 0.7;
+  z-index: 0;
 }
 
 /* Course tint over photos (subtle brand gradient) */
