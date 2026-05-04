@@ -20,7 +20,7 @@
             class="img-placeholder projects__card-media"
             :class="`img-placeholder--${project.theme}`"
             :style="{
-              backgroundImage: `url(/images/img${index + 1}.jpg)`,
+              backgroundImage: projectImageUrl(index + 1),
             }"
           >
             <div class="projects__card-overlay">
@@ -36,6 +36,11 @@
 </template>
 
 <script setup lang="ts">
+const publicPath = usePublicPath();
+
+const projectImageUrl = (index: number) =>
+  `url(${publicPath(`images/img${index}.jpg`)})`;
+
 type PreviewProject = {
   tag: string
   title: string

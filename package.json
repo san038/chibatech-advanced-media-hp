@@ -3,10 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
+    "build": "node scripts/build-note-data.mjs && nuxt build",
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "generate:gh-pages": "nuxt generate && cp .output/public/index.html .output/public/404.html",
+    "generate": "node scripts/build-note-data.mjs && nuxt generate",
+    "generate:gh-pages": "node scripts/build-note-data.mjs && nuxt generate && cp .output/public/index.html .output/public/404.html",
     "preview": "nuxt preview",
     "start": "node .output/server/index.mjs",
     "postinstall": "nuxt prepare"

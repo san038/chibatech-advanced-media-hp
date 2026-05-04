@@ -239,6 +239,8 @@
 /** Sticky layer stack: each course is a full-viewport sticky card; the next card slides over
  *  the previous while scaling/dimming it (see code.html reference). */
 
+const publicPath = usePublicPath();
+
 const SLIDE_INTERVAL_MS = 4800;
 
 function useImageSlideshow(sources: readonly string[]) {
@@ -259,19 +261,19 @@ function useImageSlideshow(sources: readonly string[]) {
 }
 
 const mediaSlideshow = useImageSlideshow([
-  "/images/img1.jpg",
-  "/images/img2.jpg",
-  "/images/img3.jpg",
+  publicPath("images/img1.jpg"),
+  publicPath("images/img2.jpg"),
+  publicPath("images/img3.jpg"),
 ]);
 const knowledgeSlideshow = useImageSlideshow([
-  "/images/img4.jpg",
-  "/images/img5.jpg",
-  "/images/img6.jpg",
+  publicPath("images/img4.jpg"),
+  publicPath("images/img5.jpg"),
+  publicPath("images/img6.jpg"),
 ]);
 const designSlideshow = useImageSlideshow([
-  "/images/img7.jpg",
-  "/images/img8.jpg",
-  "/images/img9.jpg",
+  publicPath("images/img7.jpg"),
+  publicPath("images/img8.jpg"),
+  publicPath("images/img9.jpg"),
 ]);
 
 const sectionRef = ref<HTMLElement | null>(null);

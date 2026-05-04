@@ -1,6 +1,9 @@
 # Dependencies
 node_modules
 
+# ビルド時に scripts/build-note-data.mjs が生成（RSS 取得）
+public/data/note-articles.json
+
 # Nuxt / Nitro
 .nuxt
 .output
