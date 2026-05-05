@@ -6,32 +6,30 @@
       <div class="hero__bg-overlay" />
     </div>
 
-    <!-- Main content - asymmetric, starts at col 4 -->
+    <!-- Main content - centered -->
     <div class="hero__content container">
       <div class="hero__text-area">
-        <p class="hero__label text-label">千葉工業大学 知能メディア工学科</p>
-
-        <h1 class="hero__headline">
-          あたらしい<br />コミュニケーションを<br />つくろう。
-        </h1>
-
-        <div class="hero__actions">
-          <NuxtLink to="/about" class="btn btn-light">
-            学科を理解する
-          </NuxtLink>
-          <NuxtLink to="/curriculum" class="btn btn-ghost-light">
-            カリキュラムを見る
-          </NuxtLink>
+        <div class="hero__title-block">
+          <p class="hero__label text-label">千葉工業大学 知能メディア工学科</p>
+          <h1 class="hero__headline">
+            <span class="hero__headline-line">
+              <span class="hero__headline-line__bar" aria-hidden="true" />
+              <span class="hero__headline-line__text">新時代の</span>
+            </span>
+            <span class="hero__headline-line hero__headline-line--delay">
+              <span class="hero__headline-line__bar" aria-hidden="true" />
+              <span class="hero__headline-line__text">創造力を育む</span>
+            </span>
+          </h1>
         </div>
       </div>
     </div>
 
     <!-- Scroll indicator -->
-    <!-- <div class="hero__scroll-indicator" aria-hidden="true">
-      <div class="scroll-indicator">
-        <div class="scroll-indicator__line" />
-      </div>
-    </div> -->
+    <div class="hero__scroll-indicator" aria-hidden="true">
+      <span class="hero__scroll-text">Scroll</span>
+      <div class="hero__scroll-line" />
+    </div>
   </section>
 </template>
 
@@ -44,7 +42,7 @@
   min-height: 100svh;
   display: flex;
   align-items: center;
-  background-color: var(--color-dark);
+  background-color: #ffffff;
   overflow: hidden;
 }
 
@@ -73,93 +71,150 @@
   position: relative;
   z-index: 3;
   width: 100%;
-  padding-top: 80px; /* header height */
+  padding-top: 0px; /* header height */
 }
 
 .hero__text-area {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: var(--space-md);
-  max-width: 940px;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
-@media (min-width: 1024px) {
-  .hero__text-area {
-    margin-left: 5%; /* col 4 of 12 ≈ 33%, slightly less */
-  }
+.hero__title-block {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
 }
 
 .hero__label {
-  color: rgba(252, 249, 248, 0.45);
+  color: var(--color-on-surface-muted);
   letter-spacing: 0.06em;
+  opacity: 0;
+  animation: hero-fade-in 0.6s ease 1.3s forwards;
 }
 
 .hero__headline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35em;
   font-family: var(--font-display);
   font-size: clamp(2.5rem, 6vw, var(--text-7xl));
   font-weight: 700;
-  line-height: 1.05;
   letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.hero__headline-line {
+  position: relative;
+  display: inline-block;
+  padding: 0.08em 0.28em;
+}
+
+.hero__headline-line__bar {
+  position: absolute;
+  inset: 0;
+  background-color: #0f0e1a;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: hero-bar-expand 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
+}
+
+.hero__headline-line--delay .hero__headline-line__bar {
+  animation-delay: 0.4s;
+}
+
+.hero__headline-line__text {
+  position: relative;
+  z-index: 1;
   color: #fcf9f8;
+  opacity: 0;
+  animation: hero-fade-in 0.3s ease 0.75s forwards;
 }
 
-.hero__sub {
-  font-family: var(--font-body);
-  font-size: var(--text-lg);
-  font-weight: 300;
-  color: rgba(252, 249, 248, 0.6);
-  letter-spacing: 0.02em;
+.hero__headline-line--delay .hero__headline-line__text {
+  animation-delay: 1s;
 }
 
-.hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-top: var(--space-sm);
+@keyframes hero-bar-expand {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
-/* Pillar tags */
-.hero__pillars-label {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-  margin-top: var(--space-sm);
-}
-
-.hero__pillar-tag {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: 400;
-  color: rgba(252, 249, 248, 0.55);
-  letter-spacing: 0.02em;
-}
-
-/* ヒーローは暗背景のため、main の pillar ドットより明るい色を上書き */
-.hero :deep(.pillar-dot--media) {
-  background-color: var(--color-media-on-dark);
-}
-.hero :deep(.pillar-dot--knowledge) {
-  background-color: var(--color-knowledge-on-dark);
-}
-.hero :deep(.pillar-dot--design) {
-  background-color: var(--color-design-on-dark);
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Scroll indicator */
 .hero__scroll-indicator {
   position: absolute;
-  bottom: var(--space-lg);
+  bottom: var(--space-sm);
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  animation: hero-fade-in 0.6s ease 1.6s forwards;
 }
 
-@media (min-width: 1024px) {
-  .hero__scroll-indicator {
-    left: calc(25% + var(--space-xl));
-    transform: none;
+.hero__scroll-text {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  color: rgba(15, 14, 26, 0.4);
+  text-transform: uppercase;
+}
+
+.hero__scroll-line {
+  width: 1px;
+  height: 48px;
+  background: linear-gradient(to bottom, rgba(15, 14, 26, 0.4), transparent);
+  animation: scroll-line 1.6s ease-in-out infinite;
+}
+
+@keyframes scroll-line {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(1);
+    transform-origin: top;
+    opacity: 1;
+  }
+  51% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__scroll-line {
+    animation: none;
+    opacity: 0.4;
   }
 }
 </style>
