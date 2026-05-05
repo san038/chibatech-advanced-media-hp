@@ -364,6 +364,18 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
   margin-top: var(--space-md);
 }
 
+.lab-item__site .btn {
+  background-color: transparent;
+  color: var(--color-on-surface);
+  border: 1.5px solid var(--color-on-surface);
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.lab-item__site .btn:hover {
+  background-color: var(--color-on-surface);
+  color: var(--color-surface);
+}
+
 /* Empty state */
 .labs-empty {
   padding: var(--space-xl) 0;

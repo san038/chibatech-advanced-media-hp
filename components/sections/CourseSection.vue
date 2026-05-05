@@ -53,10 +53,7 @@
         </div>
         <div class="course-text">
           <div class="course-text__inner">
-            <p
-              class="course-text__section-label text-label"
-              style="color: var(--color-media)"
-            >
+            <p class="course-text__section-label text-label">
               Media Engineering
             </p>
             <h2 class="course-text__name">メディア工学</h2>
@@ -130,10 +127,7 @@
         </div>
         <div class="course-text">
           <div class="course-text__inner">
-            <p
-              class="course-text__section-label text-label"
-              style="color: var(--color-knowledge)"
-            >
+            <p class="course-text__section-label text-label">
               Knowledge Engineering
             </p>
             <h2 class="course-text__name">知識工学</h2>
@@ -208,10 +202,7 @@
         </div>
         <div class="course-text">
           <div class="course-text__inner">
-            <p
-              class="course-text__section-label text-label"
-              style="color: var(--color-design)"
-            >
+            <p class="course-text__section-label text-label">
               Information Design
             </p>
             <h2 class="course-text__name">情報デザイン</h2>
@@ -541,10 +532,21 @@ onUnmounted(() => {
 /* Text area (30%) */
 .course-text {
   flex: 1;
-  background-color: var(--color-surface);
   display: flex;
   align-items: center;
   overflow-y: auto;
+}
+
+.course-panel--media .course-text {
+  background-color: var(--color-media);
+}
+
+.course-panel--knowledge .course-text {
+  background-color: var(--color-knowledge);
+}
+
+.course-panel--design .course-text {
+  background-color: var(--color-design);
 }
 
 @media (min-width: 768px) {
@@ -570,6 +572,7 @@ onUnmounted(() => {
 
 .course-text__section-label {
   letter-spacing: 0.08em;
+  color: rgba(252, 249, 248, 0.6);
 }
 
 .course-text__name {
@@ -578,7 +581,7 @@ onUnmounted(() => {
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--color-on-surface);
+  color: #fcf9f8;
 }
 
 .course-text__tagline {
@@ -587,14 +590,14 @@ onUnmounted(() => {
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: -0.01em;
-  color: var(--color-on-surface);
+  color: #fcf9f8;
 }
 
 .course-text__desc {
   font-family: var(--font-body);
   font-size: var(--text-sm);
   line-height: 1.8;
-  color: var(--color-on-surface-muted);
+  color: rgba(252, 249, 248, 0.78);
 }
 
 .course-text__keywords {
@@ -607,7 +610,7 @@ onUnmounted(() => {
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: 500;
-  color: var(--color-on-surface-muted);
+  color: rgba(252, 249, 248, 0.78);
   letter-spacing: 0.04em;
   padding-left: 1rem;
   position: relative;
@@ -617,21 +620,17 @@ onUnmounted(() => {
   content: "—";
   position: absolute;
   left: 0;
-  opacity: 0.4;
-}
-
-.course-panel--media .course-text__keywords li::before {
-  color: var(--color-media);
-}
-.course-panel--knowledge .course-text__keywords li::before {
-  color: var(--color-knowledge);
-}
-.course-panel--design .course-text__keywords li::before {
-  color: var(--color-design);
+  color: rgba(252, 249, 248, 0.5);
+  opacity: 1;
 }
 
 .course-text__link {
   margin-top: var(--space-xs);
+  color: #fcf9f8;
+}
+
+.course-text__link:hover {
+  color: rgba(252, 249, 248, 0.75);
 }
 
 /* Progress dots: sticky within full-height overlay so they stay mid-viewport */
