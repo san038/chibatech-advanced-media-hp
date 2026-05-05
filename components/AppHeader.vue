@@ -1,5 +1,12 @@
 <template>
-  <header class="header" :class="{ 'header--scrolled': isScrolled, 'header--menu-open': menuOpen }">
+  <header
+    class="header"
+    :class="{
+      'header--scrolled': isScrolled,
+      'header--transparent': !isScrolled && !isTopPage,
+      'header--menu-open': menuOpen,
+    }"
+  >
     <div class="header__inner container">
       <!-- Logo -->
       <NuxtLink to="/" class="header__logo" @click="menuOpen = false">
@@ -11,7 +18,11 @@
       <nav class="header__nav" aria-label="メインナビゲーション">
         <ul class="header__nav-list">
           <li v-for="link in navLinks" :key="link.href">
-            <NuxtLink :to="link.href" class="header__nav-link" active-class="header__nav-link--active">
+            <NuxtLink
+              :to="link.href"
+              class="header__nav-link"
+              active-class="header__nav-link--active"
+            >
               {{ link.label }}
             </NuxtLink>
           </li>
@@ -38,10 +49,20 @@
 
     <!-- Mobile Menu Overlay -->
     <Transition name="mobile-menu">
-      <div v-if="menuOpen" class="header__mobile-menu" role="dialog" aria-modal="true" aria-label="モバイルメニュー">
+      <div
+        v-if="menuOpen"
+        class="header__mobile-menu"
+        role="dialog"
+        aria-modal="true"
+        aria-label="モバイルメニュー"
+      >
         <nav aria-label="モバイルナビゲーション">
           <ul class="header__mobile-list">
-            <li v-for="(link, i) in navLinks" :key="link.href" :style="{ '--delay': `${i * 60}ms` }">
+            <li
+              v-for="(link, i) in navLinks"
+              :key="link.href"
+              :style="{ '--delay': `${i * 60}ms` }"
+            >
               <NuxtLink
                 :to="link.href"
                 class="header__mobile-link"
@@ -55,7 +76,9 @@
           </ul>
         </nav>
         <div class="header__mobile-footer">
-          <span class="text-label" style="color: rgba(252, 249, 248, 0.35)">千葉工業大学</span>
+          <span class="text-label" style="color: rgba(252, 249, 248, 0.35)"
+            >千葉工業大学</span
+          >
         </div>
       </div>
     </Transition>
@@ -63,40 +86,42 @@
 </template>
 
 <script setup lang="ts">
-const menuOpen = ref(false)
-const isScrolled = ref(false)
+const route = useRoute();
+const menuOpen = ref(false);
+const isScrolled = ref(false);
+const isTopPage = computed(() => route.path === '/');
 
 const navLinks = [
-  { href: '/about', label: '学びの特徴' },
-  { href: '/curriculum', label: 'カリキュラム' },
-  { href: '/skills', label: '身につく力' },
-  { href: '/laboratories', label: '研究室' },
-  { href: '/career', label: 'キャリア' },
-  { href: '/news', label: 'ニュース' },
-]
+  { href: "/about", label: "学びの特徴" },
+  { href: "/curriculum", label: "カリキュラム" },
+  { href: "/skills", label: "身につく力" },
+  { href: "/laboratories", label: "研究室" },
+  { href: "/career", label: "キャリア" },
+  { href: "/news", label: "ニュース" },
+];
 
 const toggleMenu = () => {
-  menuOpen.value = !menuOpen.value
-  document.body.style.overflow = menuOpen.value ? 'hidden' : ''
-}
+  menuOpen.value = !menuOpen.value;
+  document.body.style.overflow = menuOpen.value ? "hidden" : "";
+};
 
 const closeMenu = () => {
-  menuOpen.value = false
-  document.body.style.overflow = ''
-}
+  menuOpen.value = false;
+  document.body.style.overflow = "";
+};
 
 const handleScroll = () => {
-  isScrolled.value = window.scrollY > 40
-}
+  isScrolled.value = window.scrollY > 40;
+};
 
 onMounted(() => {
-  window.addEventListener('scroll', handleScroll, { passive: true })
-})
+  window.addEventListener("scroll", handleScroll, { passive: true });
+});
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
-  document.body.style.overflow = ''
-})
+  window.removeEventListener("scroll", handleScroll);
+  document.body.style.overflow = "";
+});
 </script>
 
 <style scoped>
@@ -106,7 +131,9 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   z-index: 1000;
-  transition: background-color 300ms ease, box-shadow 300ms ease;
+  transition:
+    background-color 300ms ease,
+    box-shadow 300ms ease;
 }
 
 .header--scrolled {
@@ -118,6 +145,38 @@ onUnmounted(() => {
 
 .header--menu-open {
   background-color: transparent;
+}
+
+/* トップページ以外の未スクロール時: 透明背景＋白文字 */
+.header--transparent .header__logo-ja {
+  color: #fcf9f8;
+}
+
+.header--transparent .header__logo-en {
+  color: #fcf9f8;
+}
+
+.header--transparent .header__nav-link {
+  color: rgba(252, 249, 248, 0.7);
+}
+
+.header--transparent .header__nav-link:hover,
+.header--transparent .header__nav-link--active {
+  color: #fcf9f8;
+}
+
+.header--transparent .header__cta {
+  background-color: rgba(252, 249, 248, 0.15);
+  color: #fcf9f8;
+  border-color: transparent;
+}
+
+.header--transparent .header__cta:hover {
+  background-color: rgba(252, 249, 248, 0.25);
+}
+
+.header--transparent .header__hamburger-line {
+  background-color: #fcf9f8;
 }
 
 .header__inner {
@@ -152,7 +211,6 @@ onUnmounted(() => {
   color: var(--color-on-surface);
 }
 
-
 .header__logo-en {
   font-family: var(--font-body);
   font-size: 0.65rem;
@@ -162,7 +220,6 @@ onUnmounted(() => {
   line-height: 1;
   transition: color 300ms ease;
 }
-
 
 /* Desktop Nav */
 .header__nav {
@@ -192,12 +249,10 @@ onUnmounted(() => {
   text-decoration: none;
 }
 
-
 .header__nav-link:hover,
 .header__nav-link--active {
   color: var(--color-on-surface);
 }
-
 
 /* CTA */
 .header__cta {
@@ -211,7 +266,6 @@ onUnmounted(() => {
     display: inline-flex;
   }
 }
-
 
 /* Hamburger */
 .header__hamburger {
@@ -239,10 +293,11 @@ onUnmounted(() => {
   width: 100%;
   height: 1.5px;
   background-color: var(--color-on-surface);
-  transition: transform 250ms ease, opacity 250ms ease;
+  transition:
+    transform 250ms ease,
+    opacity 250ms ease;
   transform-origin: center;
 }
-
 
 .header__hamburger-line:nth-child(1).open {
   transform: translateY(6.5px) rotate(45deg);
