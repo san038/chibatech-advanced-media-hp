@@ -7,7 +7,6 @@
       viewBox="0 0 1000 590"
       xmlns="http://www.w3.org/2000/svg"
       class="domain-diagram__svg"
-      @mouseleave="setHovered(null)"
     >
       <!-- Circle boundary -->
       <!-- Three domain points at 120° intervals: Media(top), Knowledge(bottom-left), Design(bottom-right) -->
@@ -129,9 +128,6 @@
         v-for="dl in domainLabels"
         :key="dl.id"
         class="kw-group"
-        :style="{ opacity: kwOpacity(dl.domain) }"
-        @mouseenter="setHovered(dl.domain)"
-        @mouseleave="setHovered(null)"
       >
         <rect
           v-bind="domainLabelPillRect(dl)"
@@ -157,8 +153,6 @@
         :class="keywordGroupClasses(kw)"
         :transform="keywordGroupTransform(kw)"
         :style="keywordGroupStyle(kw)"
-        @mouseenter="setHovered(kw.domain)"
-        @mouseleave="setHovered(null)"
       >
         <circle
           :cx="kwXY(kw).x"
@@ -243,13 +237,6 @@ interface DomainLabelSpec {
   textAnchor: "start" | "middle" | "end";
 }
 
-const hoveredDomain = ref<Domain | null>(null);
-
-function setHovered(domain: Domain | null): void {
-  if (props.variant === "hero") return;
-  hoveredDomain.value = domain;
-}
-
 const COLORS: Record<Domain, string> = {
   media: "#a14e58",
   knowledge: "#3d6b4a",
@@ -259,25 +246,8 @@ const COLORS: Record<Domain, string> = {
   all: "#7a7574",
 };
 
-const RELATED: Partial<Record<Domain, Domain[]>> = {
-  media: ["media-knowledge", "media-design", "all"],
-  knowledge: ["media-knowledge", "all"],
-  design: ["media-design", "all"],
-  "media-knowledge": ["media", "knowledge", "all"],
-  "media-design": ["media", "design", "all"],
-  all: ["media", "knowledge", "design", "media-knowledge", "media-design"],
-};
-
 function domainColor(domain: Domain): string {
   return COLORS[domain];
-}
-
-function kwOpacity(domain: Domain): number {
-  if (!hoveredDomain.value) return 1;
-  const hd = hoveredDomain.value;
-  if (domain === hd) return 1;
-  if (RELATED[hd]?.includes(domain)) return 0.45;
-  return 0.08;
 }
 
 const highlightGradientId = `domain-diagram-hl-${useId()}`.replace(
@@ -302,8 +272,7 @@ const highlightAnimEpoch = ref(0);
 
 /** グレー線ホールド中のスポットライト: 非選択キーワードのみ薄く */
 function keywordGroupOpacity(kw: Keyword): number {
-  const base = kwOpacity(kw.domain);
-  if (!spotlightActive.value) return base;
+  if (!spotlightActive.value) return 1;
   if (highlightSelectedIds.value.has(kw.id)) {
     if (
       highlightPhase.value === "shrink" ||
@@ -311,9 +280,9 @@ function keywordGroupOpacity(kw: Keyword): number {
     ) {
       return 0;
     }
-    return base;
+    return 1;
   }
-  return base * 0.42;
+  return 0.42;
 }
 
 function keywordGroupClasses(kw: Keyword): Record<string, boolean> {
@@ -333,27 +302,15 @@ function keywordGroupTransform(kw: Keyword): string | undefined {
   ) {
     return undefined;
   }
-  const { x, y } = kwXY(kw);
   const t = mergeAnimProgress.value;
+  const { x, y } = kwXY(kw);
   const dx = t * (CX - x);
   const dy = t * (CY - y);
-  // 中央へ向かうほど拡大（t=1 で約2倍）
-  const scale = 1 + t * 1;
-  // t=0 で恒等変換、t=1 でドットが (CX,CY) に重なる
-  return `translate(${dx} ${dy}) translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})`;
+  return `translate(${dx} ${dy})`;
 }
 
 function keywordGroupStyle(kw: Keyword): Record<string, string> {
-  const style: Record<string, string> = {};
-  const isMerging =
-    highlightPhase.value === "merge" &&
-    highlightSelectedIds.value.has(kw.id);
-  if (isMerging) {
-    style.opacity = String(1 - mergeAnimProgress.value * 0.95);
-  } else {
-    style.opacity = String(keywordGroupOpacity(kw));
-  }
-  return style;
+  return { opacity: String(keywordGroupOpacity(kw)) };
 }
 
 const CX = 500;
@@ -1243,19 +1200,14 @@ onUnmounted(() => {
   fill-opacity: 0;
 }
 
-/* 領域の塗り: 造語の「ぽん」と同タイミング・同イージングでポップ表示 */
+/* 領域の塗り: バウンスなしでそのまま表示 */
 .domain-diagram__highlight-links--coin .domain-diagram__highlight-fill-path {
-  transform-box: view-box;
-  transform-origin: 500px 285px;
-  animation: domain-diagram-fill-pop var(--coin-pop-ms, 450ms)
-    cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
+  fill-opacity: 1;
+  animation: none;
 }
 
 .domain-diagram__highlight-links--coin-fade .domain-diagram__highlight-fill-path {
-  transform-box: view-box;
-  transform-origin: 500px 285px;
   fill-opacity: 1;
-  transform: scale(1);
   animation: domain-diagram-fill-fade var(--coin-fade-ms, 800ms) ease-out
     forwards;
 }
@@ -1267,29 +1219,12 @@ onUnmounted(() => {
   animation: none;
 }
 
-@keyframes domain-diagram-fill-pop {
-  0% {
-    fill-opacity: 0;
-    transform: scale(0.25);
-  }
-  65% {
-    fill-opacity: 1;
-    transform: scale(1.12);
-  }
-  100% {
-    fill-opacity: 1;
-    transform: scale(1);
-  }
-}
-
 @keyframes domain-diagram-fill-fade {
-  0% {
+  from {
     fill-opacity: 1;
-    transform: scale(1) translateY(0);
   }
-  100% {
+  to {
     fill-opacity: 0;
-    transform: scale(1.06) translateY(-10px);
   }
 }
 
@@ -1376,7 +1311,6 @@ onUnmounted(() => {
 
 .kw-group {
   cursor: default;
-  transition: opacity var(--transition-fast);
 }
 
 .domain-diagram__merge-burst {
@@ -1444,7 +1378,7 @@ onUnmounted(() => {
 }
 
 .domain-label-pill {
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .domain-label-text {
@@ -1455,9 +1389,8 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* 円内ドメイン名はホバー判定のためテキストがイベントを受け取る */
 .domain-diagram__domain-label {
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .center-label-pill {

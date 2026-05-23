@@ -3,7 +3,7 @@
     class="header"
     :class="{
       'header--scrolled': isScrolled,
-      'header--transparent': !isScrolled && !isTopPage,
+      'header--transparent': !isScrolled,
       'header--menu-open': menuOpen,
     }"
   >
@@ -89,7 +89,7 @@
 const route = useRoute();
 const menuOpen = ref(false);
 const isScrolled = ref(false);
-const isTopPage = computed(() => route.path === '/');
+const isTopPage = computed(() => route.path === "/");
 
 const navLinks = [
   { href: "/about", label: "学びの特徴" },
