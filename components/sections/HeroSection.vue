@@ -10,7 +10,7 @@
 
     <!-- Title + scroll: anchored above bottom -->
     <div class="hero__bottom container">
-      <div class="hero__text-area">
+      <!-- <div class="hero__text-area">
         <div class="hero__title-block">
           <p class="hero__label text-label">千葉工業大学 知能メディア工学科</p>
           <h1 class="hero__headline">
@@ -24,7 +24,7 @@
             </span>
           </h1>
         </div>
-      </div>
+      </div> -->
 
       <div class="hero__scroll-indicator" aria-hidden="true">
         <span class="hero__scroll-text">Scroll</span>

@@ -1,5 +1,8 @@
 <template>
-  <div class="domain-diagram" :class="{ 'domain-diagram--hero': variant === 'hero' }">
+  <div
+    class="domain-diagram"
+    :class="{ 'domain-diagram--hero': variant === 'hero' }"
+  >
     <svg
       viewBox="0 0 1000 590"
       xmlns="http://www.w3.org/2000/svg"
@@ -54,7 +57,7 @@
         />
       </g>
 
-      <!-- ランダム3ノード: 線で結ぶ → 内側を塗る → 少し待つ → 縮む → 再選択 -->
+      <!-- ランダム3ノード: 線で結ぶ → 塗る → 中央へ合体 → 縮む → 再選択 -->
       <g
         v-if="highlightRingPathD"
         class="domain-diagram__highlight-links"
@@ -77,6 +80,23 @@
           class="domain-diagram__highlight-link-path"
           :stroke="`url(#${highlightGradientId})`"
         />
+      </g>
+
+      <!-- 合体の瞬間: 中央で広がるパルス -->
+      <g
+        v-if="mergeBurstVisible"
+        :transform="`translate(${CX} ${CY})`"
+        pointer-events="none"
+        aria-hidden="true"
+      >
+        <g class="domain-diagram__merge-burst">
+          <circle
+            cx="0"
+            cy="0"
+            r="14"
+            :fill="`url(#${highlightGradientId})`"
+          />
+        </g>
       </g>
 
       <!-- 3ドメイン: ドットなし・円内の専用位置にラベルのみ -->
@@ -109,7 +129,9 @@
         v-for="kw in keywords"
         :key="kw.id"
         class="kw-group"
-        :style="{ opacity: keywordGroupOpacity(kw) }"
+        :class="keywordGroupClasses(kw)"
+        :transform="keywordGroupTransform(kw)"
+        :style="keywordGroupStyle(kw)"
         @mouseenter="setHovered(kw.domain)"
         @mouseleave="setHovered(null)"
       >
@@ -131,7 +153,7 @@
       </g>
 
       <!-- Center label -->
-      <g class="center-label-group">
+      <!-- <g class="center-label-group">
         <rect
           v-bind="centerLabelPillRect"
           fill="#000000"
@@ -146,7 +168,7 @@
         >
           {{ CENTER_LABEL_TEXT }}
         </text>
-      </g>
+      </g> -->
     </svg>
   </div>
 </template>
@@ -253,8 +275,51 @@ const highlightAnimEpoch = ref(0);
 function keywordGroupOpacity(kw: Keyword): number {
   const base = kwOpacity(kw.domain);
   if (!spotlightActive.value) return base;
-  if (highlightSelectedIds.value.has(kw.id)) return base;
+  if (highlightSelectedIds.value.has(kw.id)) {
+    if (highlightPhase.value === "shrink") return 0;
+    return base;
+  }
   return base * 0.42;
+}
+
+function keywordGroupClasses(kw: Keyword): Record<string, boolean> {
+  const selected =
+    spotlightActive.value && highlightSelectedIds.value.has(kw.id);
+  return {
+    "kw-group--selected": selected,
+    "kw-group--merging": selected && highlightPhase.value === "merge",
+  };
+}
+
+/** 円周ドットを現在位置から円の中心 (CX,CY) へ補間移動 */
+function keywordGroupTransform(kw: Keyword): string | undefined {
+  if (
+    highlightPhase.value !== "merge" ||
+    !highlightSelectedIds.value.has(kw.id)
+  ) {
+    return undefined;
+  }
+  const { x, y } = kwXY(kw);
+  const t = mergeAnimProgress.value;
+  const dx = t * (CX - x);
+  const dy = t * (CY - y);
+  // 中央へ向かうほど拡大（t=1 で約2倍）
+  const scale = 1 + t * 1;
+  // t=0 で恒等変換、t=1 でドットが (CX,CY) に重なる
+  return `translate(${dx} ${dy}) translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})`;
+}
+
+function keywordGroupStyle(kw: Keyword): Record<string, string> {
+  const style: Record<string, string> = {};
+  const isMerging =
+    highlightPhase.value === "merge" &&
+    highlightSelectedIds.value.has(kw.id);
+  if (isMerging) {
+    style.opacity = String(1 - mergeAnimProgress.value * 0.95);
+  } else {
+    style.opacity = String(keywordGroupOpacity(kw));
+  }
+  return style;
 }
 
 const CX = 500;
@@ -782,18 +847,23 @@ function buildGrayLinks(): LinkSeg[] {
   return segs;
 }
 
-// ── ハイライト3ノード: 伸びる → 少し待つ → 縮む → 再選択を繰り返し ──────────────
+// ── ハイライト3ノード: 線 → 塗り → 中央合体 → 縮む → 再選択 ─────────────────────
 const HIGHLIGHT_NODE_COUNT = 3;
-const highlightPhase = ref<"draw" | "hold" | "shrink">("draw");
+const highlightPhase = ref<"draw" | "hold" | "merge" | "shrink">("draw");
+const mergeBurstVisible = ref(false);
+/** 0–1: 合体アニメの進行（円の中心 CX,CY へ） */
+const mergeAnimProgress = ref(0);
 const HIGHLIGHT_DRAW_MS = 1200;
 const HIGHLIGHT_WAIT_MS = 1200;
+const HIGHLIGHT_MERGE_MS = 1500;
 const HIGHLIGHT_SHRINK_MS = 600;
 /** 縮み終わってから次のシャッフルまで */
 const HIGHLIGHT_PAUSE_BEFORE_NEXT_MS = 250;
 
 const highlightPhaseClass = computed(() => ({
   "domain-diagram__highlight-links--draw": highlightPhase.value === "draw",
-  "domain-diagram__highlight-links--hold": highlightPhase.value === "hold",
+  "domain-diagram__highlight-links--hold":
+    highlightPhase.value === "hold" || highlightPhase.value === "merge",
   "domain-diagram__highlight-links--shrink": highlightPhase.value === "shrink",
 }));
 
@@ -805,9 +875,36 @@ const highlightTimingCssVars = computed(() => ({
   "--highlight-shrink-ms": `${HIGHLIGHT_SHRINK_MS}ms`,
   "--highlight-fill-in-ms": `${HIGHLIGHT_FILL_IN_MS}ms`,
   "--highlight-fill-out-ms": `${HIGHLIGHT_FILL_OUT_MS}ms`,
+  "--highlight-merge-ms": `${HIGHLIGHT_MERGE_MS}ms`,
 }));
 
 let diagramTimeouts: ReturnType<typeof setTimeout>[] = [];
+let mergeAnimRaf = 0;
+
+function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function cancelMergeAnimation(): void {
+  cancelAnimationFrame(mergeAnimRaf);
+  mergeAnimRaf = 0;
+}
+
+function runMergeAnimation(): void {
+  cancelMergeAnimation();
+  mergeAnimProgress.value = 0;
+  const start = performance.now();
+
+  const tick = (now: number) => {
+    const raw = Math.min(1, (now - start) / HIGHLIGHT_MERGE_MS);
+    mergeAnimProgress.value = easeInOutCubic(raw);
+    if (raw < 1) {
+      mergeAnimRaf = requestAnimationFrame(tick);
+    }
+  };
+
+  mergeAnimRaf = requestAnimationFrame(tick);
+}
 
 function clearDiagramTimeouts(): void {
   diagramTimeouts.forEach(clearTimeout);
@@ -825,6 +922,9 @@ function pickRandomHighlightRing(): void {
   const picked = pool.slice(0, n);
   highlightSelectedIds.value = new Set(picked.map((p) => p.id));
   highlightAnimEpoch.value += 1;
+  mergeBurstVisible.value = false;
+  mergeAnimProgress.value = 0;
+  cancelMergeAnimation();
   highlightRingPathD.value = buildHighlightRingAsSinglePath(picked);
   highlightFillPathD.value = buildHighlightFillPath(picked);
 }
@@ -836,17 +936,41 @@ function startHighlightCycle(): void {
   pickRandomHighlightRing();
   highlightPhase.value = "draw";
 
+  const mergeMs = linkMotionReduced.value ? 0 : HIGHLIGHT_MERGE_MS;
+  const mergeBurstAt = mergeMs > 0 ? Math.round(mergeMs * 0.72) : 0;
+
   afterDiagramDelay(HIGHLIGHT_DRAW_MS, () => {
     highlightPhase.value = "hold";
   });
 
   afterDiagramDelay(HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS, () => {
-    highlightPhase.value = "shrink";
+    if (mergeMs === 0) {
+      highlightPhase.value = "shrink";
+      return;
+    }
+    highlightPhase.value = "merge";
+    mergeBurstVisible.value = false;
+    runMergeAnimation();
   });
+
+  if (mergeMs > 0) {
+    afterDiagramDelay(
+      HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS + mergeBurstAt,
+      () => {
+        mergeBurstVisible.value = true;
+      },
+    );
+
+    afterDiagramDelay(HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS + mergeMs, () => {
+      mergeBurstVisible.value = false;
+      highlightPhase.value = "shrink";
+    });
+  }
 
   afterDiagramDelay(
     HIGHLIGHT_DRAW_MS +
       HIGHLIGHT_WAIT_MS +
+      mergeMs +
       HIGHLIGHT_SHRINK_MS +
       HIGHLIGHT_PAUSE_BEFORE_NEXT_MS,
     () => {
@@ -946,6 +1070,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearDiagramTimeouts();
+  cancelMergeAnimation();
   spotlightActive.value = false;
 });
 </script>
@@ -1016,8 +1141,8 @@ onUnmounted(() => {
 }
 
 .domain-diagram__highlight-links--hold .domain-diagram__highlight-fill-path {
-  animation: domain-diagram-highlight-fill-in var(--highlight-fill-in-ms) ease-out
-    forwards;
+  animation: domain-diagram-highlight-fill-in var(--highlight-fill-in-ms)
+    ease-out forwards;
 }
 
 .domain-diagram__highlight-links--draw .domain-diagram__highlight-fill-path {
@@ -1027,8 +1152,8 @@ onUnmounted(() => {
 
 .domain-diagram__highlight-links--shrink .domain-diagram__highlight-fill-path {
   fill-opacity: 1;
-  animation: domain-diagram-highlight-fill-out var(--highlight-fill-out-ms) ease-in
-    forwards;
+  animation: domain-diagram-highlight-fill-out var(--highlight-fill-out-ms)
+    ease-in forwards;
 }
 
 @keyframes domain-diagram-highlight-fill-in {
@@ -1105,14 +1230,39 @@ onUnmounted(() => {
   }
 
   .domain-diagram__highlight-links--draw .domain-diagram__highlight-fill-path,
-  .domain-diagram__highlight-links--shrink .domain-diagram__highlight-fill-path {
+  .domain-diagram__highlight-links--shrink
+    .domain-diagram__highlight-fill-path {
     fill-opacity: 0;
+  }
+
+  .kw-group--merging {
+    animation: none !important;
+  }
+
+  .domain-diagram__merge-burst {
+    animation: none !important;
+    opacity: 0;
   }
 }
 
 .kw-group {
   cursor: default;
   transition: opacity var(--transition-fast);
+}
+
+.domain-diagram__merge-burst {
+  animation: domain-diagram-merge-burst 420ms ease-out forwards;
+}
+
+@keyframes domain-diagram-merge-burst {
+  0% {
+    transform: scale(0.15);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
 }
 
 .kw-label {
