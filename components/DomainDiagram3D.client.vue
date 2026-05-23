@@ -54,8 +54,10 @@ const TIER_HUB_LABEL_Y = 0.48;
 const TIER_CENTER_DISK_Y = 0.82;
 /** 中心リング外周に沿った学科ラベルの半径（ワールド単位） */
 const CENTER_LABEL_ARC_R = CENTER_HUB_R * 0.8;
-/** 弧の中心角（度）— 90°=+Z（カメラ正面） */
+/** 弧の中心角（度）— 0°=+X */
 const CENTER_LABEL_ARC_CENTER_DEG = 0;
+/** 反対側ラベルの中心角オフセット（度） */
+const CENTER_LABEL_ARC_OPPOSITE_OFFSET_DEG = 180;
 const CENTER_LABEL_FONT_PX = 22;
 const CENTER_LABEL_CHAR_PLANE_H = 0.28;
 /** 学科ラベルより合成ワードをどれだけ上（ワールド Y）に置くか */
@@ -982,17 +984,23 @@ onMounted(async () => {
   centerRing.position.y = TIER_CENTER_DISK_Y + 0.001;
   ringGroup.add(centerRing);
 
-  const centerLabelGroup = createArcCenterLabel(
-    CENTER_LABEL_TEXT,
-    DIAGRAM_WHITE_CSS,
-    CENTER_LABEL_FONT_PX,
-    CENTER_LABEL_CHAR_PLANE_H,
-    CENTER_LABEL_ARC_R,
-    TIER_CENTER_DISK_Y + 0.002,
+  const centerLabelArcCenters = [
     CENTER_LABEL_ARC_CENTER_DEG,
-    0.95,
-  );
-  ringGroup.add(centerLabelGroup);
+    CENTER_LABEL_ARC_CENTER_DEG + CENTER_LABEL_ARC_OPPOSITE_OFFSET_DEG,
+  ];
+  for (const arcCenterDeg of centerLabelArcCenters) {
+    const centerLabelGroup = createArcCenterLabel(
+      CENTER_LABEL_TEXT,
+      DIAGRAM_WHITE_CSS,
+      CENTER_LABEL_FONT_PX,
+      CENTER_LABEL_CHAR_PLANE_H,
+      CENTER_LABEL_ARC_R,
+      TIER_CENTER_DISK_Y + 0.002,
+      arcCenterDeg,
+      0.95,
+    );
+    ringGroup.add(centerLabelGroup);
+  }
 
   function getCoinLabelY(): number {
     return TIER_CENTER_DISK_Y + COIN_LABEL_OFFSET_ABOVE_TITLE;
