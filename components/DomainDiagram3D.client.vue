@@ -46,7 +46,13 @@ const DIAGRAM_WHITE_CSS = "#ffffff";
 const DIAGRAM_BG_HEX = 0x1c1b1b;
 /** SVG gap=9, R=210 を 3D 円周に換算したラベルとドット間距離 */
 const LABEL_GAP = (9 / 210) * RING_R * 0.85;
-const LABEL_Y = 0.04;
+/** Y 階層: キーワード < 領域ハブ < 中心 */
+const TIER_KEYWORD_Y = 0;
+const TIER_KEYWORD_LABEL_Y = 0.04;
+const TIER_HUB_Y = 0.42;
+const TIER_HUB_LABEL_Y = 0.48;
+const TIER_CENTER_DISK_Y = 0.82;
+const TIER_CENTER_TITLE_Y = 1.05;
 /** ラベル平面の高さ（ワールド単位） */
 const LABEL_PLANE_H = 0.62;
 const HUB_LABEL_PLANE_H = 0.36;
@@ -71,7 +77,7 @@ const COIN_FADE_MS = 800;
 const HIGHLIGHT_SHRINK_MS = 600;
 const HIGHLIGHT_PAUSE_MS = 250;
 const CENTER_SPHERE_R = 0.38;
-const COIN_LABEL_REST_Y = 0.1;
+const COIN_LABEL_REST_Y = TIER_CENTER_TITLE_Y + 0.08;
 /** フェードアウト時の上方向移動（ワールド Y） */
 const COIN_FADE_RISE_Y = 0.45;
 
@@ -752,25 +758,44 @@ onMounted(async () => {
     return new THREE.Vector3(r * Math.cos(rad), y, r * Math.sin(rad));
   }
 
-  function addLineCurve(
-    p0: THREE.Vector3,
-    p1: THREE.Vector3,
+  /** 角度の最短経路で補間（rad） */
+  function lerpAngleRad(a: number, b: number, t: number): number {
+    let d = b - a;
+    while (d > Math.PI) d -= 2 * Math.PI;
+    while (d < -Math.PI) d += 2 * Math.PI;
+    return a + d * t;
+  }
+
+  /** 中間ドット → 周辺ドット: 中間の角度・半径で一度曲がる */
+  function addLineHubToKeyword(
+    hubPos: THREE.Vector3,
+    kwAngleDeg: number,
+    kwPos: THREE.Vector3,
     color: number,
     opacity: number,
-    pull = 0.4,
   ) {
-    const cx = (p0.x + p1.x) * 0.5 * pull;
-    const cz = (p0.z + p1.z) * 0.5 * pull;
+    const hubAngle = Math.atan2(hubPos.z, hubPos.x);
+    const kwAngle = (kwAngleDeg * Math.PI) / 180;
+    const hubR = Math.hypot(hubPos.x, hubPos.z);
+    const kwR = Math.hypot(kwPos.x, kwPos.z);
+    const midAngle = lerpAngleRad(hubAngle, kwAngle, 0.5);
+    const midR = (hubR + kwR) * 0.5;
+    const bend = new THREE.Vector3(
+      Math.cos(midAngle) * midR,
+      (hubPos.y + kwPos.y) * 0.5,
+      Math.sin(midAngle) * midR,
+    );
+
     const pts: THREE.Vector3[] = [];
-    const SAMPLES = 32;
+    const SAMPLES = 36;
     for (let i = 0; i <= SAMPLES; i++) {
       const t = i / SAMPLES;
       const mt = 1 - t;
       pts.push(
         new THREE.Vector3(
-          mt * mt * p0.x + 2 * mt * t * cx + t * t * p1.x,
-          p0.y,
-          mt * mt * p0.z + 2 * mt * t * cz + t * t * p1.z,
+          mt * mt * hubPos.x + 2 * mt * t * bend.x + t * t * kwPos.x,
+          mt * mt * hubPos.y + 2 * mt * t * bend.y + t * t * kwPos.y,
+          mt * mt * hubPos.z + 2 * mt * t * bend.z + t * t * kwPos.z,
         ),
       );
     }
@@ -862,7 +887,7 @@ onMounted(async () => {
     }),
   );
   centerDisk.rotation.x = -Math.PI / 2;
-  centerDisk.position.y = 0.003;
+  centerDisk.position.y = TIER_CENTER_DISK_Y;
   ringGroup.add(centerDisk);
 
   const centerRing = new THREE.Mesh(
@@ -875,7 +900,7 @@ onMounted(async () => {
     }),
   );
   centerRing.rotation.x = -Math.PI / 2;
-  centerRing.position.y = 0.004;
+  centerRing.position.y = TIER_CENTER_DISK_Y + 0.001;
   ringGroup.add(centerRing);
 
   const centerTitle = createCenteredTextPlane(
@@ -886,12 +911,12 @@ onMounted(async () => {
     0.95,
   );
   centerTitle.rotation.x = -Math.PI / 2;
-  centerTitle.position.y = 0.012;
+  centerTitle.position.y = TIER_CENTER_TITLE_Y;
   ringGroup.add(centerTitle);
 
   // 中間ドット（3領域）+ 中心との接続 + キーワードへの枝
   for (const hub of DOMAIN_HUBS) {
-    const hubPos = posAtAngle(hub.angleDeg, DOMAIN_HUB_R, 0.008);
+    const hubPos = posAtAngle(hub.angleDeg, DOMAIN_HUB_R, TIER_HUB_Y);
     hubPosByKey.set(hub.key, hubPos.clone());
 
     const hubDot = new THREE.Mesh(
@@ -908,11 +933,12 @@ onMounted(async () => {
       0.9,
       DOMAIN_HUB_R,
       HUB_LABEL_PLANE_H,
+      TIER_HUB_LABEL_Y,
     );
     ringGroup.add(hubLabel);
 
     addLineStraight(
-      new THREE.Vector3(0, 0.005, 0),
+      new THREE.Vector3(0, TIER_CENTER_DISK_Y, 0),
       hubPos,
       DIAGRAM_WHITE_HEX,
       BRANCH_LINE_OPACITY * 1.6,
@@ -922,13 +948,13 @@ onMounted(async () => {
   for (const kw of keywords) {
     const hubKey = hubKeyForDomain(kw.domain);
     const hubPos = hubPosByKey.get(hubKey)!;
-    const kwPos = posAtAngle(kw.angleDeg, RING_R, 0.006);
-    addLineCurve(
+    const kwPos = posAtAngle(kw.angleDeg, RING_R, TIER_KEYWORD_Y);
+    addLineHubToKeyword(
       hubPos,
+      kw.angleDeg,
       kwPos,
       DIAGRAM_WHITE_HEX,
       BRANCH_LINE_OPACITY,
-      0.38,
     );
   }
 
@@ -940,6 +966,7 @@ onMounted(async () => {
     opacity: number,
     anchorR = RING_R,
     planeH = LABEL_PLANE_H,
+    labelY = TIER_KEYWORD_LABEL_Y,
   ): THREE.Mesh {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const fontPx = LABEL_FONT_PX;
@@ -988,7 +1015,7 @@ onMounted(async () => {
     const innerR = anchorR + LABEL_GAP;
     mesh.position.set(
       outward.x * (innerR + planeW / 2),
-      LABEL_Y,
+      labelY,
       outward.z * (innerR + planeW / 2),
     );
 
@@ -1023,7 +1050,7 @@ onMounted(async () => {
       opacity: DOT_OPACITY_DIM,
     });
     const dot = new THREE.Mesh(dotGeo, mat);
-    dot.position.set(RING_R * dx, 0, RING_R * dz);
+    dot.position.set(RING_R * dx, TIER_KEYWORD_Y, RING_R * dz);
     ringGroup.add(dot);
     dotMeshMap.set(kw.id, dot);
     dotOrigPos.set(kw.id, dot.position.clone());
@@ -1084,14 +1111,13 @@ onMounted(async () => {
       }),
     );
     hlCenterSphere.scale.setScalar(0.001);
-    hlCenterSphere.position.set(0, 0, 0);
+    hlCenterSphere.position.set(0, TIER_CENTER_DISK_Y, 0);
     scene.add(hlCenterSphere);
   }
 
   // キーワードの3D位置
   function kwPos(kw: Keyword3D): THREE.Vector3 {
-    const rad = (kw.angleDeg * Math.PI) / 180;
-    return new THREE.Vector3(RING_R * Math.cos(rad), 0, RING_R * Math.sin(rad));
+    return posAtAngle(kw.angleDeg, RING_R, TIER_KEYWORD_Y);
   }
 
   // ベジェ曲線ライン（制御点を中心方向へ引く）
@@ -1298,7 +1324,7 @@ onMounted(async () => {
 
         if (hlCenterSphere) {
           hlCenterSphere.scale.setScalar(Math.max(0.001, burstScale));
-          hlCenterSphere.position.y = 0;
+          hlCenterSphere.position.y = TIER_CENTER_DISK_Y;
         }
         if (centerMat) centerMat.opacity = burstOpacity * 0.92;
 
@@ -1312,7 +1338,7 @@ onMounted(async () => {
         fMat.opacity = 0.32;
         if (hlCenterSphere) {
           hlCenterSphere.scale.setScalar(1);
-          hlCenterSphere.position.y = 0;
+          hlCenterSphere.position.y = TIER_CENTER_DISK_Y;
         }
         if (centerMat) centerMat.opacity = 0.92;
         if (hlCoinEl) {
@@ -1331,7 +1357,7 @@ onMounted(async () => {
 
         if (hlCenterSphere) {
           hlCenterSphere.scale.setScalar(1);
-          hlCenterSphere.position.y = riseY;
+          hlCenterSphere.position.y = TIER_CENTER_DISK_Y + riseY;
         }
         if (centerMat) centerMat.opacity = remain * 0.92;
 
