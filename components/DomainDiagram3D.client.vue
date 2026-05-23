@@ -88,6 +88,10 @@ const COIN_HOLD_MS = 2000;
 const COIN_FADE_MS = 800;
 /** 合成ワードの下からスライドイン距離（px） */
 const COIN_SLIDE_IN_PX = 28;
+/** 合成ワード（CSS2D）のフォントサイズ */
+const COIN_WORD_FONT = "clamp(20px, 2.8vw, 36px)";
+/** 合成元キーワード行のフォントサイズ */
+const COIN_SOURCE_FONT = "clamp(10px, 1.15vw, 13px)";
 const HIGHLIGHT_SHRINK_MS = 600;
 const HIGHLIGHT_PAUSE_MS = 250;
 const CENTER_SPHERE_R = 0.38;
@@ -655,6 +659,10 @@ function buildPortmanteau(kws: Keyword3D[]): string {
   return kws.map((kw) => buildPortmanteauPart(kw)).join("");
 }
 
+function buildSourceKeywordsLine(kws: Keyword3D[]): string {
+  return kws.map((kw) => `＜${kw.label}＞`).join("＋");
+}
+
 // ── イージング ────────────────────────────────────────────────────────────────
 function easeOut(t: number) {
   return 1 - (1 - t) ** 2;
@@ -1141,7 +1149,7 @@ onMounted(async () => {
   let hlPaths: THREE.Vector3[][] = [];
   let hlTravelDots: THREE.Mesh[] = [];
   let hlCenterSphere: THREE.Mesh | null = null;
-  let hlCoinEl: HTMLSpanElement | null = null;
+  let hlCoinAnimEl: HTMLDivElement | null = null;
   let hlCoinObj: InstanceType<typeof CSS2DObject> | null = null;
   let hlTimeouts: ReturnType<typeof setTimeout>[] = [];
 
@@ -1330,25 +1338,46 @@ onMounted(async () => {
     // ── 造語ラベル（CSS2DRenderer が外側 div の transform を毎フレーム上書きするため、
     //    スライドは内側 span で行う）
     const word = buildPortmanteau(hlPicked);
+    const sourceLine = buildSourceKeywordsLine(hlPicked);
     const coinWrap = document.createElement("div");
     Object.assign(coinWrap.style, {
       pointerEvents: "none",
       textAlign: "center",
     });
-    hlCoinEl = document.createElement("span");
-    hlCoinEl.textContent = `"${word}"`;
-    Object.assign(hlCoinEl.style, {
-      display: "inline-block",
-      fontSize: "clamp(16px, 2.2vw, 28px)",
-      fontWeight: "700",
-      color: DIAGRAM_WHITE_CSS,
+    hlCoinAnimEl = document.createElement("div");
+    Object.assign(hlCoinAnimEl.style, {
+      display: "inline-flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "0.35em",
       transform: `translateY(${COIN_SLIDE_IN_PX}px)`,
       opacity: "0",
-      letterSpacing: "-0.02em",
       fontFamily: "var(--font-display, system-ui, sans-serif)",
       whiteSpace: "nowrap",
     });
-    coinWrap.appendChild(hlCoinEl);
+    const coinSourceEl = document.createElement("span");
+    coinSourceEl.textContent = sourceLine;
+    Object.assign(coinSourceEl.style, {
+      display: "block",
+      fontSize: COIN_SOURCE_FONT,
+      fontWeight: "500",
+      color: DIAGRAM_WHITE_CSS,
+      opacity: "0.72",
+      letterSpacing: "0.02em",
+      lineHeight: "1.2",
+    });
+    const coinTextEl = document.createElement("span");
+    coinTextEl.textContent = `"${word}"`;
+    Object.assign(coinTextEl.style, {
+      display: "block",
+      fontSize: COIN_WORD_FONT,
+      fontWeight: "700",
+      color: DIAGRAM_WHITE_CSS,
+      letterSpacing: "-0.02em",
+      lineHeight: "1.15",
+    });
+    hlCoinAnimEl.append(coinSourceEl, coinTextEl);
+    coinWrap.appendChild(hlCoinAnimEl);
     hlCoinObj = new CSS2DObject(coinWrap);
     hlCoinObj.position.set(0, getCoinLabelY(), 0);
     scene.add(hlCoinObj);
@@ -1364,7 +1393,7 @@ onMounted(async () => {
     if (hlCoinObj) {
       scene.remove(hlCoinObj);
       hlCoinObj = null;
-      hlCoinEl = null;
+      hlCoinAnimEl = null;
     }
     disposeCenterSphere();
     disposeTravelDots();
@@ -1415,11 +1444,11 @@ onMounted(async () => {
         }
         if (centerMat) centerMat.opacity = burstOpacity * 0.92;
 
-        if (hlCoinEl) {
+        if (hlCoinAnimEl) {
           const slideT = easeOut(popProgress);
           const slideY = (1 - slideT) * COIN_SLIDE_IN_PX;
-          hlCoinEl.style.opacity = String(burstOpacity);
-          hlCoinEl.style.transform = `translateY(${slideY}px)`;
+          hlCoinAnimEl.style.opacity = String(burstOpacity);
+          hlCoinAnimEl.style.transform = `translateY(${slideY}px)`;
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       } else if (elapsed <= fadeStart) {
@@ -1428,9 +1457,9 @@ onMounted(async () => {
           hlCenterSphere.position.y = TIER_CENTER_DISK_Y;
         }
         if (centerMat) centerMat.opacity = 0.92;
-        if (hlCoinEl) {
-          hlCoinEl.style.opacity = "1";
-          hlCoinEl.style.transform = "translateY(0)";
+        if (hlCoinAnimEl) {
+          hlCoinAnimEl.style.opacity = "1";
+          hlCoinAnimEl.style.transform = "translateY(0)";
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       } else {
@@ -1445,9 +1474,9 @@ onMounted(async () => {
         }
         if (centerMat) centerMat.opacity = remain * 0.92;
 
-        if (hlCoinEl) {
-          hlCoinEl.style.opacity = String(remain);
-          hlCoinEl.style.transform = `translateY(${-10 * fadeT}px)`;
+        if (hlCoinAnimEl) {
+          hlCoinAnimEl.style.opacity = String(remain);
+          hlCoinAnimEl.style.transform = `translateY(${-10 * fadeT}px)`;
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       }

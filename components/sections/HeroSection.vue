@@ -19,7 +19,7 @@
             </span>
             <span class="hero__headline-line hero__headline-line--delay">
               <span class="hero__headline-line__bar" aria-hidden="true" />
-              <span class="hero__headline-line__text">3つの領域の先へ</span>
+              <span class="hero__headline-line__text">3領域のその先へ</span>
             </span>
           </h1>
         </div>
@@ -226,6 +226,27 @@
     transform: scaleY(0);
     transform-origin: bottom;
     opacity: 0.3;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero__bottom {
+    align-items: center;
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+  }
+
+  .hero__text-area {
+    align-items: center;
+    text-align: center;
+  }
+
+  .hero__title-block {
+    align-items: center;
+  }
+
+  .hero__headline {
+    align-items: center;
   }
 }
 
