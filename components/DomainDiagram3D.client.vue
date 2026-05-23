@@ -58,11 +58,17 @@ const COIN_LABEL_REST_Y = 0.1;
 const COIN_FADE_RISE_Y = 0.45;
 
 // ── Keyword data ───────────────────────────────────────────────────────────────
+interface KeywordSegment {
+  text: string;
+  role: string;
+}
+
 interface Keyword3D {
   id: string;
   label: string;
   angleDeg: number;
   domain: Domain;
+  segments: KeywordSegment[];
 }
 
 function equalArcDots(fromDeg: number, toDeg: number, count: number): number[] {
@@ -76,56 +82,485 @@ const angMediaToDesign = equalArcDots(-90, 30, 15);
 
 const keywords: Keyword3D[] = [
   // MEDIA
-  { id: "m1", label: "３D音響", angleDeg: angKnowledgeToMedia[5]!, domain: "media" },
-  { id: "m2", label: "音場シミュレーション", angleDeg: angKnowledgeToMedia[6]!, domain: "media" },
-  { id: "m3", label: "音声伝達", angleDeg: angKnowledgeToMedia[7]!, domain: "media" },
-  { id: "m4", label: "話者認識", angleDeg: angKnowledgeToMedia[8]!, domain: "media" },
-  { id: "m5", label: "歌声合成", angleDeg: angKnowledgeToMedia[9]!, domain: "media" },
-  { id: "m6", label: "画像/映像処理", angleDeg: angKnowledgeToMedia[10]!, domain: "media" },
-  { id: "m7", label: "画像/映像合成", angleDeg: angKnowledgeToMedia[11]!, domain: "media" },
-  { id: "m8", label: "画像/映像符号化と伝送", angleDeg: angKnowledgeToMedia[12]!, domain: "media" },
-  { id: "m9", label: "バーチャルリアリティ", angleDeg: angKnowledgeToMedia[13]!, domain: "media" },
+  {
+    id: "m1",
+    label: "３D音響",
+    angleDeg: angKnowledgeToMedia[5]!,
+    domain: "media",
+    segments: [
+      { text: "3D", role: "modifier" },
+      { text: "音響", role: "subject" },
+    ],
+  },
+  {
+    id: "m2",
+    label: "音場シミュレーション",
+    angleDeg: angKnowledgeToMedia[6]!,
+    domain: "media",
+    segments: [
+      { text: "音場", role: "subject" },
+      { text: "シミュレーション", role: "method" },
+    ],
+  },
+  {
+    id: "m3",
+    label: "音声伝達",
+    angleDeg: angKnowledgeToMedia[7]!,
+    domain: "media",
+    segments: [
+      { text: "音声", role: "subject" },
+      { text: "伝達", role: "method" },
+    ],
+  },
+  {
+    id: "m4",
+    label: "話者認識",
+    angleDeg: angKnowledgeToMedia[8]!,
+    domain: "media",
+    segments: [
+      { text: "話者", role: "subject" },
+      { text: "認識", role: "method" },
+    ],
+  },
+  {
+    id: "m5",
+    label: "歌声合成",
+    angleDeg: angKnowledgeToMedia[9]!,
+    domain: "media",
+    segments: [
+      { text: "歌声", role: "subject" },
+      { text: "合成", role: "method" },
+    ],
+  },
+  {
+    id: "m6",
+    label: "画像/映像処理",
+    angleDeg: angKnowledgeToMedia[10]!,
+    domain: "media",
+    segments: [
+      { text: "画像", role: "subject" },
+      { text: "映像", role: "subject" },
+      { text: "処理", role: "method" },
+    ],
+  },
+  {
+    id: "m7",
+    label: "画像/映像合成",
+    angleDeg: angKnowledgeToMedia[11]!,
+    domain: "media",
+    segments: [
+      { text: "画像", role: "subject" },
+      { text: "映像", role: "subject" },
+      { text: "合成", role: "method" },
+    ],
+  },
+  {
+    id: "m8",
+    label: "画像/映像符号化と伝送",
+    angleDeg: angKnowledgeToMedia[12]!,
+    domain: "media",
+    segments: [
+      { text: "画像", role: "subject" },
+      { text: "映像", role: "subject" },
+      { text: "符号化", role: "method" },
+      { text: "伝送", role: "method" },
+    ],
+  },
+  {
+    id: "m9",
+    label: "バーチャルリアリティ",
+    angleDeg: angKnowledgeToMedia[13]!,
+    domain: "media",
+    segments: [
+      { text: "バーチャル", role: "modifier" },
+      { text: "リアリティ", role: "field" },
+    ],
+  },
+
   // KNOWLEDGE
-  { id: "k1", label: "ユビキタスコンピューティング", angleDeg: angDesignToKnowledge[5]!, domain: "knowledge" },
-  { id: "k2", label: "ITS（Intelligent Transport Systems）", angleDeg: angDesignToKnowledge[6]!, domain: "knowledge" },
-  { id: "k3", label: "テキストマイニング", angleDeg: angDesignToKnowledge[7]!, domain: "knowledge" },
-  { id: "k4", label: "環境認識", angleDeg: angDesignToKnowledge[8]!, domain: "knowledge" },
-  { id: "k5", label: "コンピュータネットワーク", angleDeg: angDesignToKnowledge[9]!, domain: "knowledge" },
-  { id: "k6", label: "データマイニング", angleDeg: angDesignToKnowledge[10]!, domain: "knowledge" },
-  { id: "k7", label: "マルチエージェントシステム", angleDeg: angDesignToKnowledge[11]!, domain: "knowledge" },
-  { id: "k8", label: "ビッグデータ", angleDeg: angDesignToKnowledge[12]!, domain: "knowledge" },
-  { id: "k9", label: "人工知能", angleDeg: angDesignToKnowledge[13]!, domain: "knowledge" },
-  { id: "k10", label: "機械学習", angleDeg: angDesignToKnowledge[14]!, domain: "knowledge" },
-  { id: "k11", label: "ディープラーニング", angleDeg: angDesignToKnowledge[15]!, domain: "knowledge" },
+  {
+    id: "k1",
+    label: "ユビキタスコンピューティング",
+    angleDeg: angDesignToKnowledge[5]!,
+    domain: "knowledge",
+    segments: [
+      { text: "ユビキタス", role: "modifier" },
+      { text: "コンピューティング", role: "field" },
+    ],
+  },
+  {
+    id: "k2",
+    label: "ITS（Intelligent Transport Systems）",
+    angleDeg: angDesignToKnowledge[6]!,
+    domain: "knowledge",
+    segments: [
+      { text: "インテリジェント", role: "modifier" },
+      { text: "交通", role: "subject" },
+      { text: "システム", role: "field" },
+    ],
+  },
+  {
+    id: "k3",
+    label: "テキストマイニング",
+    angleDeg: angDesignToKnowledge[7]!,
+    domain: "knowledge",
+    segments: [
+      { text: "テキスト", role: "subject" },
+      { text: "マイニング", role: "method" },
+    ],
+  },
+  {
+    id: "k4",
+    label: "環境認識",
+    angleDeg: angDesignToKnowledge[8]!,
+    domain: "knowledge",
+    segments: [
+      { text: "環境", role: "subject" },
+      { text: "認識", role: "method" },
+    ],
+  },
+  {
+    id: "k5",
+    label: "コンピュータネットワーク",
+    angleDeg: angDesignToKnowledge[9]!,
+    domain: "knowledge",
+    segments: [
+      { text: "コンピュータ", role: "subject" },
+      { text: "ネットワーク", role: "field" },
+    ],
+  },
+  {
+    id: "k6",
+    label: "データマイニング",
+    angleDeg: angDesignToKnowledge[10]!,
+    domain: "knowledge",
+    segments: [
+      { text: "データ", role: "subject" },
+      { text: "マイニング", role: "method" },
+    ],
+  },
+  {
+    id: "k7",
+    label: "マルチエージェントシステム",
+    angleDeg: angDesignToKnowledge[11]!,
+    domain: "knowledge",
+    segments: [
+      { text: "マルチ", role: "modifier" },
+      { text: "エージェント", role: "subject" },
+      { text: "システム", role: "field" },
+    ],
+  },
+  {
+    id: "k8",
+    label: "ビッグデータ",
+    angleDeg: angDesignToKnowledge[12]!,
+    domain: "knowledge",
+    segments: [
+      { text: "ビッグ", role: "modifier" },
+      { text: "データ", role: "subject" },
+    ],
+  },
+  {
+    id: "k9",
+    label: "人工知能",
+    angleDeg: angDesignToKnowledge[13]!,
+    domain: "knowledge",
+    segments: [
+      { text: "人工", role: "modifier" },
+      { text: "知能", role: "field" },
+    ],
+  },
+  {
+    id: "k10",
+    label: "機械学習",
+    angleDeg: angDesignToKnowledge[14]!,
+    domain: "knowledge",
+    segments: [
+      { text: "機械", role: "subject" },
+      { text: "学習", role: "method" },
+    ],
+  },
+  {
+    id: "k11",
+    label: "ディープラーニング",
+    angleDeg: angDesignToKnowledge[15]!,
+    domain: "knowledge",
+    segments: [
+      { text: "ディープ", role: "modifier" },
+      { text: "ラーニング", role: "method" },
+    ],
+  },
+
   // DESIGN
-  { id: "d1", label: "テクノロジーアート", angleDeg: angMediaToDesign[5]!, domain: "design" },
-  { id: "d2", label: "ソーシャルデザイン", angleDeg: angMediaToDesign[6]!, domain: "design" },
-  { id: "d3", label: "サービスデザイン", angleDeg: angMediaToDesign[7]!, domain: "design" },
-  { id: "d4", label: "ユーザエクスペリエンスデザイン/人間中心設計", angleDeg: angMediaToDesign[8]!, domain: "design" },
-  { id: "d5", label: "映像・CG・アニメーションデザイン", angleDeg: angMediaToDesign[9]!, domain: "design" },
-  { id: "d6", label: "Webデザイン/アプリケーションデザイン", angleDeg: angMediaToDesign[10]!, domain: "design" },
-  { id: "d7", label: "ユーザインタフェースデザイン", angleDeg: angMediaToDesign[11]!, domain: "design" },
-  { id: "d8", label: "プロダクトデザイン/デジタルファブリケーション", angleDeg: angMediaToDesign[12]!, domain: "design" },
-  { id: "d9", label: "ビジュアライゼーション", angleDeg: angMediaToDesign[13]!, domain: "design" },
-  { id: "d10", label: "コミュニケーションデザイン", angleDeg: angMediaToDesign[14]!, domain: "design" },
+  {
+    id: "d1",
+    label: "テクノロジーアート",
+    angleDeg: angMediaToDesign[5]!,
+    domain: "design",
+    segments: [
+      { text: "テクノロジー", role: "subject" },
+      { text: "アート", role: "field" },
+    ],
+  },
+  {
+    id: "d2",
+    label: "ソーシャルデザイン",
+    angleDeg: angMediaToDesign[6]!,
+    domain: "design",
+    segments: [
+      { text: "ソーシャル", role: "modifier" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "d3",
+    label: "サービスデザイン",
+    angleDeg: angMediaToDesign[7]!,
+    domain: "design",
+    segments: [
+      { text: "サービス", role: "subject" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "d4",
+    label: "ユーザエクスペリエンスデザイン/人間中心設計",
+    angleDeg: angMediaToDesign[8]!,
+    domain: "design",
+    segments: [
+      { text: "ユーザエクスペリエンス", role: "field" },
+      { text: "デザイン", role: "field" },
+      { text: "人間中心", role: "modifier" },
+      { text: "設計", role: "method" },
+    ],
+  },
+  {
+    id: "d5",
+    label: "映像・CG・アニメーションデザイン",
+    angleDeg: angMediaToDesign[9]!,
+    domain: "design",
+    segments: [
+      { text: "映像", role: "subject" },
+      { text: "CG", role: "subject" },
+      { text: "アニメーション", role: "subject" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "d6",
+    label: "Webデザイン/アプリケーションデザイン",
+    angleDeg: angMediaToDesign[10]!,
+    domain: "design",
+    segments: [
+      { text: "Web", role: "subject" },
+      { text: "アプリケーション", role: "subject" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "d7",
+    label: "ユーザインタフェースデザイン",
+    angleDeg: angMediaToDesign[11]!,
+    domain: "design",
+    segments: [
+      { text: "ユーザ", role: "subject" },
+      { text: "インタフェース", role: "field" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "d8",
+    label: "プロダクトデザイン/デジタルファブリケーション",
+    angleDeg: angMediaToDesign[12]!,
+    domain: "design",
+    segments: [
+      { text: "プロダクト", role: "subject" },
+      { text: "デザイン", role: "field" },
+      { text: "デジタル", role: "modifier" },
+      { text: "ファブリケーション", role: "method" },
+    ],
+  },
+  {
+    id: "d9",
+    label: "ビジュアライゼーション",
+    angleDeg: angMediaToDesign[13]!,
+    domain: "design",
+    segments: [
+      { text: "ビジュアル", role: "subject" },
+      { text: "ライゼーション", role: "method" },
+    ],
+  },
+  {
+    id: "d10",
+    label: "コミュニケーションデザイン",
+    angleDeg: angMediaToDesign[14]!,
+    domain: "design",
+    segments: [
+      { text: "コミュニケーション", role: "subject" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+
   // MEDIA × KNOWLEDGE
-  { id: "mk1", label: "AR（拡張現実）", angleDeg: angKnowledgeToMedia[0]!, domain: "media-knowledge" },
-  { id: "mk2", label: "音声認識", angleDeg: angKnowledgeToMedia[1]!, domain: "media-knowledge" },
-  { id: "mk3", label: "画像認識", angleDeg: angKnowledgeToMedia[2]!, domain: "media-knowledge" },
-  { id: "mk4", label: "インテリジェント拡声システム", angleDeg: angKnowledgeToMedia[3]!, domain: "media-knowledge" },
-  { id: "mk5", label: "音の情景分析", angleDeg: angKnowledgeToMedia[4]!, domain: "media-knowledge" },
+  {
+    id: "mk1",
+    label: "AR（拡張現実）",
+    angleDeg: angKnowledgeToMedia[0]!,
+    domain: "media-knowledge",
+    segments: [
+      { text: "拡張", role: "modifier" },
+      { text: "現実", role: "field" },
+    ],
+  },
+  {
+    id: "mk2",
+    label: "音声認識",
+    angleDeg: angKnowledgeToMedia[1]!,
+    domain: "media-knowledge",
+    segments: [
+      { text: "音声", role: "subject" },
+      { text: "認識", role: "method" },
+    ],
+  },
+  {
+    id: "mk3",
+    label: "画像認識",
+    angleDeg: angKnowledgeToMedia[2]!,
+    domain: "media-knowledge",
+    segments: [
+      { text: "画像", role: "subject" },
+      { text: "認識", role: "method" },
+    ],
+  },
+  {
+    id: "mk4",
+    label: "インテリジェント拡声システム",
+    angleDeg: angKnowledgeToMedia[3]!,
+    domain: "media-knowledge",
+    segments: [
+      { text: "インテリジェント", role: "modifier" },
+      { text: "拡声", role: "subject" },
+      { text: "システム", role: "field" },
+    ],
+  },
+  {
+    id: "mk5",
+    label: "音の情景分析",
+    angleDeg: angKnowledgeToMedia[4]!,
+    domain: "media-knowledge",
+    segments: [
+      { text: "音", role: "subject" },
+      { text: "情景", role: "subject" },
+      { text: "分析", role: "method" },
+    ],
+  },
+
   // MEDIA × DESIGN
-  { id: "md1", label: "マルチモーダルインタフェース", angleDeg: angMediaToDesign[0]!, domain: "media-design" },
-  { id: "md2", label: "サウンドデザイン", angleDeg: angMediaToDesign[1]!, domain: "media-design" },
-  { id: "md3", label: "音環境デザイン", angleDeg: angMediaToDesign[2]!, domain: "media-design" },
-  { id: "md4", label: "メディアデザイン", angleDeg: angMediaToDesign[3]!, domain: "media-design" },
-  { id: "md5", label: "サイエンティフィック・ビジュアライゼーション", angleDeg: angMediaToDesign[4]!, domain: "media-design" },
+  {
+    id: "md1",
+    label: "マルチモーダルインタフェース",
+    angleDeg: angMediaToDesign[0]!,
+    domain: "media-design",
+    segments: [
+      { text: "マルチモーダル", role: "modifier" },
+      { text: "インタフェース", role: "field" },
+    ],
+  },
+  {
+    id: "md2",
+    label: "サウンドデザイン",
+    angleDeg: angMediaToDesign[1]!,
+    domain: "media-design",
+    segments: [
+      { text: "サウンド", role: "subject" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "md3",
+    label: "音環境デザイン",
+    angleDeg: angMediaToDesign[2]!,
+    domain: "media-design",
+    segments: [
+      { text: "音環境", role: "subject" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "md4",
+    label: "メディアデザイン",
+    angleDeg: angMediaToDesign[3]!,
+    domain: "media-design",
+    segments: [
+      { text: "メディア", role: "subject" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "md5",
+    label: "サイエンティフィック・ビジュアライゼーション",
+    angleDeg: angMediaToDesign[4]!,
+    domain: "media-design",
+    segments: [
+      { text: "サイエンティフィック", role: "modifier" },
+      { text: "ビジュアライゼーション", role: "field" },
+    ],
+  },
+
   // ALL
-  { id: "all1", label: "データ可視化", angleDeg: angDesignToKnowledge[0]!, domain: "all" },
-  { id: "all2", label: "IoT（Internet of Things）", angleDeg: angDesignToKnowledge[1]!, domain: "all" },
-  { id: "all3", label: "インテリジェントプロダクトデザイン", angleDeg: angDesignToKnowledge[2]!, domain: "all" },
-  { id: "all4", label: "インテリジェントインタフェースデザイン", angleDeg: angDesignToKnowledge[3]!, domain: "all" },
-  { id: "all5", label: "インタフェースエージェント", angleDeg: angDesignToKnowledge[4]!, domain: "all" },
+  {
+    id: "all1",
+    label: "データ可視化",
+    angleDeg: angDesignToKnowledge[0]!,
+    domain: "all",
+    segments: [
+      { text: "データ", role: "subject" },
+      { text: "可視化", role: "method" },
+    ],
+  },
+  {
+    id: "all2",
+    label: "IoT（Internet of Things）",
+    angleDeg: angDesignToKnowledge[1]!,
+    domain: "all",
+    segments: [
+      { text: "IoT", role: "field" },
+      { text: "モノ", role: "subject" },
+      { text: "インターネット", role: "field" },
+    ],
+  },
+  {
+    id: "all3",
+    label: "インテリジェントプロダクトデザイン",
+    angleDeg: angDesignToKnowledge[2]!,
+    domain: "all",
+    segments: [
+      { text: "インテリジェント", role: "modifier" },
+      { text: "プロダクト", role: "subject" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "all4",
+    label: "インテリジェントインタフェースデザイン",
+    angleDeg: angDesignToKnowledge[3]!,
+    domain: "all",
+    segments: [
+      { text: "インテリジェント", role: "modifier" },
+      { text: "インタフェース", role: "field" },
+      { text: "デザイン", role: "field" },
+    ],
+  },
+  {
+    id: "all5",
+    label: "インタフェースエージェント",
+    angleDeg: angDesignToKnowledge[4]!,
+    domain: "all",
+    segments: [
+      { text: "インタフェース", role: "field" },
+      { text: "エージェント", role: "subject" },
+    ],
+  },
 ];
 
 // ── ラベル方向（SVG版と同じロジック） ────────────────────────────────────────
@@ -137,41 +572,34 @@ function labelTransform(angleDeg: number): string {
   return "translate(5px, -50%)";
 }
 
-// ── 造語生成（DomainDiagram.vue と同じロジック） ──────────────────────────────
-function normalizeLabel(label: string): string {
-  return label
+// ── 造語生成（各キーワードの segments から1つ選び、文字列をそのまま連結） ───
+function normalizeSegmentText(text: string): string {
+  return text
     .replace(/[（(][^）)]*[）)]/g, "")
     .split(/[/／]/)[0]!
     .trim();
 }
-function blendChunk(label: string, role: "head" | "mid" | "tail"): string {
-  const clean = normalizeLabel(label);
-  const chars = [...clean];
-  const n = chars.length;
-  if (n === 0) return "";
-  if (n <= 2) return clean;
-  const chunk = Math.max(2, Math.min(4, Math.ceil(n / 3)));
-  if (role === "head") return chars.slice(0, chunk).join("");
-  if (role === "tail") return chars.slice(n - chunk).join("");
-  const midStart = Math.max(0, Math.floor(n / 2) - Math.floor(chunk / 2));
-  return chars.slice(midStart, midStart + chunk).join("");
+
+function pickRandomSegment(segments: KeywordSegment[]): KeywordSegment {
+  return segments[Math.floor(Math.random() * segments.length)]!;
 }
+
+function buildPortmanteauPart(kw: Keyword3D): string {
+  if (kw.segments.length === 0) return "";
+  return normalizeSegmentText(pickRandomSegment(kw.segments).text);
+}
+
 function buildPortmanteau(kws: Keyword3D[]): string {
-  const labels = kws.map((k) => k.label);
-  if (labels.length === 0) return "";
-  if (labels.length === 1) return normalizeLabel(labels[0]!);
-  if (labels.length === 2)
-    return blendChunk(labels[0]!, "head") + blendChunk(labels[1]!, "tail");
-  return (
-    blendChunk(labels[0]!, "head") +
-    blendChunk(labels[1]!, "mid") +
-    blendChunk(labels[2]!, "tail")
-  );
+  return kws.map((kw) => buildPortmanteauPart(kw)).join("");
 }
 
 // ── イージング ────────────────────────────────────────────────────────────────
-function easeOut(t: number) { return 1 - (1 - t) ** 2; }
-function easeIn(t: number) { return t * t; }
+function easeOut(t: number) {
+  return 1 - (1 - t) ** 2;
+}
+function easeIn(t: number) {
+  return t * t;
+}
 /** 弾むように拡大（爆発的ポップイン用） */
 function easeOutBack(t: number) {
   const c1 = 1.70158;
@@ -220,7 +648,10 @@ onMounted(async () => {
   renderer.setSize(w, h);
   renderer.setClearColor(0x000000, 0);
   Object.assign(renderer.domElement.style, {
-    position: "absolute", inset: "0", width: "100%", height: "100%",
+    position: "absolute",
+    inset: "0",
+    width: "100%",
+    height: "100%",
   });
   container.appendChild(renderer.domElement);
 
@@ -228,9 +659,13 @@ onMounted(async () => {
   const labelRenderer = new CSS2DRenderer();
   labelRenderer.setSize(w, h);
   Object.assign(labelRenderer.domElement.style, {
-    position: "absolute", top: "0", left: "0",
-    width: "100%", height: "100%",
-    pointerEvents: "none", overflow: "hidden",
+    position: "absolute",
+    top: "0",
+    left: "0",
+    width: "100%",
+    height: "100%",
+    pointerEvents: "none",
+    overflow: "hidden",
   });
   container.appendChild(labelRenderer.domElement);
 
@@ -390,7 +825,9 @@ onMounted(async () => {
     clearHL();
 
     // 3つ抽選・角度順にソート
-    hlPicked = shuffled(keywords).slice(0, 3).sort((a, b) => a.angleDeg - b.angleDeg);
+    hlPicked = shuffled(keywords)
+      .slice(0, 3)
+      .sort((a, b) => a.angleDeg - b.angleDeg);
     hlPickedIds = new Set(hlPicked.map((k) => k.id));
 
     // 接続ライン生成（閉じたループ）
@@ -401,7 +838,10 @@ onMounted(async () => {
     }
     hlLines = [];
     for (let i = 0; i < hlPicked.length; i++) {
-      const line = makeBezierLine(hlPicked[i]!, hlPicked[(i + 1) % hlPicked.length]!);
+      const line = makeBezierLine(
+        hlPicked[i]!,
+        hlPicked[(i + 1) % hlPicked.length]!,
+      );
       ringGroup.add(line);
       hlLines.push(line);
     }
@@ -444,7 +884,10 @@ onMounted(async () => {
       colors.push(c.r, c.g, c.b);
     }
     const fGeo = new THREE.BufferGeometry();
-    fGeo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    fGeo.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
+    );
     fGeo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
     const fMat = new THREE.MeshBasicMaterial({
       vertexColors: true,
@@ -558,8 +1001,7 @@ onMounted(async () => {
 
         if (hlCoinEl) {
           hlCoinEl.style.opacity = String(burstOpacity);
-          hlCoinEl.style.transform =
-            `translate(-50%, -50%) scale(${Math.max(0, burstScale)})`;
+          hlCoinEl.style.transform = `translate(-50%, -50%) scale(${Math.max(0, burstScale)})`;
         }
         if (hlCoinObj) hlCoinObj.position.y = COIN_LABEL_REST_Y;
       } else if (elapsed <= fadeStart) {
@@ -577,7 +1019,9 @@ onMounted(async () => {
         if (hlCoinObj) hlCoinObj.position.y = COIN_LABEL_REST_Y;
       } else {
         // 上へ移動しながらふわっと消える
-        const fadeT = easeOut(Math.min(1, (elapsed - fadeStart) / COIN_FADE_MS));
+        const fadeT = easeOut(
+          Math.min(1, (elapsed - fadeStart) / COIN_FADE_MS),
+        );
         const remain = 1 - fadeT;
         const riseY = fadeT * COIN_FADE_RISE_Y;
         fMat.opacity = remain * 0.32;
