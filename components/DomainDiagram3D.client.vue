@@ -1328,7 +1328,7 @@ onMounted(async () => {
     // ── 造語ラベル ─────────────────────────────────────────────────────────
     const word = buildPortmanteau(hlPicked);
     hlCoinEl = document.createElement("span");
-    hlCoinEl.textContent = word;
+    hlCoinEl.textContent = `"${word}"`;
     Object.assign(hlCoinEl.style, {
       display: "block",
       fontSize: "clamp(16px, 2.2vw, 28px)",
