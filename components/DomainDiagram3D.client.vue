@@ -37,9 +37,14 @@ const DOMAIN_HEX: Record<Domain, number> = {
 const RING_R = 5.2;
 const DOT_R = 0.1;
 /** SVG gap=9, R=210 を 3D 円周に換算したラベルとドット間距離 */
-const LABEL_GAP = (9 / 210) * RING_R * 1.55;
-const LABEL_DZ = (4 / 210) * RING_R;
+const LABEL_GAP = (9 / 210) * RING_R * 0.85;
 const LABEL_Y = 0.04;
+/** ラベル平面の高さ（ワールド単位） */
+const LABEL_PLANE_H = 0.5;
+/** ラベル Canvas のフォントサイズ（px）— 平面サイズに合わせて調整 */
+const LABEL_FONT_PX = 30;
+/** 正射影カメラの表示高さ（ワールド単位）— 平面ラベルの歪みを抑える */
+const ORTHO_VIEW_HEIGHT = 10;
 /** キーワードリングの回転速度（rad/s）— 約90秒で1周 */
 const RING_ROTATION_RAD_PER_S = (2 * Math.PI) / 90;
 const DOT_OPACITY_DIM = 0.15;
@@ -566,25 +571,6 @@ const keywords: Keyword3D[] = [
   },
 ];
 
-// ── ラベル配置（SVG版 labelXY / text-anchor 相当） ───────────────────────────
-/** 画面上の角度に応じたワールド XZ オフセット（リング回転と独立） */
-function labelWorldOffset(screenAngleDeg: number): { x: number; z: number } {
-  const d = ((screenAngleDeg % 360) + 360) % 360;
-  if (d >= 200 && d <= 340) return { x: 0, z: -LABEL_GAP };
-  if (d >= 82 && d <= 198) return { x: -LABEL_GAP, z: LABEL_DZ };
-  if (d > 10 && d < 80) return { x: 0, z: LABEL_GAP + LABEL_DZ };
-  return { x: LABEL_GAP, z: 0 };
-}
-
-/** CSS2D のアンカー（ドット側の辺を基準点に合わせる） */
-function labelTransform(screenAngleDeg: number): string {
-  const d = ((screenAngleDeg % 360) + 360) % 360;
-  if (d >= 200 && d <= 340) return "translate(-50%, calc(-100% - 3px))";
-  if (d >= 82 && d <= 198) return "translate(calc(-100% - 5px), -50%)";
-  if (d > 10 && d < 80) return "translate(-50%, 3px)";
-  return "translate(5px, -50%)";
-}
-
 // ── 造語生成（各キーワードの segments から1つ選び、文字列をそのまま連結） ───
 function normalizeSegmentText(text: string): string {
   return text
@@ -648,12 +634,26 @@ onMounted(async () => {
   // Scene
   const scene = new THREE.Scene();
 
-  // Camera
+  // Camera（正射影 — 円周平面のラベルが透視で歪まないようにする）
   const w = container.clientWidth || 800;
   const h = container.clientHeight || 500;
-  const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
-  camera.position.set(0, 4.8, 9.2);
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+  const fitOrthoCamera = (width: number, height: number) => {
+    const aspect = width / height;
+    camera.left = (-ORTHO_VIEW_HEIGHT * aspect) / 2;
+    camera.right = (ORTHO_VIEW_HEIGHT * aspect) / 2;
+    camera.top = ORTHO_VIEW_HEIGHT / 2;
+    camera.bottom = -ORTHO_VIEW_HEIGHT / 2;
+    camera.updateProjectionMatrix();
+  };
+  fitOrthoCamera(w, h);
+  camera.position.set(0, 8, 8);
   camera.lookAt(0, 0, 0);
+
+  const outward = new THREE.Vector3();
+  const up = new THREE.Vector3(0, 1, 0);
+  const tangent = new THREE.Vector3();
+  const labelBasis = new THREE.Matrix4();
 
   // WebGL renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -665,10 +665,11 @@ onMounted(async () => {
     inset: "0",
     width: "100%",
     height: "100%",
+    zIndex: "0",
   });
   container.appendChild(renderer.domElement);
 
-  // CSS2D renderer（HTMLラベル用）
+  // CSS2D renderer（合成ワードのみ）
   const labelRenderer = new CSS2DRenderer();
   labelRenderer.setSize(w, h);
   Object.assign(labelRenderer.domElement.style, {
@@ -679,6 +680,7 @@ onMounted(async () => {
     height: "100%",
     pointerEvents: "none",
     overflow: "hidden",
+    zIndex: "1",
   });
   container.appendChild(labelRenderer.domElement);
 
@@ -697,25 +699,75 @@ onMounted(async () => {
 
   const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
   const dotMeshMap = new Map<string, THREE.Mesh>();
-  const labelElMap = new Map<string, HTMLSpanElement>();
-  const labelObjMap = new Map<string, InstanceType<typeof CSS2DObject>>();
+  const labelMeshMap = new Map<string, THREE.Mesh>();
   const dotOrigPos = new Map<string, THREE.Vector3>();
 
-  /** ドット位置 + 画面軸オフセットでラベルを追従（リング回転時のずれ防止） */
-  function updateLabelLayout(ringRotY: number) {
-    const rotDeg = (ringRotY * 180) / Math.PI;
-    for (const kw of keywords) {
-      // ringGroup の Y 回転後のワールド座標は angle - rotation
-      const rad = (kw.angleDeg * Math.PI) / 180 - ringRotY;
-      const dotX = RING_R * Math.cos(rad);
-      const dotZ = RING_R * Math.sin(rad);
-      const screenDeg = kw.angleDeg - rotDeg;
-      const off = labelWorldOffset(screenDeg);
-      labelObjMap
-        .get(kw.id)!
-        .position.set(dotX + off.x, LABEL_Y, dotZ + off.z);
-      labelElMap.get(kw.id)!.style.transform = labelTransform(screenDeg);
-    }
+  /** 円周 XZ 平面にラベルを配置（中心角度に傾け、外側へ左寄せ） */
+  function createRadialLabelMesh(
+    text: string,
+    colorCss: string,
+    angleDeg: number,
+    opacity: number,
+  ): THREE.Mesh {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const fontPx = LABEL_FONT_PX;
+    const font = `500 ${fontPx}px var(--font-body, system-ui, sans-serif)`;
+
+    const probe = document.createElement("canvas").getContext("2d")!;
+    probe.font = font;
+    const textW = probe.measureText(text).width;
+    const padX = 8;
+    const padY = 6;
+    const logicalW = textW + padX * 2;
+    const logicalH = fontPx + padY * 2;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(logicalW * dpr);
+    canvas.height = Math.ceil(logicalH * dpr);
+    const ctx = canvas.getContext("2d")!;
+    ctx.scale(dpr, dpr);
+    ctx.font = font;
+    ctx.fillStyle = colorCss;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, padX, logicalH / 2);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+
+    const planeH = LABEL_PLANE_H;
+    const planeW = planeH * (logicalW / logicalH);
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(planeW, planeH),
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    );
+
+    const rad = (angleDeg * Math.PI) / 180;
+    outward.set(Math.cos(rad), 0, Math.sin(rad));
+    tangent.crossVectors(up, outward).normalize();
+
+    const innerR = RING_R + LABEL_GAP;
+    mesh.position.set(
+      outward.x * (innerR + planeW / 2),
+      LABEL_Y,
+      outward.z * (innerR + planeW / 2),
+    );
+
+    // XZ 平面に固定（ビルボードなし）: 法線 +Y、テキストは外側へ左寄せ
+    labelBasis.makeBasis(outward, tangent, up);
+    mesh.quaternion.setFromRotationMatrix(labelBasis);
+    mesh.renderOrder = 2;
+
+    mesh.userData.labelTexture = texture;
+    return mesh;
   }
 
   function applyKeywordVisibility(pickedIds: Set<string> | null) {
@@ -723,9 +775,8 @@ onMounted(async () => {
       const selected = pickedIds?.has(kw.id) ?? false;
       (dotMeshMap.get(kw.id)!.material as THREE.MeshBasicMaterial).opacity =
         selected ? DOT_OPACITY_ACTIVE : DOT_OPACITY_DIM;
-      labelElMap.get(kw.id)!.style.opacity = String(
-        selected ? LABEL_OPACITY_ACTIVE : LABEL_OPACITY_DIM,
-      );
+      (labelMeshMap.get(kw.id)!.material as THREE.MeshBasicMaterial).opacity =
+        selected ? LABEL_OPACITY_ACTIVE : LABEL_OPACITY_DIM;
     }
   }
 
@@ -746,26 +797,16 @@ onMounted(async () => {
     dotMeshMap.set(kw.id, dot);
     dotOrigPos.set(kw.id, dot.position.clone());
 
-    // ラベル（CSS2DObject）
-    const el = document.createElement("span");
-    el.textContent = kw.label;
-    el.style.cssText = [
-      "display:block",
-      "font-size:9px",
-      "line-height:1.3",
-      `color:${DOMAIN_CSS[kw.domain]}`,
-      "white-space:nowrap",
-      "font-family:var(--font-body,system-ui,sans-serif)",
-      "pointer-events:none",
-      `transform:${labelTransform(kw.angleDeg)}`,
-      `opacity:${LABEL_OPACITY_DIM}`,
-    ].join(";");
-    labelElMap.set(kw.id, el);
-    const labelObj = new CSS2DObject(el);
-    labelObjMap.set(kw.id, labelObj);
-    scene.add(labelObj);
+    // ラベル（Canvas テクスチャ平面 — 円周に沿って角度傾斜）
+    const labelMesh = createRadialLabelMesh(
+      kw.label,
+      DOMAIN_CSS[kw.domain],
+      kw.angleDeg,
+      LABEL_OPACITY_DIM,
+    );
+    labelMeshMap.set(kw.id, labelMesh);
+    ringGroup.add(labelMesh);
   }
-  updateLabelLayout(0);
 
   // ── ハイライトアニメーション ──────────────────────────────────────────────
   type HLPhase = "idle" | "draw" | "merge" | "coin" | "shrink";
@@ -1094,7 +1135,6 @@ onMounted(async () => {
       }
     }
     lastFrameTime = now;
-    updateLabelLayout(ringGroup.rotation.y);
     if (!reduceMotion) updateHighlight(now);
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
@@ -1108,8 +1148,7 @@ onMounted(async () => {
   const resizeObs = new ResizeObserver(() => {
     const cw = container.clientWidth;
     const ch = container.clientHeight;
-    camera.aspect = cw / ch;
-    camera.updateProjectionMatrix();
+    fitOrthoCamera(cw, ch);
     renderer.setSize(cw, ch);
     labelRenderer.setSize(cw, ch);
   });
