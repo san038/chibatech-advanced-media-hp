@@ -58,7 +58,8 @@ const CENTER_TITLE_PX_ABOVE_CIRCLE = 1;
 const COIN_LABEL_OFFSET_ABOVE_TITLE = 0.4;
 /** ラベル平面の高さ（ワールド単位） */
 const LABEL_PLANE_H = 0.62;
-const HUB_LABEL_PLANE_H = 0.36;
+const HUB_LABEL_PLANE_H = 0.72;
+const HUB_LABEL_FONT_PX = 64;
 /** ラベル Canvas のフォントサイズ（px）— 平面サイズに合わせて調整 */
 const LABEL_FONT_PX = 36;
 /** リングを手前に寝かせる傾き（rad・負で上端が手前に） */
@@ -941,19 +942,20 @@ onMounted(async () => {
 
     const hubDot = new THREE.Mesh(
       new THREE.SphereGeometry(DOMAIN_HUB_DOT_R, 12, 12),
-      new THREE.MeshBasicMaterial({ color: DIAGRAM_WHITE_HEX }),
+      new THREE.MeshBasicMaterial({ color: hub.hex }),
     );
     hubDot.position.copy(hubPos);
     ringGroup.add(hubDot);
 
     const hubLabel = createRadialLabelMesh(
       hub.label,
-      DIAGRAM_WHITE_CSS,
+      hub.css,
       hub.angleDeg,
       0.9,
       DOMAIN_HUB_R,
       HUB_LABEL_PLANE_H,
       TIER_HUB_LABEL_Y,
+      HUB_LABEL_FONT_PX,
     );
     ringGroup.add(hubLabel);
 
@@ -987,9 +989,9 @@ onMounted(async () => {
     anchorR = RING_R,
     planeH = LABEL_PLANE_H,
     labelY = TIER_KEYWORD_LABEL_Y,
+    fontPx = LABEL_FONT_PX,
   ): THREE.Mesh {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const fontPx = LABEL_FONT_PX;
     const font = `500 ${fontPx}px var(--font-body, system-ui, sans-serif)`;
 
     const probe = document.createElement("canvas").getContext("2d")!;
