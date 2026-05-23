@@ -53,4 +53,10 @@ export default defineNuxtConfig({
   typescript: {
     strict: true,
   },
+
+  vite: {
+    optimizeDeps: {
+      include: ['three'],
+    },
+  },
 })

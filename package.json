@@ -11,6 +11,7 @@
   "scripts": {
     "build": "node scripts/build-note-data.mjs && nuxt build",
     "dev": "nuxt dev",
+    "dev:fresh": "rm -rf .nuxt node_modules/.cache && nuxt dev",
     "generate": "node scripts/build-note-data.mjs && nuxt generate",
     "generate:gh-pages": "node scripts/build-note-data.mjs && nuxt generate && cp .output/public/index.html .output/public/404.html",
     "preview": "nuxt preview",
@@ -19,11 +20,13 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^0.7.0",
+    "@types/three": "^0.184.1",
     "nuxt": "^3.17.7",
     "typescript": "^5.7.2",
     "vue-tsc": "^3.2.7"
   },
   "dependencies": {
-    "fast-xml-parser": "^4.5.0"
+    "fast-xml-parser": "^4.5.0",
+    "three": "^0.184.0"
   }
 }

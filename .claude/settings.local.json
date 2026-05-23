@@ -11,7 +11,11 @@
       "Bash(npm ci:*)",
       "Bash(grep:*)",
       "Bash(sed -n '5987,5995p' /Users/sannomiya/Desktop/001_Git/chibatech-adm-hp/package-lock.json && sed -n '6177,6185p' /Users/sannomiya/Desktop/001_Git/chibatech-adm-hp/package-lock.json)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(npx nuxi:*)",
+      "Bash(curl:*)",
+      "Bash(kill 39895:*)",
+      "Bash(NUXT_IGNORE_LOCK=1 npx nuxt:*)"
     ]
   }
 }

@@ -3,7 +3,7 @@
     <!-- Background visual element -->
     <div class="hero__bg" aria-hidden="true">
       <div class="hero__diagram">
-        <DomainDiagram variant="hero" />
+        <DomainDiagram3D />
       </div>
       <div class="hero__bg-overlay" />
     </div>
