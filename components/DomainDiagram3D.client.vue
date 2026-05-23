@@ -53,7 +53,7 @@ const TIER_KEYWORD_Y = 0;
 const TIER_KEYWORD_LABEL_Y = 0.04;
 const TIER_HUB_Y = 0.42;
 const TIER_HUB_LABEL_Y = 0.48;
-const TIER_CENTER_DISK_Y = 0.82;
+const TIER_CENTER_DISK_Y = TIER_KEYWORD_Y + 0.1;
 /** 中心リング外周に沿った学科ラベルの半径（ワールド単位） */
 const CENTER_LABEL_ARC_R = CENTER_HUB_R * 0.8;
 /** 弧の中心角（度）— 0°=+X */
