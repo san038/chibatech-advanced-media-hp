@@ -36,7 +36,10 @@ const DOMAIN_HEX: Record<Domain, number> = {
 
 const RING_R = 5.2;
 const DOT_R = 0.1;
-const LABEL_R = 6.05;
+/** SVG gap=9, R=210 を 3D 円周に換算したラベルとドット間距離 */
+const LABEL_GAP = (9 / 210) * RING_R * 1.55;
+const LABEL_DZ = (4 / 210) * RING_R;
+const LABEL_Y = 0.04;
 /** キーワードリングの回転速度（rad/s）— 約90秒で1周 */
 const RING_ROTATION_RAD_PER_S = (2 * Math.PI) / 90;
 const DOT_OPACITY_DIM = 0.15;
@@ -563,9 +566,19 @@ const keywords: Keyword3D[] = [
   },
 ];
 
-// ── ラベル方向（SVG版と同じロジック） ────────────────────────────────────────
-function labelTransform(angleDeg: number): string {
-  const d = ((angleDeg % 360) + 360) % 360;
+// ── ラベル配置（SVG版 labelXY / text-anchor 相当） ───────────────────────────
+/** 画面上の角度に応じたワールド XZ オフセット（リング回転と独立） */
+function labelWorldOffset(screenAngleDeg: number): { x: number; z: number } {
+  const d = ((screenAngleDeg % 360) + 360) % 360;
+  if (d >= 200 && d <= 340) return { x: 0, z: -LABEL_GAP };
+  if (d >= 82 && d <= 198) return { x: -LABEL_GAP, z: LABEL_DZ };
+  if (d > 10 && d < 80) return { x: 0, z: LABEL_GAP + LABEL_DZ };
+  return { x: LABEL_GAP, z: 0 };
+}
+
+/** CSS2D のアンカー（ドット側の辺を基準点に合わせる） */
+function labelTransform(screenAngleDeg: number): string {
+  const d = ((screenAngleDeg % 360) + 360) % 360;
   if (d >= 200 && d <= 340) return "translate(-50%, calc(-100% - 3px))";
   if (d >= 82 && d <= 198) return "translate(calc(-100% - 5px), -50%)";
   if (d > 10 && d < 80) return "translate(-50%, 3px)";
@@ -685,7 +698,25 @@ onMounted(async () => {
   const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
   const dotMeshMap = new Map<string, THREE.Mesh>();
   const labelElMap = new Map<string, HTMLSpanElement>();
+  const labelObjMap = new Map<string, InstanceType<typeof CSS2DObject>>();
   const dotOrigPos = new Map<string, THREE.Vector3>();
+
+  /** ドット位置 + 画面軸オフセットでラベルを追従（リング回転時のずれ防止） */
+  function updateLabelLayout(ringRotY: number) {
+    const rotDeg = (ringRotY * 180) / Math.PI;
+    for (const kw of keywords) {
+      // ringGroup の Y 回転後のワールド座標は angle - rotation
+      const rad = (kw.angleDeg * Math.PI) / 180 - ringRotY;
+      const dotX = RING_R * Math.cos(rad);
+      const dotZ = RING_R * Math.sin(rad);
+      const screenDeg = kw.angleDeg - rotDeg;
+      const off = labelWorldOffset(screenDeg);
+      labelObjMap
+        .get(kw.id)!
+        .position.set(dotX + off.x, LABEL_Y, dotZ + off.z);
+      labelElMap.get(kw.id)!.style.transform = labelTransform(screenDeg);
+    }
+  }
 
   function applyKeywordVisibility(pickedIds: Set<string> | null) {
     for (const kw of keywords) {
@@ -731,9 +762,10 @@ onMounted(async () => {
     ].join(";");
     labelElMap.set(kw.id, el);
     const labelObj = new CSS2DObject(el);
-    labelObj.position.set(LABEL_R * dx, 0, LABEL_R * dz);
-    ringGroup.add(labelObj);
+    labelObjMap.set(kw.id, labelObj);
+    scene.add(labelObj);
   }
+  updateLabelLayout(0);
 
   // ── ハイライトアニメーション ──────────────────────────────────────────────
   type HLPhase = "idle" | "draw" | "merge" | "coin" | "shrink";
@@ -1062,6 +1094,7 @@ onMounted(async () => {
       }
     }
     lastFrameTime = now;
+    updateLabelLayout(ringGroup.rotation.y);
     if (!reduceMotion) updateHighlight(now);
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
