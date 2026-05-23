@@ -6,8 +6,8 @@
       <div class="hero__bg-overlay" />
     </div>
 
-    <!-- Main content - centered -->
-    <div class="hero__content container">
+    <!-- Title + scroll: anchored above bottom -->
+    <div class="hero__bottom container">
       <div class="hero__text-area">
         <div class="hero__title-block">
           <p class="hero__label text-label">千葉工業大学 知能メディア工学科</p>
@@ -23,12 +23,11 @@
           </h1>
         </div>
       </div>
-    </div>
 
-    <!-- Scroll indicator -->
-    <div class="hero__scroll-indicator" aria-hidden="true">
-      <span class="hero__scroll-text">Scroll</span>
-      <div class="hero__scroll-line" />
+      <div class="hero__scroll-indicator" aria-hidden="true">
+        <span class="hero__scroll-text">Scroll</span>
+        <div class="hero__scroll-line" />
+      </div>
     </div>
   </section>
 </template>
@@ -41,7 +40,8 @@
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  justify-content: flex-end;
   background-color: #ffffff;
   overflow: hidden;
 }
@@ -66,12 +66,16 @@
   z-index: 1;
 }
 
-/* Content */
-.hero__content {
+/* Bottom block: title above scroll */
+.hero__bottom {
   position: relative;
   z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
   width: 100%;
-  padding-top: 0px; /* header height */
+  padding-bottom: max(var(--space-sm), env(safe-area-inset-bottom, 0px));
 }
 
 .hero__text-area {
@@ -161,10 +165,6 @@
 
 /* Scroll indicator */
 .hero__scroll-indicator {
-  position: absolute;
-  bottom: var(--space-sm);
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
