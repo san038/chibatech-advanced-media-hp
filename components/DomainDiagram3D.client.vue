@@ -37,6 +37,8 @@ const DOMAIN_HEX: Record<Domain, number> = {
 const RING_R = 5.2;
 const DOT_R = 0.1;
 const LABEL_R = 6.05;
+/** キーワードリングの回転速度（rad/s）— 約90秒で1周 */
+const RING_ROTATION_RAD_PER_S = (2 * Math.PI) / 90;
 
 // アニメーションタイミング（SVG版と同じ値）
 const HIGHLIGHT_DRAW_MS = 1200;
@@ -228,7 +230,10 @@ onMounted(async () => {
   fillLight.position.set(-6, 1, -8);
   scene.add(fillLight);
 
-  // ── ドット & ラベル ──────────────────────────────────────────────────────────
+  // ── ドット & ラベル（リンググループで常時回転） ───────────────────────────────
+  const ringGroup = new THREE.Group();
+  scene.add(ringGroup);
+
   const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
   const dotMeshMap = new Map<string, THREE.Mesh>();
   const dotOrigPos = new Map<string, THREE.Vector3>();
@@ -246,7 +251,7 @@ onMounted(async () => {
     });
     const dot = new THREE.Mesh(dotGeo, mat);
     dot.position.set(RING_R * dx, 0, RING_R * dz);
-    scene.add(dot);
+    ringGroup.add(dot);
     dotMeshMap.set(kw.id, dot);
     dotOrigPos.set(kw.id, dot.position.clone());
 
@@ -265,7 +270,7 @@ onMounted(async () => {
     ].join(";");
     const labelObj = new CSS2DObject(el);
     labelObj.position.set(LABEL_R * dx, 0, LABEL_R * dz);
-    scene.add(labelObj);
+    ringGroup.add(labelObj);
   }
 
   // ── ハイライトアニメーション ──────────────────────────────────────────────
@@ -338,14 +343,14 @@ onMounted(async () => {
 
     // 接続ライン生成（閉じたループ）
     for (const line of hlLines) {
-      scene.remove(line);
+      ringGroup.remove(line);
       line.geometry.dispose();
       (line.material as THREE.LineBasicMaterial).dispose();
     }
     hlLines = [];
     for (let i = 0; i < hlPicked.length; i++) {
       const line = makeBezierLine(hlPicked[i]!, hlPicked[(i + 1) % hlPicked.length]!);
-      scene.add(line);
+      ringGroup.add(line);
       hlLines.push(line);
     }
 
@@ -410,7 +415,7 @@ onMounted(async () => {
       depthWrite: false,
     });
     hlFillMesh = new THREE.Mesh(fGeo, fMat);
-    scene.add(hlFillMesh);
+    ringGroup.add(hlFillMesh);
 
     // ── 造語ラベル ─────────────────────────────────────────────────────────
     const word = buildPortmanteau(hlPicked);
@@ -444,7 +449,7 @@ onMounted(async () => {
 
     // 塗り面と造語を除去
     if (hlFillMesh) {
-      scene.remove(hlFillMesh);
+      ringGroup.remove(hlFillMesh);
       hlFillMesh.geometry.dispose();
       (hlFillMesh.material as THREE.MeshBasicMaterial).dispose();
       hlFillMesh = null;
@@ -543,8 +548,16 @@ onMounted(async () => {
 
   // ── メインアニメーションループ ────────────────────────────────────────────
   let rafId = 0;
+  let lastFrameTime = 0;
   const animate = (now: number) => {
     rafId = requestAnimationFrame(animate);
+    if (lastFrameTime > 0) {
+      const delta = Math.min(0.05, (now - lastFrameTime) / 1000);
+      if (!reduceMotion) {
+        ringGroup.rotation.y += RING_ROTATION_RAD_PER_S * delta;
+      }
+    }
+    lastFrameTime = now;
     if (!reduceMotion) updateHighlight(now);
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
