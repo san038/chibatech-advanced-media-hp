@@ -86,6 +86,8 @@ const HIGHLIGHT_MERGE_MS = 1500;
 const COIN_POP_MS = 450;
 const COIN_HOLD_MS = 2000;
 const COIN_FADE_MS = 800;
+/** 合成ワードの下からスライドイン距離（px） */
+const COIN_SLIDE_IN_PX = 28;
 const HIGHLIGHT_SHRINK_MS = 600;
 const HIGHLIGHT_PAUSE_MS = 250;
 const CENTER_SPHERE_R = 0.38;
@@ -1325,25 +1327,29 @@ onMounted(async () => {
     // 中央ドット爆発（造語と同タイミング）
     createCenterSphere();
 
-    // ── 造語ラベル ─────────────────────────────────────────────────────────
+    // ── 造語ラベル（CSS2DRenderer が外側 div の transform を毎フレーム上書きするため、
+    //    スライドは内側 span で行う）
     const word = buildPortmanteau(hlPicked);
+    const coinWrap = document.createElement("div");
+    Object.assign(coinWrap.style, {
+      pointerEvents: "none",
+      textAlign: "center",
+    });
     hlCoinEl = document.createElement("span");
     hlCoinEl.textContent = `"${word}"`;
     Object.assign(hlCoinEl.style, {
-      display: "block",
+      display: "inline-block",
       fontSize: "clamp(16px, 2.2vw, 28px)",
       fontWeight: "700",
       color: DIAGRAM_WHITE_CSS,
-      textAlign: "center",
-      transform: "translate(-50%, -50%) scale(0)",
+      transform: `translateY(${COIN_SLIDE_IN_PX}px)`,
       opacity: "0",
       letterSpacing: "-0.02em",
-      pointerEvents: "none",
       fontFamily: "var(--font-display, system-ui, sans-serif)",
-      zIndex: "10",
       whiteSpace: "nowrap",
     });
-    hlCoinObj = new CSS2DObject(hlCoinEl);
+    coinWrap.appendChild(hlCoinEl);
+    hlCoinObj = new CSS2DObject(coinWrap);
     hlCoinObj.position.set(0, getCoinLabelY(), 0);
     scene.add(hlCoinObj);
 
@@ -1410,8 +1416,10 @@ onMounted(async () => {
         if (centerMat) centerMat.opacity = burstOpacity * 0.92;
 
         if (hlCoinEl) {
+          const slideT = easeOut(popProgress);
+          const slideY = (1 - slideT) * COIN_SLIDE_IN_PX;
           hlCoinEl.style.opacity = String(burstOpacity);
-          hlCoinEl.style.transform = `translate(-50%, -50%) scale(${Math.max(0.001, burstScale)})`;
+          hlCoinEl.style.transform = `translateY(${slideY}px)`;
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       } else if (elapsed <= fadeStart) {
@@ -1422,7 +1430,7 @@ onMounted(async () => {
         if (centerMat) centerMat.opacity = 0.92;
         if (hlCoinEl) {
           hlCoinEl.style.opacity = "1";
-          hlCoinEl.style.transform = "translate(-50%, -50%) scale(1)";
+          hlCoinEl.style.transform = "translateY(0)";
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       } else {
@@ -1439,7 +1447,7 @@ onMounted(async () => {
 
         if (hlCoinEl) {
           hlCoinEl.style.opacity = String(remain);
-          hlCoinEl.style.transform = "translate(-50%, -50%) scale(1)";
+          hlCoinEl.style.transform = `translateY(${-10 * fadeT}px)`;
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       }
