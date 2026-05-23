@@ -41,6 +41,9 @@ const CENTER_HUB_R = 0.78;
 const DOMAIN_HUB_R = 2.85;
 const DOMAIN_HUB_DOT_R = 0.13;
 const BRANCH_LINE_OPACITY = 0.28;
+const DIAGRAM_WHITE_HEX = 0xffffff;
+const DIAGRAM_WHITE_CSS = "#ffffff";
+const DIAGRAM_BG_HEX = 0x1c1b1b;
 /** SVG gap=9, R=210 を 3D 円周に換算したラベルとドット間距離 */
 const LABEL_GAP = (9 / 210) * RING_R * 0.85;
 const LABEL_Y = 0.04;
@@ -852,9 +855,9 @@ onMounted(async () => {
   const centerDisk = new THREE.Mesh(
     new THREE.CircleGeometry(CENTER_HUB_R * 0.88, 64),
     new THREE.MeshBasicMaterial({
-      color: 0xf8f8f8,
+      color: DIAGRAM_BG_HEX,
       transparent: true,
-      opacity: 0.96,
+      opacity: 0.98,
       side: THREE.DoubleSide,
     }),
   );
@@ -865,9 +868,9 @@ onMounted(async () => {
   const centerRing = new THREE.Mesh(
     new THREE.RingGeometry(CENTER_HUB_R * 0.88, CENTER_HUB_R, 64),
     new THREE.MeshBasicMaterial({
-      color: 0x2a2a2a,
+      color: DIAGRAM_WHITE_HEX,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.5,
       side: THREE.DoubleSide,
     }),
   );
@@ -877,7 +880,7 @@ onMounted(async () => {
 
   const centerTitle = createCenteredTextPlane(
     CENTER_LABEL_TEXT,
-    "#2a2a2a",
+    DIAGRAM_WHITE_CSS,
     22,
     0.38,
     0.95,
@@ -893,14 +896,14 @@ onMounted(async () => {
 
     const hubDot = new THREE.Mesh(
       new THREE.SphereGeometry(DOMAIN_HUB_DOT_R, 12, 12),
-      new THREE.MeshBasicMaterial({ color: hub.hex }),
+      new THREE.MeshBasicMaterial({ color: DIAGRAM_WHITE_HEX }),
     );
     hubDot.position.copy(hubPos);
     ringGroup.add(hubDot);
 
     const hubLabel = createRadialLabelMesh(
       hub.label,
-      hub.css,
+      DIAGRAM_WHITE_CSS,
       hub.angleDeg,
       0.9,
       DOMAIN_HUB_R,
@@ -911,7 +914,7 @@ onMounted(async () => {
     addLineStraight(
       new THREE.Vector3(0, 0.005, 0),
       hubPos,
-      hub.hex,
+      DIAGRAM_WHITE_HEX,
       BRANCH_LINE_OPACITY * 1.6,
     );
   }
@@ -923,7 +926,7 @@ onMounted(async () => {
     addLineCurve(
       hubPos,
       kwPos,
-      DOMAIN_HEX[kw.domain],
+      DIAGRAM_WHITE_HEX,
       BRANCH_LINE_OPACITY,
       0.38,
     );
@@ -1015,7 +1018,7 @@ onMounted(async () => {
 
     // 各ドットは固有のマテリアル（opacity を個別制御するため）
     const mat = new THREE.MeshBasicMaterial({
-      color: DOMAIN_HEX[kw.domain],
+      color: DIAGRAM_WHITE_HEX,
       transparent: true,
       opacity: DOT_OPACITY_DIM,
     });
@@ -1028,7 +1031,7 @@ onMounted(async () => {
     // ラベル（Canvas テクスチャ平面 — 円周に沿って角度傾斜）
     const labelMesh = createRadialLabelMesh(
       kw.label,
-      DOMAIN_CSS[kw.domain],
+      DIAGRAM_WHITE_CSS,
       kw.angleDeg,
       LABEL_OPACITY_DIM,
     );
@@ -1114,7 +1117,7 @@ onMounted(async () => {
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
     geo.setDrawRange(0, 0);
     const mat = new THREE.LineBasicMaterial({
-      color: 0x4a6eb8,
+      color: DIAGRAM_WHITE_HEX,
       transparent: true,
       opacity: 0.85,
     });
@@ -1181,8 +1184,7 @@ onMounted(async () => {
     for (const kw of hlPicked) {
       const p = kwPos(kw);
       positions.push(p.x, 0.02, p.z);
-      const c = new THREE.Color(DOMAIN_HEX[kw.domain]);
-      colors.push(c.r, c.g, c.b);
+      colors.push(1, 1, 1);
     }
     const fGeo = new THREE.BufferGeometry();
     fGeo.setAttribute(
@@ -1208,7 +1210,7 @@ onMounted(async () => {
       display: "block",
       fontSize: "clamp(14px, 1.8vw, 22px)",
       fontWeight: "700",
-      color: "#4a6eb8",
+      color: DIAGRAM_WHITE_CSS,
       textAlign: "center",
       transform: "translate(-50%, -50%) scale(0)",
       opacity: "0",

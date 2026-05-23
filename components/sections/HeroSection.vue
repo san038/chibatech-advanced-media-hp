@@ -44,7 +44,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  background-color: #ffffff;
+  background-color: #1c1b1b;
   overflow: hidden;
 }
 
@@ -73,10 +73,9 @@
   pointer-events: none;
   background: linear-gradient(
     to top,
-    #ffffff 0%,
-    rgba(255, 255, 255, 0.88) 22%,
-    rgba(255, 255, 255, 0.18) 55%,
-    transparent 78%
+    #1c1b1b 0%,
+    rgba(28, 27, 27, 0.85) 28%,
+    transparent 72%
   );
 }
 
@@ -193,14 +192,14 @@
   font-size: 0.65rem;
   font-weight: 400;
   letter-spacing: 0.15em;
-  color: rgba(15, 14, 26, 0.4);
+  color: rgba(252, 249, 248, 0.45);
   text-transform: uppercase;
 }
 
 .hero__scroll-line {
   width: 1px;
   height: 48px;
-  background: linear-gradient(to bottom, rgba(15, 14, 26, 0.4), transparent);
+  background: linear-gradient(to bottom, rgba(252, 249, 248, 0.45), transparent);
   animation: scroll-line 1.6s ease-in-out infinite;
 }
 
