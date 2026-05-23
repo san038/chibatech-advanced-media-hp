@@ -63,7 +63,6 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding-bottom: 80px;
 }
 
 /* 下部タイトル帯の可読性 */
