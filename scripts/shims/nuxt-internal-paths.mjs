@@ -1,4 +1,4 @@
-// `#internal/nuxt/paths` の Node 解決用（Vite 仮想の代替）。本番は npm run start。
+// `#internal/nuxt/paths` の Node 解決用（package.json imports から参照）
 export function baseURL() {
   const env = typeof process !== 'undefined' ? process.env : undefined
   return env?.NUXT_APP_BASE_URL ?? '/'

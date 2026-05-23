@@ -2,7 +2,9 @@
   <section class="hero">
     <!-- Background visual element -->
     <div class="hero__bg" aria-hidden="true">
-      <HeroKeywordsBg />
+      <div class="hero__diagram">
+        <DomainDiagram variant="hero" />
+      </div>
       <div class="hero__bg-overlay" />
     </div>
 
@@ -53,17 +55,30 @@
   pointer-events: none;
 }
 
-/* キーワードレイヤー */
-.hero__bg :deep(.hero-kw-bg) {
+.hero__diagram {
+  position: absolute;
+  inset: 0;
   z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding-bottom: 80px;
 }
 
-/* グラデーションオーバーレイ: 左=完全な黒、右=透明
-   キーワードの上、コンテンツの下に配置 */
+/* 下部タイトル帯の可読性 */
 .hero__bg-overlay {
   position: absolute;
   inset: 0;
   z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to top,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0.92) 18%,
+    rgba(255, 255, 255, 0.45) 42%,
+    transparent 68%
+  );
 }
 
 /* Bottom block: title above scroll */

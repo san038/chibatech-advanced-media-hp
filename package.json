@@ -2,13 +2,19 @@
   "name": "chibatech-adm-hp",
   "private": true,
   "type": "module",
+  "imports": {
+    "#internal/nuxt/paths": "./scripts/shims/nuxt-internal-paths.mjs"
+  },
+  "engines": {
+    "node": ">=20 <=24"
+  },
   "scripts": {
     "build": "node scripts/build-note-data.mjs && nuxt build",
     "dev": "nuxt dev",
     "generate": "node scripts/build-note-data.mjs && nuxt generate",
     "generate:gh-pages": "node scripts/build-note-data.mjs && nuxt generate && cp .output/public/index.html .output/public/404.html",
     "preview": "nuxt preview",
-    "start": "node .output/server/index.mjs",
+    "start": "npx serve .output/public",
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {

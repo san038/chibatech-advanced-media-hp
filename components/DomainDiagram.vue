@@ -1,10 +1,10 @@
 <template>
-  <div class="domain-diagram">
+  <div class="domain-diagram" :class="{ 'domain-diagram--hero': variant === 'hero' }">
     <svg
       viewBox="0 0 1000 590"
       xmlns="http://www.w3.org/2000/svg"
       class="domain-diagram__svg"
-      @mouseleave="hoveredDomain = null"
+      @mouseleave="setHovered(null)"
     >
       <!-- Circle boundary -->
       <!-- Three domain points at 120° intervals: Media(top), Knowledge(bottom-left), Design(bottom-right) -->
@@ -66,8 +66,8 @@
         :key="dl.id"
         class="kw-group"
         :style="{ opacity: kwOpacity(dl.domain) }"
-        @mouseenter="hoveredDomain = dl.domain"
-        @mouseleave="hoveredDomain = null"
+        @mouseenter="setHovered(dl.domain)"
+        @mouseleave="setHovered(null)"
       >
         <rect
           v-bind="domainLabelPillRect(dl)"
@@ -91,8 +91,8 @@
         :key="kw.id"
         class="kw-group"
         :style="{ opacity: keywordGroupOpacity(kw) }"
-        @mouseenter="hoveredDomain = kw.domain"
-        @mouseleave="hoveredDomain = null"
+        @mouseenter="setHovered(kw.domain)"
+        @mouseleave="setHovered(null)"
       >
         <circle
           :cx="kwXY(kw).x"
@@ -135,6 +135,14 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, useId } from "vue";
 
+const props = withDefaults(
+  defineProps<{
+    /** default: about 等のコンテンツ幅 / hero: ヒーロー背景用の大型表示 */
+    variant?: "default" | "hero";
+  }>(),
+  { variant: "default" },
+);
+
 type Domain =
   | "media"
   | "knowledge"
@@ -170,6 +178,11 @@ interface DomainLabelSpec {
 }
 
 const hoveredDomain = ref<Domain | null>(null);
+
+function setHovered(domain: Domain | null): void {
+  if (props.variant === "hero") return;
+  hoveredDomain.value = domain;
+}
 
 const COLORS: Record<Domain, string> = {
   media: "#a14e58",
@@ -908,6 +921,38 @@ onUnmounted(() => {
   width: max(100%, 700px);
   height: auto;
   display: block;
+}
+
+/* Hero background: larger, no horizontal scroll */
+.domain-diagram--hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.domain-diagram--hero .domain-diagram__svg {
+  width: min(1320px, 118vw);
+  max-width: none;
+  min-width: unset;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .domain-diagram--hero .domain-diagram__svg {
+    width: min(1500px, 125vw);
+  }
+}
+
+@media (min-width: 1200px) {
+  .domain-diagram--hero .domain-diagram__svg {
+    width: min(1680px, 92vw);
+  }
 }
 
 .domain-diagram__link-path {
