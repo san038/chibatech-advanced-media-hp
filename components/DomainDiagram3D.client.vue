@@ -36,13 +36,19 @@ const DOMAIN_HEX: Record<Domain, number> = {
 
 const RING_R = 5.2;
 const DOT_R = 0.1;
+const CENTER_LABEL_TEXT = "知能メディア工学科";
+const CENTER_HUB_R = 0.78;
+const DOMAIN_HUB_R = 2.85;
+const DOMAIN_HUB_DOT_R = 0.13;
+const BRANCH_LINE_OPACITY = 0.14;
 /** SVG gap=9, R=210 を 3D 円周に換算したラベルとドット間距離 */
 const LABEL_GAP = (9 / 210) * RING_R * 0.85;
 const LABEL_Y = 0.04;
 /** ラベル平面の高さ（ワールド単位） */
-const LABEL_PLANE_H = 0.5;
+const LABEL_PLANE_H = 0.62;
+const HUB_LABEL_PLANE_H = 0.36;
 /** ラベル Canvas のフォントサイズ（px）— 平面サイズに合わせて調整 */
-const LABEL_FONT_PX = 30;
+const LABEL_FONT_PX = 36;
 /** リングを手前に寝かせる傾き（rad・負で上端が手前に） */
 const RING_TILT_X = 0.2;
 const CAMERA_FOV = 46;
@@ -88,6 +94,44 @@ function equalArcDots(fromDeg: number, toDeg: number, count: number): number[] {
 const angDesignToKnowledge = equalArcDots(30, 150, 16);
 const angKnowledgeToMedia = equalArcDots(150, 270, 14);
 const angMediaToDesign = equalArcDots(-90, 30, 15);
+
+type HubKey = "design" | "knowledge" | "media";
+
+const DOMAIN_HUBS: {
+  key: HubKey;
+  label: string;
+  angleDeg: number;
+  hex: number;
+  css: string;
+}[] = [
+  {
+    key: "design",
+    label: "情報デザイン",
+    angleDeg: -30,
+    hex: DOMAIN_HEX.design,
+    css: DOMAIN_CSS.design,
+  },
+  {
+    key: "knowledge",
+    label: "知能工学",
+    angleDeg: 90,
+    hex: DOMAIN_HEX.knowledge,
+    css: DOMAIN_CSS.knowledge,
+  },
+  {
+    key: "media",
+    label: "メディア工学",
+    angleDeg: 210,
+    hex: DOMAIN_HEX.media,
+    css: DOMAIN_CSS.media,
+  },
+];
+
+function hubKeyForDomain(domain: Domain): HubKey {
+  if (domain === "design" || domain === "media-design") return "design";
+  if (domain === "media" || domain === "media-knowledge") return "media";
+  return "knowledge";
+}
 
 const keywords: Keyword3D[] = [
   // MEDIA
@@ -690,10 +734,200 @@ onMounted(async () => {
   ringGroup.rotation.x = RING_TILT_X;
   scene.add(ringGroup);
 
+  const branchGroup = new THREE.Group();
+  ringGroup.add(branchGroup);
+
   const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
   const dotMeshMap = new Map<string, THREE.Mesh>();
   const labelMeshMap = new Map<string, THREE.Mesh>();
   const dotOrigPos = new Map<string, THREE.Vector3>();
+
+  const hubPosByKey = new Map<HubKey, THREE.Vector3>();
+
+  function posAtAngle(angleDeg: number, r: number, y = 0.006): THREE.Vector3 {
+    const rad = (angleDeg * Math.PI) / 180;
+    return new THREE.Vector3(r * Math.cos(rad), y, r * Math.sin(rad));
+  }
+
+  function addLineCurve(
+    p0: THREE.Vector3,
+    p1: THREE.Vector3,
+    color: number,
+    opacity: number,
+    pull = 0.4,
+  ) {
+    const cx = (p0.x + p1.x) * 0.5 * pull;
+    const cz = (p0.z + p1.z) * 0.5 * pull;
+    const pts: THREE.Vector3[] = [];
+    const SAMPLES = 32;
+    for (let i = 0; i <= SAMPLES; i++) {
+      const t = i / SAMPLES;
+      const mt = 1 - t;
+      pts.push(
+        new THREE.Vector3(
+          mt * mt * p0.x + 2 * mt * t * cx + t * t * p1.x,
+          p0.y,
+          mt * mt * p0.z + 2 * mt * t * cz + t * t * p1.z,
+        ),
+      );
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.Line(
+      geo,
+      new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity,
+      }),
+    );
+    branchGroup.add(line);
+    return line;
+  }
+
+  function addLineStraight(
+    p0: THREE.Vector3,
+    p1: THREE.Vector3,
+    color: number,
+    opacity: number,
+  ) {
+    const geo = new THREE.BufferGeometry().setFromPoints([p0, p1]);
+    const line = new THREE.Line(
+      geo,
+      new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity,
+      }),
+    );
+    branchGroup.add(line);
+    return line;
+  }
+
+  /** 中央テキスト平面（円内・中央寄せ） */
+  function createCenteredTextPlane(
+    text: string,
+    colorCss: string,
+    fontPx: number,
+    planeH: number,
+    opacity: number,
+  ): THREE.Mesh {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const font = `600 ${fontPx}px var(--font-body, system-ui, sans-serif)`;
+    const probe = document.createElement("canvas").getContext("2d")!;
+    probe.font = font;
+    const textW = probe.measureText(text).width;
+    const padX = 10;
+    const padY = 6;
+    const logicalW = textW + padX * 2;
+    const logicalH = fontPx + padY * 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(logicalW * dpr);
+    canvas.height = Math.ceil(logicalH * dpr);
+    const ctx = canvas.getContext("2d")!;
+    ctx.scale(dpr, dpr);
+    ctx.font = font;
+    ctx.fillStyle = colorCss;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, logicalW / 2, logicalH / 2);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    const planeW = planeH * (logicalW / logicalH);
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(planeW, planeH),
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    );
+    mesh.userData.labelTexture = texture;
+    return mesh;
+  }
+
+  // 中心サークル + タイトル
+  const centerDisk = new THREE.Mesh(
+    new THREE.CircleGeometry(CENTER_HUB_R * 0.88, 64),
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.92,
+      side: THREE.DoubleSide,
+    }),
+  );
+  centerDisk.rotation.x = -Math.PI / 2;
+  centerDisk.position.y = 0.003;
+  ringGroup.add(centerDisk);
+
+  const centerRing = new THREE.Mesh(
+    new THREE.RingGeometry(CENTER_HUB_R * 0.88, CENTER_HUB_R, 64),
+    new THREE.MeshBasicMaterial({
+      color: 0x3a3a3a,
+      transparent: true,
+      opacity: 0.35,
+      side: THREE.DoubleSide,
+    }),
+  );
+  centerRing.rotation.x = -Math.PI / 2;
+  centerRing.position.y = 0.004;
+  ringGroup.add(centerRing);
+
+  const centerTitle = createCenteredTextPlane(
+    CENTER_LABEL_TEXT,
+    "#2a2a2a",
+    22,
+    0.38,
+    0.95,
+  );
+  centerTitle.rotation.x = -Math.PI / 2;
+  centerTitle.position.y = 0.012;
+  ringGroup.add(centerTitle);
+
+  // 中間ドット（3領域）+ 中心との接続 + キーワードへの枝
+  for (const hub of DOMAIN_HUBS) {
+    const hubPos = posAtAngle(hub.angleDeg, DOMAIN_HUB_R, 0.008);
+    hubPosByKey.set(hub.key, hubPos.clone());
+
+    const hubDot = new THREE.Mesh(
+      new THREE.SphereGeometry(DOMAIN_HUB_DOT_R, 12, 12),
+      new THREE.MeshBasicMaterial({ color: hub.hex }),
+    );
+    hubDot.position.copy(hubPos);
+    ringGroup.add(hubDot);
+
+    const hubLabel = createRadialLabelMesh(
+      hub.label,
+      hub.css,
+      hub.angleDeg,
+      0.9,
+      DOMAIN_HUB_R,
+      HUB_LABEL_PLANE_H,
+    );
+    ringGroup.add(hubLabel);
+
+    addLineStraight(
+      new THREE.Vector3(0, 0.005, 0),
+      hubPos,
+      hub.hex,
+      BRANCH_LINE_OPACITY * 1.6,
+    );
+  }
+
+  for (const kw of keywords) {
+    const hubKey = hubKeyForDomain(kw.domain);
+    const hubPos = hubPosByKey.get(hubKey)!;
+    const kwPos = posAtAngle(kw.angleDeg, RING_R, 0.006);
+    addLineCurve(
+      hubPos,
+      kwPos,
+      DOMAIN_HEX[kw.domain],
+      BRANCH_LINE_OPACITY,
+      0.38,
+    );
+  }
 
   /** 円周 XZ 平面にラベルを配置（中心角度に傾け、外側へ左寄せ） */
   function createRadialLabelMesh(
@@ -701,6 +935,8 @@ onMounted(async () => {
     colorCss: string,
     angleDeg: number,
     opacity: number,
+    anchorR = RING_R,
+    planeH = LABEL_PLANE_H,
   ): THREE.Mesh {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const fontPx = LABEL_FONT_PX;
@@ -730,7 +966,6 @@ onMounted(async () => {
     texture.magFilter = THREE.LinearFilter;
     texture.generateMipmaps = false;
 
-    const planeH = LABEL_PLANE_H;
     const planeW = planeH * (logicalW / logicalH);
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(planeW, planeH),
@@ -747,7 +982,7 @@ onMounted(async () => {
     outward.set(Math.cos(rad), 0, Math.sin(rad));
     tangent.crossVectors(up, outward).normalize();
 
-    const innerR = RING_R + LABEL_GAP;
+    const innerR = anchorR + LABEL_GAP;
     mesh.position.set(
       outward.x * (innerR + planeW / 2),
       LABEL_Y,
