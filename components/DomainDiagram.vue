@@ -57,7 +57,7 @@
         />
       </g>
 
-      <!-- ランダム3ノード: 線で結ぶ → 塗る → 中央へ合体 → 縮む → 再選択 -->
+      <!-- ランダム3ノード: 線で結ぶ → 中央へ合体 → 造語+領域塗り → 縮む → 再選択 -->
       <g
         v-if="highlightRingPathD"
         class="domain-diagram__highlight-links"
@@ -881,16 +881,13 @@ function buildGrayLinks(): LinkSeg[] {
   return segs;
 }
 
-// ── ハイライト3ノード: 線 → 塗り → 合体 → 造語 → 縮む → 再選択 ─────────────────
+// ── ハイライト3ノード: 線 → 合体 → 造語+領域塗り → 縮む → 再選択 ───────────────────
 const HIGHLIGHT_NODE_COUNT = 3;
-const highlightPhase = ref<"draw" | "hold" | "merge" | "coin" | "shrink">(
-  "draw",
-);
+const highlightPhase = ref<"draw" | "merge" | "coin" | "shrink">("draw");
 const mergeBurstVisible = ref(false);
 /** 0–1: 合体アニメの進行（円の中心 CX,CY へ） */
 const mergeAnimProgress = ref(0);
 const HIGHLIGHT_DRAW_MS = 1200;
-const HIGHLIGHT_WAIT_MS = 1200;
 const HIGHLIGHT_MERGE_MS = 1500;
 const COIN_POP_MS = 450;
 const COIN_HOLD_MS = 1100;
@@ -909,10 +906,10 @@ const coinedWordFontSize = computed(() => {
 
 const highlightPhaseClass = computed(() => ({
   "domain-diagram__highlight-links--draw": highlightPhase.value === "draw",
-  "domain-diagram__highlight-links--hold":
-    highlightPhase.value === "hold" ||
-    highlightPhase.value === "merge" ||
-    highlightPhase.value === "coin",
+  "domain-diagram__highlight-links--hold": highlightPhase.value === "merge",
+  "domain-diagram__highlight-links--coin": highlightPhase.value === "coin",
+  "domain-diagram__highlight-links--coin-fade":
+    highlightPhase.value === "coin" && coinedWordPhase.value === "fade",
   "domain-diagram__highlight-links--shrink": highlightPhase.value === "shrink",
 }));
 
@@ -1040,14 +1037,13 @@ function startHighlightCycle(): void {
   const coinMs = linkMotionReduced.value
     ? 0
     : COIN_POP_MS + COIN_HOLD_MS + COIN_FADE_MS;
-  const mergeBurstAt = mergeMs > 0 ? Math.round(mergeMs * 0.72) : 0;
-  const mergeEndAt = HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS + mergeMs;
+  const mergeStartAt = HIGHLIGHT_DRAW_MS;
+  const mergeBurstAt =
+    mergeMs > 0 ? mergeStartAt + Math.round(mergeMs * 0.72) : 0;
+  const mergeEndAt = mergeStartAt + mergeMs;
 
-  afterDiagramDelay(HIGHLIGHT_DRAW_MS, () => {
-    highlightPhase.value = "hold";
-  });
-
-  afterDiagramDelay(HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS, () => {
+  // 線の接続完了後すぐに中央へ移動
+  afterDiagramDelay(mergeStartAt, () => {
     if (mergeMs === 0) {
       highlightPhase.value = "shrink";
       return;
@@ -1058,12 +1054,9 @@ function startHighlightCycle(): void {
   });
 
   if (mergeMs > 0) {
-    afterDiagramDelay(
-      HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS + mergeBurstAt,
-      () => {
-        mergeBurstVisible.value = true;
-      },
-    );
+    afterDiagramDelay(mergeBurstAt, () => {
+      mergeBurstVisible.value = true;
+    });
 
     afterDiagramDelay(mergeEndAt, () => {
       mergeBurstVisible.value = false;
@@ -1250,37 +1243,53 @@ onUnmounted(() => {
   fill-opacity: 0;
 }
 
-.domain-diagram__highlight-links--hold .domain-diagram__highlight-fill-path {
-  animation: domain-diagram-highlight-fill-in var(--highlight-fill-in-ms)
-    ease-out forwards;
+/* 領域の塗り: 造語の「ぽん」と同タイミング・同イージングでポップ表示 */
+.domain-diagram__highlight-links--coin .domain-diagram__highlight-fill-path {
+  transform-box: view-box;
+  transform-origin: 500px 285px;
+  animation: domain-diagram-fill-pop var(--coin-pop-ms, 450ms)
+    cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
 }
 
-.domain-diagram__highlight-links--draw .domain-diagram__highlight-fill-path {
+.domain-diagram__highlight-links--coin-fade .domain-diagram__highlight-fill-path {
+  transform-box: view-box;
+  transform-origin: 500px 285px;
+  fill-opacity: 1;
+  transform: scale(1);
+  animation: domain-diagram-fill-fade var(--coin-fade-ms, 800ms) ease-out
+    forwards;
+}
+
+.domain-diagram__highlight-links--draw .domain-diagram__highlight-fill-path,
+.domain-diagram__highlight-links--hold .domain-diagram__highlight-fill-path,
+.domain-diagram__highlight-links--shrink .domain-diagram__highlight-fill-path {
   fill-opacity: 0;
   animation: none;
 }
 
-.domain-diagram__highlight-links--shrink .domain-diagram__highlight-fill-path {
-  fill-opacity: 1;
-  animation: domain-diagram-highlight-fill-out var(--highlight-fill-out-ms)
-    ease-in forwards;
+@keyframes domain-diagram-fill-pop {
+  0% {
+    fill-opacity: 0;
+    transform: scale(0.25);
+  }
+  65% {
+    fill-opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    fill-opacity: 1;
+    transform: scale(1);
+  }
 }
 
-@keyframes domain-diagram-highlight-fill-in {
-  from {
-    fill-opacity: 0;
-  }
-  to {
+@keyframes domain-diagram-fill-fade {
+  0% {
     fill-opacity: 1;
+    transform: scale(1) translateY(0);
   }
-}
-
-@keyframes domain-diagram-highlight-fill-out {
-  from {
-    fill-opacity: 1;
-  }
-  to {
+  100% {
     fill-opacity: 0;
+    transform: scale(1.06) translateY(-10px);
   }
 }
 
@@ -1293,7 +1302,10 @@ onUnmounted(() => {
   stroke-dasharray: 1;
 }
 
-.domain-diagram__highlight-links--hold .domain-diagram__highlight-link-path {
+.domain-diagram__highlight-links--hold .domain-diagram__highlight-link-path,
+.domain-diagram__highlight-links--coin .domain-diagram__highlight-link-path,
+.domain-diagram__highlight-links--coin-fade
+  .domain-diagram__highlight-link-path {
   animation: none;
   stroke-dashoffset: 0;
 }
@@ -1334,13 +1346,15 @@ onUnmounted(() => {
     animation: none !important;
   }
 
-  .domain-diagram__highlight-fill-path {
+  .domain-diagram__highlight-links--coin .domain-diagram__highlight-fill-path {
     animation: none !important;
     fill-opacity: 1;
   }
 
   .domain-diagram__highlight-links--draw .domain-diagram__highlight-fill-path,
-  .domain-diagram__highlight-links--shrink
+  .domain-diagram__highlight-links--hold .domain-diagram__highlight-fill-path,
+  .domain-diagram__highlight-links--shrink .domain-diagram__highlight-fill-path,
+  .domain-diagram__highlight-links--coin-fade
     .domain-diagram__highlight-fill-path {
     fill-opacity: 0;
   }
