@@ -7,7 +7,7 @@
       'header--menu-open': menuOpen,
     }"
   >
-    <div class="header__inner container">
+    <div class="header__inner">
       <!-- Logo -->
       <NuxtLink to="/" class="header__logo" @click="menuOpen = false">
         <span class="header__logo-ja">知能メディア工学科</span>
@@ -184,6 +184,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   height: 72px;
+  padding: 0 var(--space-md);
   gap: var(--space-md);
 }
 

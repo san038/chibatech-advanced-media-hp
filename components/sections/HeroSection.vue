@@ -9,10 +9,9 @@
     </div>
 
     <!-- Title + scroll: anchored above bottom -->
-    <div class="hero__bottom container">
-      <!-- <div class="hero__text-area">
+    <div class="hero__bottom">
+      <div class="hero__text-area">
         <div class="hero__title-block">
-          <p class="hero__label text-label">千葉工業大学 知能メディア工学科</p>
           <h1 class="hero__headline">
             <span class="hero__headline-line">
               <span class="hero__headline-line__bar" aria-hidden="true" />
@@ -24,7 +23,7 @@
             </span>
           </h1>
         </div>
-      </div> -->
+      </div>
 
       <div class="hero__scroll-indicator" aria-hidden="true">
         <span class="hero__scroll-text">Scroll</span>
@@ -88,7 +87,8 @@
   align-items: flex-start;
   gap: var(--space-md);
   width: 100%;
-  padding-bottom: max(var(--space-sm), env(safe-area-inset-bottom, 0px));
+  padding-left: var(--space-md);
+  padding-bottom: max(var(--space-md), env(safe-area-inset-bottom, 0px));
 }
 
 .hero__text-area {
@@ -199,7 +199,11 @@
 .hero__scroll-line {
   width: 1px;
   height: 48px;
-  background: linear-gradient(to bottom, rgba(252, 249, 248, 0.45), transparent);
+  background: linear-gradient(
+    to bottom,
+    rgba(252, 249, 248, 0.45),
+    transparent
+  );
   animation: scroll-line 1.6s ease-in-out infinite;
 }
 
