@@ -75,7 +75,7 @@ const LABEL_OPACITY_ACTIVE = 1;
 const HIGHLIGHT_DRAW_MS = 1200;
 const HIGHLIGHT_MERGE_MS = 1500;
 const COIN_POP_MS = 450;
-const COIN_HOLD_MS = 1500;
+const COIN_HOLD_MS = 2000;
 const COIN_FADE_MS = 800;
 const HIGHLIGHT_SHRINK_MS = 600;
 const HIGHLIGHT_PAUSE_MS = 250;
@@ -1201,7 +1201,7 @@ onMounted(async () => {
     const line = new THREE.Line(
       geo,
       new THREE.LineBasicMaterial({
-        color: DIAGRAM_WHITE_HEX,
+        color: TRAVEL_DOT_COLOR,
         transparent: true,
         opacity: 0.88,
       }),
