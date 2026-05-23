@@ -52,7 +52,10 @@ const COIN_HOLD_MS = 1100;
 const COIN_FADE_MS = 800;
 const HIGHLIGHT_SHRINK_MS = 600;
 const HIGHLIGHT_PAUSE_MS = 250;
-const BURST_MS = 420;
+const CENTER_SPHERE_R = 0.38;
+const COIN_LABEL_REST_Y = 0.1;
+/** フェードアウト時の上方向移動（ワールド Y） */
+const COIN_FADE_RISE_Y = 0.45;
 
 // ── Keyword data ───────────────────────────────────────────────────────────────
 interface Keyword3D {
@@ -169,6 +172,12 @@ function buildPortmanteau(kws: Keyword3D[]): string {
 // ── イージング ────────────────────────────────────────────────────────────────
 function easeOut(t: number) { return 1 - (1 - t) ** 2; }
 function easeIn(t: number) { return t * t; }
+/** 弾むように拡大（爆発的ポップイン用） */
+function easeOutBack(t: number) {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
+}
 function easeInOutCubic(t: number) {
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
@@ -299,8 +308,7 @@ onMounted(async () => {
   let hlPickedIds = new Set<string>();
   let hlLines: THREE.Line[] = [];
   let hlFillMesh: THREE.Mesh | null = null;
-  let hlBurstMesh: THREE.Mesh | null = null;
-  let hlBurstStart = 0;
+  let hlCenterSphere: THREE.Mesh | null = null;
   let hlCoinEl: HTMLSpanElement | null = null;
   let hlCoinObj: InstanceType<typeof CSS2DObject> | null = null;
   let hlTimeouts: ReturnType<typeof setTimeout>[] = [];
@@ -310,9 +318,35 @@ onMounted(async () => {
   function clearHL() {
     for (const t of hlTimeouts) clearTimeout(t);
     hlTimeouts = [];
+    disposeCenterSphere();
   }
   function after(ms: number, fn: () => void) {
     hlTimeouts.push(setTimeout(fn, ms));
+  }
+
+  function disposeCenterSphere() {
+    if (!hlCenterSphere) return;
+    scene.remove(hlCenterSphere);
+    hlCenterSphere.geometry.dispose();
+    (hlCenterSphere.material as THREE.Material).dispose();
+    hlCenterSphere = null;
+  }
+
+  function createCenterSphere() {
+    disposeCenterSphere();
+    hlCenterSphere = new THREE.Mesh(
+      new THREE.SphereGeometry(CENTER_SPHERE_R, 40, 40),
+      new THREE.MeshPhongMaterial({
+        color: 0xf0f2f8,
+        transparent: true,
+        opacity: 0,
+        specular: 0x9aa8c4,
+        shininess: 32,
+      }),
+    );
+    hlCenterSphere.scale.setScalar(0.001);
+    hlCenterSphere.position.set(0, 0, 0);
+    scene.add(hlCenterSphere);
   }
 
   // キーワードの3D位置
@@ -384,18 +418,6 @@ onMounted(async () => {
   function startMerge() {
     hlPhase = "merge";
     hlStartTime = performance.now();
-
-    // 合体バーストのタイミング
-    after(Math.round(HIGHLIGHT_MERGE_MS * 0.72), () => {
-      const bGeo = new THREE.SphereGeometry(0.22, 12, 12);
-      const bMat = new THREE.MeshBasicMaterial({
-        color: 0x4a6eb8, transparent: true, opacity: 0.75,
-      });
-      hlBurstMesh = new THREE.Mesh(bGeo, bMat);
-      scene.add(hlBurstMesh);
-      hlBurstStart = performance.now();
-    });
-
     after(HIGHLIGHT_MERGE_MS, startCoin);
   }
 
@@ -408,6 +430,9 @@ onMounted(async () => {
     for (const kw of hlPicked) {
       dotMeshMap.get(kw.id)!.visible = false;
     }
+
+    // 中央スフィア（造語と同タイミングでばっと表示 → 上へ移動しながら消える）
+    createCenterSphere();
 
     // ── 三角形塗り面 ──────────────────────────────────────────────────────
     const positions: number[] = [];
@@ -441,7 +466,7 @@ onMounted(async () => {
       fontWeight: "700",
       color: "#4a6eb8",
       textAlign: "center",
-      transform: "translate(-50%, -50%)",
+      transform: "translate(-50%, -50%) scale(0)",
       opacity: "0",
       letterSpacing: "-0.02em",
       pointerEvents: "none",
@@ -450,7 +475,7 @@ onMounted(async () => {
       whiteSpace: "nowrap",
     });
     hlCoinObj = new CSS2DObject(hlCoinEl);
-    hlCoinObj.position.set(0, 0.1, 0);
+    hlCoinObj.position.set(0, COIN_LABEL_REST_Y, 0);
     scene.add(hlCoinObj);
 
     after(COIN_POP_MS + COIN_HOLD_MS + COIN_FADE_MS, startShrink);
@@ -473,6 +498,7 @@ onMounted(async () => {
       hlCoinObj = null;
       hlCoinEl = null;
     }
+    disposeCenterSphere();
 
     // ドットを元の位置に戻し、全員を薄い表示に
     for (const kw of hlPicked) {
@@ -490,21 +516,6 @@ onMounted(async () => {
   function updateHighlight(now: number) {
     const elapsed = now - hlStartTime;
 
-    // バースト（フェーズ独立）
-    if (hlBurstMesh) {
-      const bt = Math.min(1, (now - hlBurstStart) / BURST_MS);
-      if (bt >= 1) {
-        scene.remove(hlBurstMesh);
-        hlBurstMesh.geometry.dispose();
-        (hlBurstMesh.material as THREE.MeshBasicMaterial).dispose();
-        hlBurstMesh = null;
-      } else {
-        hlBurstMesh.scale.setScalar(1 + bt * 9);
-        (hlBurstMesh.material as THREE.MeshBasicMaterial).opacity =
-          0.75 * (1 - bt);
-      }
-    }
-
     // DRAW: ラインを描画
     if (hlPhase === "draw") {
       const t = easeOut(Math.min(1, elapsed / HIGHLIGHT_DRAW_MS));
@@ -514,36 +525,74 @@ onMounted(async () => {
       }
     }
 
-    // MERGE: ドットが中央へ収束
+    // MERGE: ドットが中央へ収束（透明度は維持）
     if (hlPhase === "merge") {
       const t = easeInOutCubic(Math.min(1, elapsed / HIGHLIGHT_MERGE_MS));
       for (const kw of hlPicked) {
         const mesh = dotMeshMap.get(kw.id)!;
         mesh.position.lerpVectors(dotOrigPos.get(kw.id)!, centerVec, t);
         mesh.scale.setScalar(1 + t * 0.8);
-        (mesh.material as THREE.MeshBasicMaterial).opacity = 1 - t * 0.96;
       }
     }
 
-    // COIN: 塗り面と造語のフェードイン・フェードアウト
+    // COIN: 塗り面・造語・中央スフィア
     if (hlPhase === "coin" && hlFillMesh) {
       const fMat = hlFillMesh.material as THREE.MeshBasicMaterial;
+      const centerMat = hlCenterSphere?.material as
+        | THREE.MeshPhongMaterial
+        | undefined;
       const fadeStart = COIN_POP_MS + COIN_HOLD_MS;
+      const popProgress = Math.min(1, elapsed / COIN_POP_MS);
 
       if (elapsed <= COIN_POP_MS) {
-        // ぽんっと表示
-        const popT = easeOut(elapsed / COIN_POP_MS);
-        fMat.opacity = popT * 0.32;
-        if (hlCoinEl) hlCoinEl.style.opacity = String(popT);
+        // ばっと拡大して出現（スフィア・造語）
+        const burstScale = easeOutBack(popProgress);
+        const burstOpacity = easeOut(Math.min(1, popProgress * 1.35));
+        fMat.opacity = burstOpacity * 0.32;
+
+        if (hlCenterSphere) {
+          hlCenterSphere.scale.setScalar(Math.max(0.001, burstScale));
+          hlCenterSphere.position.y = 0;
+        }
+        if (centerMat) centerMat.opacity = burstOpacity * 0.92;
+
+        if (hlCoinEl) {
+          hlCoinEl.style.opacity = String(burstOpacity);
+          hlCoinEl.style.transform =
+            `translate(-50%, -50%) scale(${Math.max(0, burstScale)})`;
+        }
+        if (hlCoinObj) hlCoinObj.position.y = COIN_LABEL_REST_Y;
       } else if (elapsed <= fadeStart) {
         // ホールド
         fMat.opacity = 0.32;
-        if (hlCoinEl) hlCoinEl.style.opacity = "1";
+        if (hlCenterSphere) {
+          hlCenterSphere.scale.setScalar(1);
+          hlCenterSphere.position.y = 0;
+        }
+        if (centerMat) centerMat.opacity = 0.92;
+        if (hlCoinEl) {
+          hlCoinEl.style.opacity = "1";
+          hlCoinEl.style.transform = "translate(-50%, -50%) scale(1)";
+        }
+        if (hlCoinObj) hlCoinObj.position.y = COIN_LABEL_REST_Y;
       } else {
-        // ふわっと消える
-        const fadeT = Math.min(1, (elapsed - fadeStart) / COIN_FADE_MS);
-        fMat.opacity = (1 - fadeT) * 0.32;
-        if (hlCoinEl) hlCoinEl.style.opacity = String(1 - fadeT);
+        // 上へ移動しながらふわっと消える
+        const fadeT = easeOut(Math.min(1, (elapsed - fadeStart) / COIN_FADE_MS));
+        const remain = 1 - fadeT;
+        const riseY = fadeT * COIN_FADE_RISE_Y;
+        fMat.opacity = remain * 0.32;
+
+        if (hlCenterSphere) {
+          hlCenterSphere.scale.setScalar(1);
+          hlCenterSphere.position.y = riseY;
+        }
+        if (centerMat) centerMat.opacity = remain * 0.92;
+
+        if (hlCoinEl) {
+          hlCoinEl.style.opacity = String(remain);
+          hlCoinEl.style.transform = "translate(-50%, -50%) scale(1)";
+        }
+        if (hlCoinObj) hlCoinObj.position.y = COIN_LABEL_REST_Y + riseY;
       }
     }
 
