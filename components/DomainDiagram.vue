@@ -22,6 +22,18 @@
           <stop offset="48%" stop-color="#3d6eb8" />
           <stop offset="100%" stop-color="#2a9d5f" />
         </linearGradient>
+        <linearGradient
+          :id="highlightFillGradientId"
+          gradientUnits="userSpaceOnUse"
+          x1="220"
+          y1="55"
+          x2="840"
+          y2="535"
+        >
+          <stop offset="0%" stop-color="#d94a55" stop-opacity="0.38" />
+          <stop offset="48%" stop-color="#3d6eb8" stop-opacity="0.32" />
+          <stop offset="100%" stop-color="#2a9d5f" stop-opacity="0.38" />
+        </linearGradient>
       </defs>
       <circle
         cx="500"
@@ -42,7 +54,7 @@
         />
       </g>
 
-      <!-- ランダム10ノード: 伸びる → 少し待つ → 縮む → 再選択（グレーと同じ太さ） -->
+      <!-- ランダム3ノード: 線で結ぶ → 内側を塗る → 少し待つ → 縮む → 再選択 -->
       <g
         v-if="highlightRingPathD"
         class="domain-diagram__highlight-links"
@@ -51,6 +63,13 @@
         aria-hidden="true"
         :style="highlightTimingCssVars"
       >
+        <path
+          v-if="highlightFillPathD"
+          :key="`fill-${highlightAnimEpoch}`"
+          :d="highlightFillPathD"
+          class="domain-diagram__highlight-fill-path"
+          :fill="`url(#${highlightFillGradientId})`"
+        />
         <path
           :key="highlightAnimEpoch"
           pathLength="1"
@@ -218,10 +237,16 @@ const highlightGradientId = `domain-diagram-hl-${useId()}`.replace(
   /[^a-zA-Z0-9-]/g,
   "",
 );
+const highlightFillGradientId = `domain-diagram-hl-fill-${useId()}`.replace(
+  /[^a-zA-Z0-9-]/g,
+  "",
+);
 const spotlightActive = ref(false);
 const highlightSelectedIds = ref(new Set<string>());
-/** 10ノード閉路を一筆の path の d に連結 */
+/** 選択ノードの閉路を一筆の path の d に連結 */
 const highlightRingPathD = ref("");
+/** 閉路の内側塗り（線と同じベジェ形状） */
+const highlightFillPathD = ref("");
 const highlightAnimEpoch = ref(0);
 
 /** グレー線ホールド中のスポットライト: 非選択キーワードのみ薄く */
@@ -757,7 +782,8 @@ function buildGrayLinks(): LinkSeg[] {
   return segs;
 }
 
-// ── ハイライト10ノード: 伸びる → 少し待つ → 縮む → 再選択を繰り返し ─────────────
+// ── ハイライト3ノード: 伸びる → 少し待つ → 縮む → 再選択を繰り返し ──────────────
+const HIGHLIGHT_NODE_COUNT = 3;
 const highlightPhase = ref<"draw" | "hold" | "shrink">("draw");
 const HIGHLIGHT_DRAW_MS = 1200;
 const HIGHLIGHT_WAIT_MS = 1200;
@@ -771,9 +797,14 @@ const highlightPhaseClass = computed(() => ({
   "domain-diagram__highlight-links--shrink": highlightPhase.value === "shrink",
 }));
 
+const HIGHLIGHT_FILL_IN_MS = 500;
+const HIGHLIGHT_FILL_OUT_MS = 400;
+
 const highlightTimingCssVars = computed(() => ({
   "--highlight-draw-ms": `${HIGHLIGHT_DRAW_MS}ms`,
   "--highlight-shrink-ms": `${HIGHLIGHT_SHRINK_MS}ms`,
+  "--highlight-fill-in-ms": `${HIGHLIGHT_FILL_IN_MS}ms`,
+  "--highlight-fill-out-ms": `${HIGHLIGHT_FILL_OUT_MS}ms`,
 }));
 
 let diagramTimeouts: ReturnType<typeof setTimeout>[] = [];
@@ -790,11 +821,12 @@ function afterDiagramDelay(ms: number, fn: () => void): void {
 function pickRandomHighlightRing(): void {
   const pool = [...keywords];
   shuffleInPlace(pool);
-  const n = Math.min(10, pool.length);
+  const n = Math.min(HIGHLIGHT_NODE_COUNT, pool.length);
   const picked = pool.slice(0, n);
   highlightSelectedIds.value = new Set(picked.map((p) => p.id));
   highlightAnimEpoch.value += 1;
   highlightRingPathD.value = buildHighlightRingAsSinglePath(picked);
+  highlightFillPathD.value = buildHighlightFillPath(picked);
 }
 
 function startHighlightCycle(): void {
@@ -858,7 +890,7 @@ function stripLeadingMoveTo(d: string): string {
   return d.replace(/^M\s+[\d.-]+\s+[\d.-]+\s+/, "").trim();
 }
 
-/** ランダム10ノードを円周角度順に並べ、閉ループを1本の path に連結（一筆書き風アニメ用） */
+/** 選択ノードを円周角度順に並べ、閉ループを1本の path に連結（一筆書き風アニメ用） */
 function buildHighlightRingAsSinglePath(selected: Keyword[]): string {
   if (selected.length < 2) return "";
   const sorted = sortKeywordsByAngle(selected);
@@ -870,6 +902,13 @@ function buildHighlightRingAsSinglePath(selected: Keyword[]): string {
     parts.push(i === 0 ? seg.trim() : stripLeadingMoveTo(seg));
   }
   return parts.join(" ");
+}
+
+/** 線で囲まれた内側を塗る閉じた path（ストローク path と同形） */
+function buildHighlightFillPath(selected: Keyword[]): string {
+  const ring = buildHighlightRingAsSinglePath(selected);
+  if (!ring || selected.length < 3) return "";
+  return `${ring} Z`;
 }
 
 /** 端点を中心方向へ引っ張った制御点で C 曲線（わずかにランダムで自然な弧） */
@@ -967,6 +1006,47 @@ onUnmounted(() => {
   pointer-events: none;
   --highlight-draw-ms: 700ms;
   --highlight-shrink-ms: 700ms;
+  --highlight-fill-in-ms: 500ms;
+  --highlight-fill-out-ms: 400ms;
+}
+
+.domain-diagram__highlight-fill-path {
+  stroke: none;
+  fill-opacity: 0;
+}
+
+.domain-diagram__highlight-links--hold .domain-diagram__highlight-fill-path {
+  animation: domain-diagram-highlight-fill-in var(--highlight-fill-in-ms) ease-out
+    forwards;
+}
+
+.domain-diagram__highlight-links--draw .domain-diagram__highlight-fill-path {
+  fill-opacity: 0;
+  animation: none;
+}
+
+.domain-diagram__highlight-links--shrink .domain-diagram__highlight-fill-path {
+  fill-opacity: 1;
+  animation: domain-diagram-highlight-fill-out var(--highlight-fill-out-ms) ease-in
+    forwards;
+}
+
+@keyframes domain-diagram-highlight-fill-in {
+  from {
+    fill-opacity: 0;
+  }
+  to {
+    fill-opacity: 1;
+  }
+}
+
+@keyframes domain-diagram-highlight-fill-out {
+  from {
+    fill-opacity: 1;
+  }
+  to {
+    fill-opacity: 0;
+  }
 }
 
 .domain-diagram__highlight-link-path {
@@ -1017,6 +1097,16 @@ onUnmounted(() => {
   .domain-diagram__highlight-link-path {
     stroke-dashoffset: 0 !important;
     animation: none !important;
+  }
+
+  .domain-diagram__highlight-fill-path {
+    animation: none !important;
+    fill-opacity: 1;
+  }
+
+  .domain-diagram__highlight-links--draw .domain-diagram__highlight-fill-path,
+  .domain-diagram__highlight-links--shrink .domain-diagram__highlight-fill-path {
+    fill-opacity: 0;
   }
 }
 

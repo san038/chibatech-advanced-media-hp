@@ -81,13 +81,13 @@
   );
 }
 
-/* Bottom block: title above scroll */
+/* Bottom block: title (left) + scroll (center) */
 .hero__bottom {
   position: relative;
   z-index: 3;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-md);
   width: 100%;
   padding-bottom: max(var(--space-sm), env(safe-area-inset-bottom, 0px));
@@ -96,17 +96,17 @@
 .hero__text-area {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
   gap: var(--space-md);
+  width: 100%;
   max-width: 860px;
-  margin: 0 auto;
 }
 
 .hero__title-block {
   display: inline-flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-sm);
 }
 
@@ -120,7 +120,7 @@
 .hero__headline {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.35em;
   font-family: var(--font-display);
   font-size: clamp(2.5rem, 6vw, var(--text-7xl));
@@ -180,6 +180,7 @@
 
 /* Scroll indicator */
 .hero__scroll-indicator {
+  align-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;
