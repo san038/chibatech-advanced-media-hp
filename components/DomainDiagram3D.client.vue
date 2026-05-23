@@ -40,7 +40,9 @@ const CENTER_LABEL_TEXT = "知能メディア工学科";
 const CENTER_HUB_R = 0.78;
 const DOMAIN_HUB_R = 2.15;
 const DOMAIN_HUB_DOT_R = 0.13;
-const BRANCH_LINE_OPACITY = 0.28;
+/** DomainDiagram の .domain-diagram__link-path に合わせる */
+const GRAY_LINK_COLOR = 0xb8b3b0;
+const GRAY_LINK_OPACITY = 0.32;
 const DIAGRAM_WHITE_HEX = 0xffffff;
 const DIAGRAM_WHITE_CSS = "#ffffff";
 const DIAGRAM_BG_HEX = 0x1c1b1b;
@@ -146,12 +148,6 @@ const DOMAIN_HUBS: {
     css: DOMAIN_CSS.media,
   },
 ];
-
-function hubKeyForDomain(domain: Domain): HubKey {
-  if (domain === "design" || domain === "media-design") return "design";
-  if (domain === "media" || domain === "media-knowledge") return "media";
-  return "knowledge";
-}
 
 const keywords: Keyword3D[] = [
   // MEDIA
@@ -683,6 +679,31 @@ function shuffled<T>(arr: T[]): T[] {
   return a;
 }
 
+function edgeKey(a: string, b: string): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+/** DomainDiagram.buildGrayLinks と同じ接続ルール（各ノード最大3本・重複なし） */
+function buildGrayLinkPairs(
+  nodes: Keyword3D[],
+): { key: string; from: Keyword3D; to: Keyword3D }[] {
+  const seen = new Set<string>();
+  const links: { key: string; from: Keyword3D; to: Keyword3D }[] = [];
+  for (const kw of shuffled(nodes)) {
+    const peers = shuffled(nodes.filter((k) => k.id !== kw.id));
+    let n = 0;
+    for (const t of peers) {
+      if (n >= 3) break;
+      const k = edgeKey(kw.id, t.id);
+      if (seen.has(k)) continue;
+      seen.add(k);
+      n++;
+      links.push({ key: k, from: kw, to: t });
+    }
+  }
+  return links;
+}
+
 // ── onMounted: Three.js セットアップ ─────────────────────────────────────────
 onMounted(async () => {
   const container = containerRef.value;
@@ -773,41 +794,39 @@ onMounted(async () => {
   const labelMeshMap = new Map<string, THREE.Mesh>();
   const dotOrigPos = new Map<string, THREE.Vector3>();
 
-  const hubPosByKey = new Map<HubKey, THREE.Vector3>();
-  const hubLabelMeshMap = new Map<HubKey, THREE.Mesh>();
-
   function posAtAngle(angleDeg: number, r: number, y = 0.006): THREE.Vector3 {
     const rad = (angleDeg * Math.PI) / 180;
     return new THREE.Vector3(r * Math.cos(rad), y, r * Math.sin(rad));
   }
 
-  /** 角度の最短経路で補間（rad） */
-  function lerpAngleRad(a: number, b: number, t: number): number {
-    let d = b - a;
-    while (d > Math.PI) d -= 2 * Math.PI;
-    while (d < -Math.PI) d += 2 * Math.PI;
-    return a + d * t;
+  function kwPos(kw: Keyword3D): THREE.Vector3 {
+    return posAtAngle(kw.angleDeg, RING_R, TIER_KEYWORD_Y);
   }
 
-  /** 中間ドット → 周辺ドット: 中間の角度・半径で一度曲がる */
-  function addLineHubToKeyword(
-    hubPos: THREE.Vector3,
-    kwAngleDeg: number,
-    kwPos: THREE.Vector3,
-    color: number,
-    opacity: number,
-  ) {
-    const hubAngle = Math.atan2(hubPos.z, hubPos.x);
-    const kwAngle = (kwAngleDeg * Math.PI) / 180;
-    const hubR = Math.hypot(hubPos.x, hubPos.z);
-    const kwR = Math.hypot(kwPos.x, kwPos.z);
-    const midAngle = lerpAngleRad(hubAngle, kwAngle, 0.5);
-    const midR = (hubR + kwR) * 0.5;
-    const bend = new THREE.Vector3(
-      Math.cos(midAngle) * midR,
-      (hubPos.y + kwPos.y) * 0.5,
-      Math.sin(midAngle) * midR,
+  /** DomainDiagram.bezierTowardCenter 相当（中心方向へ引いた三次ベジェ） */
+  function addBezierTowardCenter(from: Keyword3D, to: Keyword3D) {
+    const p0 = kwPos(from);
+    const p3 = kwPos(to);
+    const center = new THREE.Vector3(0, TIER_KEYWORD_Y, 0);
+    const t1 = 0.4 + Math.random() * 0.16;
+    const t2 = 0.4 + Math.random() * 0.16;
+    const c1 = new THREE.Vector3(
+      p0.x + t1 * (center.x - p0.x),
+      p0.y + t1 * (center.y - p0.y),
+      p0.z + t1 * (center.z - p0.z),
     );
+    const c2 = new THREE.Vector3(
+      p3.x + t2 * (center.x - p3.x),
+      p3.y + t2 * (center.y - p3.y),
+      p3.z + t2 * (center.z - p3.z),
+    );
+    const jitter = (2.5 + Math.random() * 3.5) * (RING_R / 210);
+    c1.x += (Math.random() - 0.5) * jitter;
+    c1.y += (Math.random() - 0.5) * jitter;
+    c1.z += (Math.random() - 0.5) * jitter;
+    c2.x += (Math.random() - 0.5) * jitter;
+    c2.y += (Math.random() - 0.5) * jitter;
+    c2.z += (Math.random() - 0.5) * jitter;
 
     const pts: THREE.Vector3[] = [];
     const SAMPLES = 36;
@@ -816,9 +835,18 @@ onMounted(async () => {
       const mt = 1 - t;
       pts.push(
         new THREE.Vector3(
-          mt * mt * hubPos.x + 2 * mt * t * bend.x + t * t * kwPos.x,
-          mt * mt * hubPos.y + 2 * mt * t * bend.y + t * t * kwPos.y,
-          mt * mt * hubPos.z + 2 * mt * t * bend.z + t * t * kwPos.z,
+          mt * mt * mt * p0.x +
+            3 * mt * mt * t * c1.x +
+            3 * mt * t * t * c2.x +
+            t * t * t * p3.x,
+          mt * mt * mt * p0.y +
+            3 * mt * mt * t * c1.y +
+            3 * mt * t * t * c2.y +
+            t * t * t * p3.y,
+          mt * mt * mt * p0.z +
+            3 * mt * mt * t * c1.z +
+            3 * mt * t * t * c2.z +
+            t * t * t * p3.z,
         ),
       );
     }
@@ -826,32 +854,12 @@ onMounted(async () => {
     const line = new THREE.Line(
       geo,
       new THREE.LineBasicMaterial({
-        color,
+        color: GRAY_LINK_COLOR,
         transparent: true,
-        opacity,
+        opacity: GRAY_LINK_OPACITY,
       }),
     );
     branchGroup.add(line);
-    return line;
-  }
-
-  function addLineStraight(
-    p0: THREE.Vector3,
-    p1: THREE.Vector3,
-    color: number,
-    opacity: number,
-  ) {
-    const geo = new THREE.BufferGeometry().setFromPoints([p0, p1]);
-    const line = new THREE.Line(
-      geo,
-      new THREE.LineBasicMaterial({
-        color,
-        transparent: true,
-        opacity,
-      }),
-    );
-    branchGroup.add(line);
-    return line;
   }
 
   /** 中心円周（半径 R）に沿って 1 文字ずつ弧上に配置 */
@@ -982,10 +990,9 @@ onMounted(async () => {
     return TIER_CENTER_DISK_Y + COIN_LABEL_OFFSET_ABOVE_TITLE;
   }
 
-  // 中間ドット（3領域）+ 中心との接続 + キーワードへの枝
+  // 中間ドット（3領域）
   for (const hub of DOMAIN_HUBS) {
     const hubPos = posAtAngle(hub.angleDeg, DOMAIN_HUB_R, TIER_HUB_Y);
-    hubPosByKey.set(hub.key, hubPos.clone());
 
     const hubDot = new THREE.Mesh(
       new THREE.SphereGeometry(DOMAIN_HUB_DOT_R, 12, 12),
@@ -1005,27 +1012,6 @@ onMounted(async () => {
       HUB_LABEL_FONT_PX,
     );
     ringGroup.add(hubLabel);
-    hubLabelMeshMap.set(hub.key, hubLabel);
-
-    addLineStraight(
-      new THREE.Vector3(0, TIER_CENTER_DISK_Y, 0),
-      hubPos,
-      DIAGRAM_WHITE_HEX,
-      BRANCH_LINE_OPACITY * 1.6,
-    );
-  }
-
-  for (const kw of keywords) {
-    const hubKey = hubKeyForDomain(kw.domain);
-    const hubPos = hubPosByKey.get(hubKey)!;
-    const kwPos = posAtAngle(kw.angleDeg, RING_R, TIER_KEYWORD_Y);
-    addLineHubToKeyword(
-      hubPos,
-      kw.angleDeg,
-      kwPos,
-      DIAGRAM_WHITE_HEX,
-      BRANCH_LINE_OPACITY,
-    );
   }
 
   /** 円周 XZ 平面にラベルを配置（中心角度に傾け、外側へ左寄せ） */
@@ -1139,6 +1125,10 @@ onMounted(async () => {
     ringGroup.add(labelMesh);
   }
 
+  for (const link of buildGrayLinkPairs(keywords)) {
+    addBezierTowardCenter(link.from, link.to);
+  }
+
   // ── ハイライトアニメーション ──────────────────────────────────────────────
   type HLPhase = "idle" | "draw" | "merge" | "coin" | "shrink";
   let hlPhase: HLPhase = "idle";
@@ -1216,11 +1206,6 @@ onMounted(async () => {
     // 中心円・枝線より手前、タイトル・造語より奥
     hlCenterSphere.renderOrder = 8;
     ringGroup.add(hlCenterSphere);
-  }
-
-  // キーワードの3D位置
-  function kwPos(kw: Keyword3D): THREE.Vector3 {
-    return posAtAngle(kw.angleDeg, RING_R, TIER_KEYWORD_Y);
   }
 
   /** キーワード → 中心サークル下端付近への曲線パス */
