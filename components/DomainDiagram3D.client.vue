@@ -43,8 +43,9 @@ const LABEL_Y = 0.04;
 const LABEL_PLANE_H = 0.5;
 /** ラベル Canvas のフォントサイズ（px）— 平面サイズに合わせて調整 */
 const LABEL_FONT_PX = 30;
-/** 正射影カメラの表示高さ（ワールド単位）— 平面ラベルの歪みを抑える */
-const ORTHO_VIEW_HEIGHT = 10;
+/** リングを手前に寝かせる傾き（rad・負で上端が手前に） */
+const RING_TILT_X = 0.2;
+const CAMERA_FOV = 46;
 /** キーワードリングの回転速度（rad/s）— 約90秒で1周 */
 const RING_ROTATION_RAD_PER_S = (2 * Math.PI) / 90;
 const DOT_OPACITY_DIM = 0.15;
@@ -634,20 +635,11 @@ onMounted(async () => {
   // Scene
   const scene = new THREE.Scene();
 
-  // Camera（正射影 — 円周平面のラベルが透視で歪まないようにする）
+  // Camera（透視 — 寝かせたリングに奥行きをつける）
   const w = container.clientWidth || 800;
   const h = container.clientHeight || 500;
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
-  const fitOrthoCamera = (width: number, height: number) => {
-    const aspect = width / height;
-    camera.left = (-ORTHO_VIEW_HEIGHT * aspect) / 2;
-    camera.right = (ORTHO_VIEW_HEIGHT * aspect) / 2;
-    camera.top = ORTHO_VIEW_HEIGHT / 2;
-    camera.bottom = -ORTHO_VIEW_HEIGHT / 2;
-    camera.updateProjectionMatrix();
-  };
-  fitOrthoCamera(w, h);
-  camera.position.set(0, 8, 8);
+  const camera = new THREE.PerspectiveCamera(CAMERA_FOV, w / h, 0.1, 200);
+  camera.position.set(0, 5.2, 10.5);
   camera.lookAt(0, 0, 0);
 
   const outward = new THREE.Vector3();
@@ -695,6 +687,7 @@ onMounted(async () => {
 
   // ── ドット & ラベル（リンググループで常時回転） ───────────────────────────────
   const ringGroup = new THREE.Group();
+  ringGroup.rotation.x = RING_TILT_X;
   scene.add(ringGroup);
 
   const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
@@ -1148,7 +1141,8 @@ onMounted(async () => {
   const resizeObs = new ResizeObserver(() => {
     const cw = container.clientWidth;
     const ch = container.clientHeight;
-    fitOrthoCamera(cw, ch);
+    camera.aspect = cw / ch;
+    camera.updateProjectionMatrix();
     renderer.setSize(cw, ch);
     labelRenderer.setSize(cw, ch);
   });
