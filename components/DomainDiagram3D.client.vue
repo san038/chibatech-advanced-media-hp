@@ -707,6 +707,21 @@ function shuffled<T>(arr: T[]): T[] {
   return a;
 }
 
+/** PointsMaterial 用の正円アルファマップ（デフォルトの正方形スプライトを回避） */
+function createParticleCircleCanvas(size = 64): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const r = size / 2;
+  ctx.clearRect(0, 0, size, size);
+  ctx.beginPath();
+  ctx.arc(r, r, r - 0.5, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  return canvas;
+}
+
 // ── onMounted: Three.js セットアップ ─────────────────────────────────────────
 onMounted(async () => {
   const container = containerRef.value;
@@ -1230,15 +1245,24 @@ onMounted(async () => {
     "position",
     new THREE.BufferAttribute(particlePositionArray, 3),
   );
+  const particleCircleTexture = new THREE.CanvasTexture(
+    createParticleCircleCanvas(),
+  );
+  particleCircleTexture.minFilter = THREE.LinearFilter;
+  particleCircleTexture.magFilter = THREE.LinearFilter;
+  particleCircleTexture.generateMipmaps = false;
+
   const labelFieldParticles = new THREE.Points(
     particleGeo,
     new THREE.PointsMaterial({
+      map: particleCircleTexture,
       color: DIAGRAM_WHITE_HEX,
       size: PARTICLE_SIZE,
       sizeAttenuation: true,
       transparent: true,
       opacity: PARTICLE_OPACITY,
       depthWrite: false,
+      alphaTest: 0.05,
     }),
   );
   labelFieldParticles.renderOrder = 1;
@@ -1640,6 +1664,7 @@ onMounted(async () => {
     clearHL();
     resizeObs.disconnect();
     labelFieldParticles.geometry.dispose();
+    particleCircleTexture.dispose();
     (labelFieldParticles.material as THREE.PointsMaterial).dispose();
     renderer.dispose();
     container.innerHTML = "";
