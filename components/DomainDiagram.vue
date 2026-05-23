@@ -99,6 +99,31 @@
         </g>
       </g>
 
+      <!-- 3語から生成した造語: ぽんっと表示 → ふわっと消える -->
+      <g
+        v-if="coinedWordVisible"
+        :transform="`translate(${CX} ${CY})`"
+        pointer-events="none"
+        aria-hidden="true"
+      >
+        <g
+          class="domain-diagram__coined-word"
+          :class="`domain-diagram__coined-word--${coinedWordPhase}`"
+        >
+          <text
+            x="0"
+            y="0"
+            text-anchor="middle"
+            dominant-baseline="central"
+            class="domain-diagram__coined-word-text"
+            :font-size="coinedWordFontSize"
+            :fill="`url(#${highlightGradientId})`"
+          >
+            {{ coinedWord }}
+          </text>
+        </g>
+      </g>
+
       <!-- 3ドメイン: ドットなし・円内の専用位置にラベルのみ -->
       <g
         v-for="dl in domainLabels"
@@ -265,6 +290,10 @@ const highlightFillGradientId = `domain-diagram-hl-fill-${useId()}`.replace(
 );
 const spotlightActive = ref(false);
 const highlightSelectedIds = ref(new Set<string>());
+const highlightPickedKeywords = ref<Keyword[]>([]);
+const coinedWord = ref("");
+const coinedWordVisible = ref(false);
+const coinedWordPhase = ref<"pop" | "fade">("pop");
 /** 選択ノードの閉路を一筆の path の d に連結 */
 const highlightRingPathD = ref("");
 /** 閉路の内側塗り（線と同じベジェ形状） */
@@ -276,7 +305,12 @@ function keywordGroupOpacity(kw: Keyword): number {
   const base = kwOpacity(kw.domain);
   if (!spotlightActive.value) return base;
   if (highlightSelectedIds.value.has(kw.id)) {
-    if (highlightPhase.value === "shrink") return 0;
+    if (
+      highlightPhase.value === "shrink" ||
+      highlightPhase.value === "coin"
+    ) {
+      return 0;
+    }
     return base;
   }
   return base * 0.42;
@@ -847,23 +881,38 @@ function buildGrayLinks(): LinkSeg[] {
   return segs;
 }
 
-// ── ハイライト3ノード: 線 → 塗り → 中央合体 → 縮む → 再選択 ─────────────────────
+// ── ハイライト3ノード: 線 → 塗り → 合体 → 造語 → 縮む → 再選択 ─────────────────
 const HIGHLIGHT_NODE_COUNT = 3;
-const highlightPhase = ref<"draw" | "hold" | "merge" | "shrink">("draw");
+const highlightPhase = ref<"draw" | "hold" | "merge" | "coin" | "shrink">(
+  "draw",
+);
 const mergeBurstVisible = ref(false);
 /** 0–1: 合体アニメの進行（円の中心 CX,CY へ） */
 const mergeAnimProgress = ref(0);
 const HIGHLIGHT_DRAW_MS = 1200;
 const HIGHLIGHT_WAIT_MS = 1200;
 const HIGHLIGHT_MERGE_MS = 1500;
+const COIN_POP_MS = 450;
+const COIN_HOLD_MS = 1100;
+const COIN_FADE_MS = 800;
 const HIGHLIGHT_SHRINK_MS = 600;
 /** 縮み終わってから次のシャッフルまで */
 const HIGHLIGHT_PAUSE_BEFORE_NEXT_MS = 250;
 
+const coinedWordFontSize = computed(() => {
+  const len = [...coinedWord.value].length;
+  if (len > 14) return 13;
+  if (len > 10) return 16;
+  if (len > 7) return 19;
+  return 22;
+});
+
 const highlightPhaseClass = computed(() => ({
   "domain-diagram__highlight-links--draw": highlightPhase.value === "draw",
   "domain-diagram__highlight-links--hold":
-    highlightPhase.value === "hold" || highlightPhase.value === "merge",
+    highlightPhase.value === "hold" ||
+    highlightPhase.value === "merge" ||
+    highlightPhase.value === "coin",
   "domain-diagram__highlight-links--shrink": highlightPhase.value === "shrink",
 }));
 
@@ -876,6 +925,8 @@ const highlightTimingCssVars = computed(() => ({
   "--highlight-fill-in-ms": `${HIGHLIGHT_FILL_IN_MS}ms`,
   "--highlight-fill-out-ms": `${HIGHLIGHT_FILL_OUT_MS}ms`,
   "--highlight-merge-ms": `${HIGHLIGHT_MERGE_MS}ms`,
+  "--coin-pop-ms": `${COIN_POP_MS}ms`,
+  "--coin-fade-ms": `${COIN_FADE_MS}ms`,
 }));
 
 let diagramTimeouts: ReturnType<typeof setTimeout>[] = [];
@@ -915,15 +966,64 @@ function afterDiagramDelay(ms: number, fn: () => void): void {
   diagramTimeouts.push(setTimeout(fn, ms));
 }
 
+/** 3キーワードの頭・中・尾をつないで造語を作る */
+function normalizeKeywordLabel(label: string): string {
+  return label
+    .replace(/[（(][^）)]*[）)]/g, "")
+    .split(/[/／]/)[0]!
+    .trim();
+}
+
+function blendChunk(label: string, role: "head" | "mid" | "tail"): string {
+  const clean = normalizeKeywordLabel(label);
+  const chars = [...clean];
+  const n = chars.length;
+  if (n === 0) return "";
+  if (n <= 2) return clean;
+
+  const chunk = Math.max(2, Math.min(4, Math.ceil(n / 3)));
+  if (role === "head") return chars.slice(0, chunk).join("");
+  if (role === "tail") return chars.slice(n - chunk).join("");
+  const midStart = Math.max(0, Math.floor(n / 2) - Math.floor(chunk / 2));
+  return chars.slice(midStart, midStart + chunk).join("");
+}
+
+function buildPortmanteau(selected: Keyword[]): string {
+  const labels = selected.map((k) => k.label);
+  if (labels.length === 0) return "";
+  if (labels.length === 1) return normalizeKeywordLabel(labels[0]!);
+  if (labels.length === 2) {
+    return blendChunk(labels[0]!, "head") + blendChunk(labels[1]!, "tail");
+  }
+  return (
+    blendChunk(labels[0]!, "head") +
+    blendChunk(labels[1]!, "mid") +
+    blendChunk(labels[2]!, "tail")
+  );
+}
+
+function showCoinedWord(): void {
+  coinedWord.value = buildPortmanteau(highlightPickedKeywords.value);
+  coinedWordVisible.value = coinedWord.value.length > 0;
+  coinedWordPhase.value = "pop";
+}
+
+function hideCoinedWord(): void {
+  coinedWordVisible.value = false;
+  coinedWordPhase.value = "pop";
+}
+
 function pickRandomHighlightRing(): void {
   const pool = [...keywords];
   shuffleInPlace(pool);
   const n = Math.min(HIGHLIGHT_NODE_COUNT, pool.length);
   const picked = pool.slice(0, n);
+  highlightPickedKeywords.value = picked;
   highlightSelectedIds.value = new Set(picked.map((p) => p.id));
   highlightAnimEpoch.value += 1;
   mergeBurstVisible.value = false;
   mergeAnimProgress.value = 0;
+  hideCoinedWord();
   cancelMergeAnimation();
   highlightRingPathD.value = buildHighlightRingAsSinglePath(picked);
   highlightFillPathD.value = buildHighlightFillPath(picked);
@@ -937,7 +1037,11 @@ function startHighlightCycle(): void {
   highlightPhase.value = "draw";
 
   const mergeMs = linkMotionReduced.value ? 0 : HIGHLIGHT_MERGE_MS;
+  const coinMs = linkMotionReduced.value
+    ? 0
+    : COIN_POP_MS + COIN_HOLD_MS + COIN_FADE_MS;
   const mergeBurstAt = mergeMs > 0 ? Math.round(mergeMs * 0.72) : 0;
+  const mergeEndAt = HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS + mergeMs;
 
   afterDiagramDelay(HIGHLIGHT_DRAW_MS, () => {
     highlightPhase.value = "hold";
@@ -961,18 +1065,24 @@ function startHighlightCycle(): void {
       },
     );
 
-    afterDiagramDelay(HIGHLIGHT_DRAW_MS + HIGHLIGHT_WAIT_MS + mergeMs, () => {
+    afterDiagramDelay(mergeEndAt, () => {
       mergeBurstVisible.value = false;
+      highlightPhase.value = "coin";
+      showCoinedWord();
+    });
+
+    afterDiagramDelay(mergeEndAt + COIN_POP_MS + COIN_HOLD_MS, () => {
+      coinedWordPhase.value = "fade";
+    });
+
+    afterDiagramDelay(mergeEndAt + coinMs, () => {
+      hideCoinedWord();
       highlightPhase.value = "shrink";
     });
   }
 
   afterDiagramDelay(
-    HIGHLIGHT_DRAW_MS +
-      HIGHLIGHT_WAIT_MS +
-      mergeMs +
-      HIGHLIGHT_SHRINK_MS +
-      HIGHLIGHT_PAUSE_BEFORE_NEXT_MS,
+    mergeEndAt + coinMs + HIGHLIGHT_SHRINK_MS + HIGHLIGHT_PAUSE_BEFORE_NEXT_MS,
     () => {
       startHighlightCycle();
     },
@@ -1243,6 +1353,11 @@ onUnmounted(() => {
     animation: none !important;
     opacity: 0;
   }
+
+  .domain-diagram__coined-word {
+    animation: none !important;
+    opacity: 0;
+  }
 }
 
 .kw-group {
@@ -1262,6 +1377,49 @@ onUnmounted(() => {
   100% {
     transform: scale(2.8);
     opacity: 0;
+  }
+}
+
+.domain-diagram__coined-word-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+}
+
+.domain-diagram__coined-word--pop {
+  animation: domain-diagram-coin-pop var(--coin-pop-ms, 450ms)
+    cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
+}
+
+.domain-diagram__coined-word--fade {
+  animation: domain-diagram-coin-fade var(--coin-fade-ms, 800ms) ease-out
+    forwards;
+}
+
+@keyframes domain-diagram-coin-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.25);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes domain-diagram-coin-fade {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.06) translateY(-10px);
   }
 }
 
