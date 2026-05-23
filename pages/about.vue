@@ -134,7 +134,9 @@
           3つの領域の先にある<br />知能メディア工学という挑戦
         </h2>
 
-        <DomainDiagram />
+        <div class="about-diagram__visual">
+          <DomainDiagram3D />
+        </div>
 
         <div class="about-diagram__caption">
           <p>
@@ -362,6 +364,15 @@ const designTopic = [
 /* Diagram */
 .about-diagram__title {
   color: var(--color-on-surface);
+}
+
+.about-diagram__visual {
+  width: 100%;
+  max-width: 1000px;
+  height: clamp(320px, 52vw, 590px);
+  margin: var(--space-xl) auto var(--space-lg);
+  background-color: #1c1b1b;
+  overflow: hidden;
 }
 
 .about-diagram__caption {
