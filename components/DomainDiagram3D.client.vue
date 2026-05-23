@@ -39,6 +39,10 @@ const DOT_R = 0.1;
 const LABEL_R = 6.05;
 /** キーワードリングの回転速度（rad/s）— 約90秒で1周 */
 const RING_ROTATION_RAD_PER_S = (2 * Math.PI) / 90;
+const DOT_OPACITY_DIM = 0.15;
+const DOT_OPACITY_ACTIVE = 1;
+const LABEL_OPACITY_DIM = 0.32;
+const LABEL_OPACITY_ACTIVE = 1;
 
 // アニメーションタイミング（SVG版と同じ値）
 const HIGHLIGHT_DRAW_MS = 1200;
@@ -236,7 +240,19 @@ onMounted(async () => {
 
   const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
   const dotMeshMap = new Map<string, THREE.Mesh>();
+  const labelElMap = new Map<string, HTMLSpanElement>();
   const dotOrigPos = new Map<string, THREE.Vector3>();
+
+  function applyKeywordVisibility(pickedIds: Set<string> | null) {
+    for (const kw of keywords) {
+      const selected = pickedIds?.has(kw.id) ?? false;
+      (dotMeshMap.get(kw.id)!.material as THREE.MeshBasicMaterial).opacity =
+        selected ? DOT_OPACITY_ACTIVE : DOT_OPACITY_DIM;
+      labelElMap.get(kw.id)!.style.opacity = String(
+        selected ? LABEL_OPACITY_ACTIVE : LABEL_OPACITY_DIM,
+      );
+    }
+  }
 
   for (const kw of keywords) {
     const rad = (kw.angleDeg * Math.PI) / 180;
@@ -247,7 +263,7 @@ onMounted(async () => {
     const mat = new THREE.MeshBasicMaterial({
       color: DOMAIN_HEX[kw.domain],
       transparent: true,
-      opacity: 1,
+      opacity: DOT_OPACITY_DIM,
     });
     const dot = new THREE.Mesh(dotGeo, mat);
     dot.position.set(RING_R * dx, 0, RING_R * dz);
@@ -267,7 +283,9 @@ onMounted(async () => {
       "font-family:var(--font-body,system-ui,sans-serif)",
       "pointer-events:none",
       `transform:${labelTransform(kw.angleDeg)}`,
+      `opacity:${LABEL_OPACITY_DIM}`,
     ].join(";");
+    labelElMap.set(kw.id, el);
     const labelObj = new CSS2DObject(el);
     labelObj.position.set(LABEL_R * dx, 0, LABEL_R * dz);
     ringGroup.add(labelObj);
@@ -354,11 +372,7 @@ onMounted(async () => {
       hlLines.push(line);
     }
 
-    // 非選択ドットを薄く
-    for (const kw of keywords) {
-      (dotMeshMap.get(kw.id)!.material as THREE.MeshBasicMaterial).opacity =
-        hlPickedIds.has(kw.id) ? 1 : 0.15;
-    }
+    applyKeywordVisibility(hlPickedIds);
 
     hlPhase = "draw";
     hlStartTime = performance.now();
@@ -460,17 +474,14 @@ onMounted(async () => {
       hlCoinEl = null;
     }
 
-    // ドットを元の位置・状態に戻す
+    // ドットを元の位置に戻し、全員を薄い表示に
     for (const kw of hlPicked) {
       const mesh = dotMeshMap.get(kw.id)!;
       mesh.visible = true;
       mesh.position.copy(dotOrigPos.get(kw.id)!);
       mesh.scale.setScalar(1);
-      (mesh.material as THREE.MeshBasicMaterial).opacity = 1;
     }
-    for (const kw of keywords) {
-      (dotMeshMap.get(kw.id)!.material as THREE.MeshBasicMaterial).opacity = 1;
-    }
+    applyKeywordVisibility(null);
 
     after(HIGHLIGHT_SHRINK_MS + HIGHLIGHT_PAUSE_MS, startCycle);
   }
