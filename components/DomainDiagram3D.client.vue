@@ -36,7 +36,6 @@ const DOMAIN_HEX: Record<Domain, number> = {
 
 const RING_R = 5.2;
 const DOT_R = 0.1;
-const SPHERE_R = 1.4;
 const LABEL_R = 6.05;
 
 // アニメーションタイミング（SVG版と同じ値）
@@ -228,22 +227,6 @@ onMounted(async () => {
   const fillLight = new THREE.DirectionalLight(0xd8e8ff, 0.4);
   fillLight.position.set(-6, 1, -8);
   scene.add(fillLight);
-
-  // Central sphere
-  scene.add(
-    new THREE.Mesh(
-      new THREE.SphereGeometry(SPHERE_R, 64, 64),
-      new THREE.MeshPhongMaterial({ color: 0xf3f3f3, specular: 0x888888, shininess: 28 }),
-    ),
-  );
-
-  // Orbital ring
-  scene.add(
-    new THREE.Mesh(
-      new THREE.TorusGeometry(RING_R, 0.028, 8, 300),
-      new THREE.MeshBasicMaterial({ color: 0xa8bfd8, transparent: true, opacity: 0.55 }),
-    ),
-  );
 
   // ── ドット & ラベル ──────────────────────────────────────────────────────────
   const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
