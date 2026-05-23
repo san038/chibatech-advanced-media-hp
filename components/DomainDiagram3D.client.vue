@@ -38,7 +38,7 @@ const RING_R = 5.2;
 const DOT_R = 0.1;
 const CENTER_LABEL_TEXT = "知能メディア工学科";
 const CENTER_HUB_R = 0.78;
-const DOMAIN_HUB_R = 2.85;
+const DOMAIN_HUB_R = 2.15;
 const DOMAIN_HUB_DOT_R = 0.13;
 const BRANCH_LINE_OPACITY = 0.28;
 const DIAGRAM_WHITE_HEX = 0xffffff;
@@ -52,7 +52,10 @@ const TIER_KEYWORD_LABEL_Y = 0.04;
 const TIER_HUB_Y = 0.42;
 const TIER_HUB_LABEL_Y = 0.48;
 const TIER_CENTER_DISK_Y = 0.82;
-const TIER_CENTER_TITLE_Y = 1.05;
+/** 中心サークル Y から学科ラベルを何 px 上に置くか */
+const CENTER_TITLE_PX_ABOVE_CIRCLE = 1;
+/** 学科ラベルより合成ワードをどれだけ上（ワールド Y）に置くか */
+const COIN_LABEL_OFFSET_ABOVE_TITLE = 0.4;
 /** ラベル平面の高さ（ワールド単位） */
 const LABEL_PLANE_H = 0.62;
 const HUB_LABEL_PLANE_H = 0.36;
@@ -72,14 +75,15 @@ const LABEL_OPACITY_ACTIVE = 1;
 const HIGHLIGHT_DRAW_MS = 1200;
 const HIGHLIGHT_MERGE_MS = 1500;
 const COIN_POP_MS = 450;
-const COIN_HOLD_MS = 1100;
+const COIN_HOLD_MS = 1500;
 const COIN_FADE_MS = 800;
 const HIGHLIGHT_SHRINK_MS = 600;
 const HIGHLIGHT_PAUSE_MS = 250;
 const CENTER_SPHERE_R = 0.38;
-const COIN_LABEL_REST_Y = TIER_CENTER_TITLE_Y + 0.08;
-/** フェードアウト時の上方向移動（ワールド Y） */
-const COIN_FADE_RISE_Y = 0.45;
+/** ハイライト曲線の終点: 中心サークル下端から何 px 下か */
+const HIGHLIGHT_LINE_END_PX_BELOW_CIRCLE = 1;
+const TRAVEL_DOT_R = 0.11;
+const TRAVEL_DOT_COLOR = 0xffd54f;
 
 // ── Keyword data ───────────────────────────────────────────────────────────────
 interface KeywordSegment {
@@ -653,7 +657,7 @@ function easeOut(t: number) {
 function easeIn(t: number) {
   return t * t;
 }
-/** 弾むように拡大（爆発的ポップイン用） */
+/** 爆発的ポップイン（coin フェーズの中央ドット用） */
 function easeOutBack(t: number) {
   const c1 = 1.70158;
   const c3 = c1 + 1;
@@ -745,6 +749,17 @@ onMounted(async () => {
 
   const branchGroup = new THREE.Group();
   ringGroup.add(branchGroup);
+
+  /** 中心サークル Y から px 分だけずらした ring ローカル Y（+ が上） */
+  function ringLocalYFromCirclePx(pxOffset: number): number {
+    const local = new THREE.Vector3(0, TIER_CENTER_DISK_Y, 0);
+    const world = ringGroup.localToWorld(local.clone());
+    const dist = camera.position.distanceTo(world);
+    const vh = Math.max(1, container.clientHeight);
+    const worldPerPx =
+      (2 * Math.tan((CAMERA_FOV * Math.PI) / 180 / 2) * dist) / vh;
+    return TIER_CENTER_DISK_Y + worldPerPx * pxOffset;
+  }
 
   const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
   const dotMeshMap = new Map<string, THREE.Mesh>();
@@ -911,8 +926,13 @@ onMounted(async () => {
     0.95,
   );
   centerTitle.rotation.x = -Math.PI / 2;
-  centerTitle.position.y = TIER_CENTER_TITLE_Y;
+  centerTitle.position.y = ringLocalYFromCirclePx(CENTER_TITLE_PX_ABOVE_CIRCLE);
+  centerTitle.renderOrder = 10;
   ringGroup.add(centerTitle);
+
+  function getCoinLabelY(): number {
+    return centerTitle.position.y + COIN_LABEL_OFFSET_ABOVE_TITLE;
+  }
 
   // 中間ドット（3領域）+ 中心との接続 + キーワードへの枝
   for (const hub of DOMAIN_HUBS) {
@@ -1073,18 +1093,46 @@ onMounted(async () => {
   let hlPicked: Keyword3D[] = [];
   let hlPickedIds = new Set<string>();
   let hlLines: THREE.Line[] = [];
-  let hlFillMesh: THREE.Mesh | null = null;
+  let hlPaths: THREE.Vector3[][] = [];
+  let hlTravelDots: THREE.Mesh[] = [];
   let hlCenterSphere: THREE.Mesh | null = null;
   let hlCoinEl: HTMLSpanElement | null = null;
   let hlCoinObj: InstanceType<typeof CSS2DObject> | null = null;
   let hlTimeouts: ReturnType<typeof setTimeout>[] = [];
 
-  const centerVec = new THREE.Vector3(0, 0, 0);
+  function getHighlightCenterTarget(): THREE.Vector3 {
+    return new THREE.Vector3(
+      0,
+      ringLocalYFromCirclePx(-HIGHLIGHT_LINE_END_PX_BELOW_CIRCLE),
+      0,
+    );
+  }
+
+  function disposeHighlightLines() {
+    for (const line of hlLines) {
+      ringGroup.remove(line);
+      line.geometry.dispose();
+      (line.material as THREE.LineBasicMaterial).dispose();
+    }
+    hlLines = [];
+  }
+
+  function disposeTravelDots() {
+    for (const mesh of hlTravelDots) {
+      ringGroup.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
+    hlTravelDots = [];
+    hlPaths = [];
+  }
 
   function clearHL() {
     for (const t of hlTimeouts) clearTimeout(t);
     hlTimeouts = [];
     disposeCenterSphere();
+    disposeHighlightLines();
+    disposeTravelDots();
   }
   function after(ms: number, fn: () => void) {
     hlTimeouts.push(setTimeout(fn, ms));
@@ -1092,7 +1140,7 @@ onMounted(async () => {
 
   function disposeCenterSphere() {
     if (!hlCenterSphere) return;
-    scene.remove(hlCenterSphere);
+    ringGroup.remove(hlCenterSphere);
     hlCenterSphere.geometry.dispose();
     (hlCenterSphere.material as THREE.Material).dispose();
     hlCenterSphere = null;
@@ -1102,17 +1150,19 @@ onMounted(async () => {
     disposeCenterSphere();
     hlCenterSphere = new THREE.Mesh(
       new THREE.SphereGeometry(CENTER_SPHERE_R, 40, 40),
-      new THREE.MeshPhongMaterial({
-        color: 0xf0f2f8,
+      new THREE.MeshBasicMaterial({
+        color: TRAVEL_DOT_COLOR,
         transparent: true,
         opacity: 0,
-        specular: 0x9aa8c4,
-        shininess: 32,
+        depthTest: true,
+        depthWrite: true,
       }),
     );
     hlCenterSphere.scale.setScalar(0.001);
     hlCenterSphere.position.set(0, TIER_CENTER_DISK_Y, 0);
-    scene.add(hlCenterSphere);
+    // 中心円・枝線より手前、タイトル・造語より奥
+    hlCenterSphere.renderOrder = 8;
+    ringGroup.add(hlCenterSphere);
   }
 
   // キーワードの3D位置
@@ -1120,34 +1170,66 @@ onMounted(async () => {
     return posAtAngle(kw.angleDeg, RING_R, TIER_KEYWORD_Y);
   }
 
-  // ベジェ曲線ライン（制御点を中心方向へ引く）
-  function makeBezierLine(fromKw: Keyword3D, toKw: Keyword3D): THREE.Line {
-    const p0 = kwPos(fromKw);
-    const p1 = kwPos(toKw);
-    const SAMPLES = 64;
+  /** キーワード → 中心サークル下端付近への曲線パス */
+  function buildPathToCenter(kw: Keyword3D): THREE.Vector3[] {
+    const p0 = kwPos(kw);
+    const p1 = getHighlightCenterTarget();
+    const ctrl = new THREE.Vector3(
+      (p0.x + p1.x) * 0.38,
+      p0.y + (p1.y - p0.y) * 0.5,
+      (p0.z + p1.z) * 0.38,
+    );
+    const SAMPLES = 56;
     const pts: THREE.Vector3[] = [];
-    // 2次ベジェ: 制御点は p0・p1 の中点を 0.38 倍引き（中心方向へ）
-    const cx = (p0.x + p1.x) * 0.5 * 0.38;
-    const cz = (p0.z + p1.z) * 0.5 * 0.38;
     for (let i = 0; i <= SAMPLES; i++) {
       const t = i / SAMPLES;
       const mt = 1 - t;
       pts.push(
         new THREE.Vector3(
-          mt * mt * p0.x + 2 * mt * t * cx + t * t * p1.x,
-          0.01,
-          mt * mt * p0.z + 2 * mt * t * cz + t * t * p1.z,
+          mt * mt * p0.x + 2 * mt * t * ctrl.x + t * t * p1.x,
+          mt * mt * p0.y + 2 * mt * t * ctrl.y + t * t * p1.y,
+          mt * mt * p0.z + 2 * mt * t * ctrl.z + t * t * p1.z,
         ),
       );
     }
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    return pts;
+  }
+
+  function createHighlightLine(path: THREE.Vector3[]): THREE.Line {
+    const geo = new THREE.BufferGeometry().setFromPoints(path);
     geo.setDrawRange(0, 0);
-    const mat = new THREE.LineBasicMaterial({
-      color: DIAGRAM_WHITE_HEX,
-      transparent: true,
-      opacity: 0.85,
-    });
-    return new THREE.Line(geo, mat);
+    const line = new THREE.Line(
+      geo,
+      new THREE.LineBasicMaterial({
+        color: DIAGRAM_WHITE_HEX,
+        transparent: true,
+        opacity: 0.88,
+      }),
+    );
+    return line;
+  }
+
+  function samplePath(path: THREE.Vector3[], t: number): THREE.Vector3 {
+    const f = Math.max(0, Math.min(1, t)) * (path.length - 1);
+    const i = Math.floor(f);
+    const u = f - i;
+    const a = path[i]!;
+    const b = path[Math.min(i + 1, path.length - 1)]!;
+    return new THREE.Vector3().lerpVectors(a, b, u);
+  }
+
+  function createTravelDot(): THREE.Mesh {
+    const dot = new THREE.Mesh(
+      new THREE.SphereGeometry(TRAVEL_DOT_R, 12, 12),
+      new THREE.MeshBasicMaterial({
+        color: TRAVEL_DOT_COLOR,
+        transparent: true,
+        opacity: 1,
+        depthWrite: false,
+      }),
+    );
+    dot.renderOrder = 20;
+    return dot;
   }
 
   // ─── フェーズ: DRAW ──────────────────────────────────────────────────────
@@ -1160,20 +1242,21 @@ onMounted(async () => {
       .sort((a, b) => a.angleDeg - b.angleDeg);
     hlPickedIds = new Set(hlPicked.map((k) => k.id));
 
-    // 接続ライン生成（閉じたループ）
-    for (const line of hlLines) {
-      ringGroup.remove(line);
-      line.geometry.dispose();
-      (line.material as THREE.LineBasicMaterial).dispose();
-    }
-    hlLines = [];
-    for (let i = 0; i < hlPicked.length; i++) {
-      const line = makeBezierLine(
-        hlPicked[i]!,
-        hlPicked[(i + 1) % hlPicked.length]!,
-      );
+    disposeHighlightLines();
+    disposeTravelDots();
+
+    for (const kw of hlPicked) {
+      const path = buildPathToCenter(kw);
+      hlPaths.push(path);
+      const line = createHighlightLine(path);
       ringGroup.add(line);
       hlLines.push(line);
+
+      const traveler = createTravelDot();
+      traveler.position.copy(path[0]!);
+      traveler.visible = false;
+      ringGroup.add(traveler);
+      hlTravelDots.push(traveler);
     }
 
     applyKeywordVisibility(hlPickedIds);
@@ -1188,6 +1271,9 @@ onMounted(async () => {
   function startMerge() {
     hlPhase = "merge";
     hlStartTime = performance.now();
+    for (const traveler of hlTravelDots) {
+      traveler.visible = true;
+    }
     after(HIGHLIGHT_MERGE_MS, startCoin);
   }
 
@@ -1196,37 +1282,10 @@ onMounted(async () => {
     hlPhase = "coin";
     hlStartTime = performance.now();
 
-    // 選択ドットを非表示（中央へ到達済み）
-    for (const kw of hlPicked) {
-      dotMeshMap.get(kw.id)!.visible = false;
-    }
+    disposeTravelDots();
 
-    // 中央スフィア（造語と同タイミングでばっと表示 → 上へ移動しながら消える）
+    // 中央ドット爆発（造語と同タイミング）
     createCenterSphere();
-
-    // ── 三角形塗り面 ──────────────────────────────────────────────────────
-    const positions: number[] = [];
-    const colors: number[] = [];
-    for (const kw of hlPicked) {
-      const p = kwPos(kw);
-      positions.push(p.x, 0.02, p.z);
-      colors.push(1, 1, 1);
-    }
-    const fGeo = new THREE.BufferGeometry();
-    fGeo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positions, 3),
-    );
-    fGeo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
-    const fMat = new THREE.MeshBasicMaterial({
-      vertexColors: true,
-      transparent: true,
-      opacity: 0,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-    });
-    hlFillMesh = new THREE.Mesh(fGeo, fMat);
-    ringGroup.add(hlFillMesh);
 
     // ── 造語ラベル ─────────────────────────────────────────────────────────
     const word = buildPortmanteau(hlPicked);
@@ -1234,7 +1293,7 @@ onMounted(async () => {
     hlCoinEl.textContent = word;
     Object.assign(hlCoinEl.style, {
       display: "block",
-      fontSize: "clamp(14px, 1.8vw, 22px)",
+      fontSize: "clamp(16px, 2.2vw, 28px)",
       fontWeight: "700",
       color: DIAGRAM_WHITE_CSS,
       textAlign: "center",
@@ -1247,7 +1306,7 @@ onMounted(async () => {
       whiteSpace: "nowrap",
     });
     hlCoinObj = new CSS2DObject(hlCoinEl);
-    hlCoinObj.position.set(0, COIN_LABEL_REST_Y, 0);
+    hlCoinObj.position.set(0, getCoinLabelY(), 0);
     scene.add(hlCoinObj);
 
     after(COIN_POP_MS + COIN_HOLD_MS + COIN_FADE_MS, startShrink);
@@ -1258,27 +1317,13 @@ onMounted(async () => {
     hlPhase = "shrink";
     hlStartTime = performance.now();
 
-    // 塗り面と造語を除去
-    if (hlFillMesh) {
-      ringGroup.remove(hlFillMesh);
-      hlFillMesh.geometry.dispose();
-      (hlFillMesh.material as THREE.MeshBasicMaterial).dispose();
-      hlFillMesh = null;
-    }
     if (hlCoinObj) {
       scene.remove(hlCoinObj);
       hlCoinObj = null;
       hlCoinEl = null;
     }
     disposeCenterSphere();
-
-    // ドットを元の位置に戻し、全員を薄い表示に
-    for (const kw of hlPicked) {
-      const mesh = dotMeshMap.get(kw.id)!;
-      mesh.visible = true;
-      mesh.position.copy(dotOrigPos.get(kw.id)!);
-      mesh.scale.setScalar(1);
-    }
+    disposeTravelDots();
     applyKeywordVisibility(null);
 
     after(HIGHLIGHT_SHRINK_MS + HIGHLIGHT_PAUSE_MS, startCycle);
@@ -1297,30 +1342,28 @@ onMounted(async () => {
       }
     }
 
-    // MERGE: ドットが中央へ収束（透明度は維持）
+    // MERGE: 移動用ドットが曲線に沿って中心へ（キーワードのドットはそのまま）
     if (hlPhase === "merge") {
       const t = easeInOutCubic(Math.min(1, elapsed / HIGHLIGHT_MERGE_MS));
-      for (const kw of hlPicked) {
-        const mesh = dotMeshMap.get(kw.id)!;
-        mesh.position.lerpVectors(dotOrigPos.get(kw.id)!, centerVec, t);
-        mesh.scale.setScalar(1 + t * 0.8);
+      for (let i = 0; i < hlTravelDots.length; i++) {
+        const path = hlPaths[i];
+        const traveler = hlTravelDots[i];
+        if (!path || !traveler) continue;
+        traveler.position.copy(samplePath(path, t));
       }
     }
 
-    // COIN: 塗り面・造語・中央スフィア
-    if (hlPhase === "coin" && hlFillMesh) {
-      const fMat = hlFillMesh.material as THREE.MeshBasicMaterial;
+    // COIN: 中央ドット爆発 + 造語ラベル
+    if (hlPhase === "coin") {
       const centerMat = hlCenterSphere?.material as
-        | THREE.MeshPhongMaterial
+        | THREE.MeshBasicMaterial
         | undefined;
       const fadeStart = COIN_POP_MS + COIN_HOLD_MS;
       const popProgress = Math.min(1, elapsed / COIN_POP_MS);
 
       if (elapsed <= COIN_POP_MS) {
-        // ばっと拡大して出現（スフィア・造語）
         const burstScale = easeOutBack(popProgress);
         const burstOpacity = easeOut(Math.min(1, popProgress * 1.35));
-        fMat.opacity = burstOpacity * 0.32;
 
         if (hlCenterSphere) {
           hlCenterSphere.scale.setScalar(Math.max(0.001, burstScale));
@@ -1330,12 +1373,10 @@ onMounted(async () => {
 
         if (hlCoinEl) {
           hlCoinEl.style.opacity = String(burstOpacity);
-          hlCoinEl.style.transform = `translate(-50%, -50%) scale(${Math.max(0, burstScale)})`;
+          hlCoinEl.style.transform = `translate(-50%, -50%) scale(${Math.max(0.001, burstScale)})`;
         }
-        if (hlCoinObj) hlCoinObj.position.y = COIN_LABEL_REST_Y;
+        if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       } else if (elapsed <= fadeStart) {
-        // ホールド
-        fMat.opacity = 0.32;
         if (hlCenterSphere) {
           hlCenterSphere.scale.setScalar(1);
           hlCenterSphere.position.y = TIER_CENTER_DISK_Y;
@@ -1345,19 +1386,16 @@ onMounted(async () => {
           hlCoinEl.style.opacity = "1";
           hlCoinEl.style.transform = "translate(-50%, -50%) scale(1)";
         }
-        if (hlCoinObj) hlCoinObj.position.y = COIN_LABEL_REST_Y;
+        if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       } else {
-        // 上へ移動しながらふわっと消える
         const fadeT = easeOut(
           Math.min(1, (elapsed - fadeStart) / COIN_FADE_MS),
         );
         const remain = 1 - fadeT;
-        const riseY = fadeT * COIN_FADE_RISE_Y;
-        fMat.opacity = remain * 0.32;
 
         if (hlCenterSphere) {
           hlCenterSphere.scale.setScalar(1);
-          hlCenterSphere.position.y = TIER_CENTER_DISK_Y + riseY;
+          hlCenterSphere.position.y = TIER_CENTER_DISK_Y;
         }
         if (centerMat) centerMat.opacity = remain * 0.92;
 
@@ -1365,16 +1403,17 @@ onMounted(async () => {
           hlCoinEl.style.opacity = String(remain);
           hlCoinEl.style.transform = "translate(-50%, -50%) scale(1)";
         }
-        if (hlCoinObj) hlCoinObj.position.y = COIN_LABEL_REST_Y + riseY;
+        if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       }
     }
 
-    // SHRINK: ラインを縮小
+    // SHRINK: ドット側から中心側へ消える
     if (hlPhase === "shrink") {
       const t = easeIn(Math.min(1, elapsed / HIGHLIGHT_SHRINK_MS));
       for (const line of hlLines) {
         const cnt = line.geometry.attributes["position"]!.count;
-        line.geometry.setDrawRange(0, Math.max(0, Math.floor((1 - t) * cnt)));
+        const start = Math.floor(t * cnt);
+        line.geometry.setDrawRange(start, Math.max(0, cnt - start));
       }
     }
   }
@@ -1408,6 +1447,10 @@ onMounted(async () => {
     camera.updateProjectionMatrix();
     renderer.setSize(cw, ch);
     labelRenderer.setSize(cw, ch);
+    centerTitle.position.y = ringLocalYFromCirclePx(
+      CENTER_TITLE_PX_ABOVE_CIRCLE,
+    );
+    if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
   });
   resizeObs.observe(container);
 
