@@ -58,7 +58,7 @@
 .hero__diagram {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -75,9 +75,9 @@
   background: linear-gradient(
     to top,
     #ffffff 0%,
-    rgba(255, 255, 255, 0.92) 18%,
-    rgba(255, 255, 255, 0.45) 42%,
-    transparent 68%
+    rgba(255, 255, 255, 0.88) 22%,
+    rgba(255, 255, 255, 0.18) 55%,
+    transparent 78%
   );
 }
 

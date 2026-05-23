@@ -40,7 +40,7 @@ const CENTER_LABEL_TEXT = "知能メディア工学科";
 const CENTER_HUB_R = 0.78;
 const DOMAIN_HUB_R = 2.85;
 const DOMAIN_HUB_DOT_R = 0.13;
-const BRANCH_LINE_OPACITY = 0.14;
+const BRANCH_LINE_OPACITY = 0.28;
 /** SVG gap=9, R=210 を 3D 円周に換算したラベルとドット間距離 */
 const LABEL_GAP = (9 / 210) * RING_R * 0.85;
 const LABEL_Y = 0.04;
@@ -54,9 +54,9 @@ const RING_TILT_X = 0.2;
 const CAMERA_FOV = 46;
 /** キーワードリングの回転速度（rad/s）— 約90秒で1周 */
 const RING_ROTATION_RAD_PER_S = (2 * Math.PI) / 90;
-const DOT_OPACITY_DIM = 0.15;
+const DOT_OPACITY_DIM = 0.42;
 const DOT_OPACITY_ACTIVE = 1;
-const LABEL_OPACITY_DIM = 0.32;
+const LABEL_OPACITY_DIM = 0.58;
 const LABEL_OPACITY_ACTIVE = 1;
 
 // アニメーションタイミング（SVG版と同じ値）
@@ -852,9 +852,9 @@ onMounted(async () => {
   const centerDisk = new THREE.Mesh(
     new THREE.CircleGeometry(CENTER_HUB_R * 0.88, 64),
     new THREE.MeshBasicMaterial({
-      color: 0xffffff,
+      color: 0xf8f8f8,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.96,
       side: THREE.DoubleSide,
     }),
   );
@@ -865,9 +865,9 @@ onMounted(async () => {
   const centerRing = new THREE.Mesh(
     new THREE.RingGeometry(CENTER_HUB_R * 0.88, CENTER_HUB_R, 64),
     new THREE.MeshBasicMaterial({
-      color: 0x3a3a3a,
+      color: 0x2a2a2a,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.55,
       side: THREE.DoubleSide,
     }),
   );
