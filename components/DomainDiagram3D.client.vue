@@ -85,6 +85,30 @@ const CENTER_SPHERE_R = 0.38;
 const HIGHLIGHT_LINE_END_PX_BELOW_CIRCLE = 1;
 const TRAVEL_DOT_R = 0.11;
 const TRAVEL_DOT_COLOR = 0xffd54f;
+/** 中心 → 外周のパーティクル */
+const PARTICLES_PER_KEYWORD = 52;
+const PARTICLES_PER_HUB = 140;
+const PARTICLE_SIZE = 0.05;
+const PARTICLE_OPACITY = 0.36;
+/** 中心 → 外周へ流れる速度（小さいほどゆったり） */
+const PARTICLE_TRAVEL_SPEED = 0.028;
+const PARTICLE_R_INNER_MIN = CENTER_HUB_R * 0.25;
+const PARTICLE_R_INNER_MAX = DOMAIN_HUB_R * 0.75;
+const PARTICLE_WOBBLE_ANGLE = 0.022;
+const PARTICLE_WOBBLE_R = 0.04;
+
+interface FieldParticle {
+  angle: number;
+  rInner: number;
+  rOuter: number;
+  yInner: number;
+  yOuter: number;
+  phase: number;
+  speed: number;
+  wobblePhase: number;
+  wobbleAngle: number;
+  wobbleR: number;
+}
 
 // ── Keyword data ───────────────────────────────────────────────────────────────
 interface KeywordSegment {
@@ -768,6 +792,7 @@ onMounted(async () => {
   const dotOrigPos = new Map<string, THREE.Vector3>();
 
   const hubPosByKey = new Map<HubKey, THREE.Vector3>();
+  const hubLabelMeshMap = new Map<HubKey, THREE.Mesh>();
 
   function posAtAngle(angleDeg: number, r: number, y = 0.006): THREE.Vector3 {
     const rad = (angleDeg * Math.PI) / 180;
@@ -958,6 +983,7 @@ onMounted(async () => {
       HUB_LABEL_FONT_PX,
     );
     ringGroup.add(hubLabel);
+    hubLabelMeshMap.set(hub.key, hubLabel);
 
     addLineStraight(
       new THREE.Vector3(0, TIER_CENTER_DISK_Y, 0),
@@ -1047,6 +1073,9 @@ onMounted(async () => {
     mesh.renderOrder = 2;
 
     mesh.userData.labelTexture = texture;
+    mesh.userData.planeW = planeW;
+    mesh.userData.innerR = innerR;
+    mesh.userData.angleDeg = angleDeg;
     return mesh;
   }
 
@@ -1087,6 +1116,110 @@ onMounted(async () => {
     labelMeshMap.set(kw.id, labelMesh);
     ringGroup.add(labelMesh);
   }
+
+  const fieldParticles: FieldParticle[] = [];
+
+  function addFieldParticle(
+    angleDeg: number,
+    rOuter: number,
+    yOuter: number,
+    angleSpread: number,
+    yInner = TIER_CENTER_DISK_Y,
+  ) {
+    const angle =
+      (angleDeg * Math.PI) / 180 + (Math.random() - 0.5) * angleSpread;
+    const rInner =
+      PARTICLE_R_INNER_MIN +
+      Math.random() * (PARTICLE_R_INNER_MAX - PARTICLE_R_INNER_MIN);
+    fieldParticles.push({
+      angle,
+      rInner,
+      rOuter,
+      yInner: yInner + (Math.random() - 0.5) * 0.03,
+      yOuter: yOuter + (Math.random() - 0.5) * 0.04,
+      phase: Math.random(),
+      speed: PARTICLE_TRAVEL_SPEED * (0.65 + Math.random() * 0.7),
+      wobblePhase: Math.random() * Math.PI * 2,
+      wobbleAngle: PARTICLE_WOBBLE_ANGLE * (0.35 + Math.random() * 0.5),
+      wobbleR: PARTICLE_WOBBLE_R * (0.35 + Math.random() * 0.5),
+    });
+  }
+
+  for (const kw of keywords) {
+    const angleDeg = labelMeshMap.get(kw.id)!.userData.angleDeg as number;
+
+    for (let i = 0; i < PARTICLES_PER_KEYWORD; i++) {
+      addFieldParticle(
+        angleDeg,
+        RING_R,
+        TIER_KEYWORD_LABEL_Y,
+        0.06 + Math.random() * 0.05,
+      );
+    }
+  }
+
+  for (const hub of DOMAIN_HUBS) {
+    const hubAngles = keywords
+      .filter((k) => hubKeyForDomain(k.domain) === hub.key)
+      .map((k) => k.angleDeg);
+    const minA = Math.min(...hubAngles, hub.angleDeg);
+    const maxA = Math.max(...hubAngles, hub.angleDeg);
+    const sectorSpread = ((maxA - minA) * Math.PI) / 180 + 0.1;
+
+    for (let i = 0; i < PARTICLES_PER_HUB; i++) {
+      const angleDeg = minA + (maxA - minA) * Math.random();
+      addFieldParticle(
+        angleDeg,
+        RING_R,
+        TIER_KEYWORD_LABEL_Y,
+        sectorSpread,
+        TIER_HUB_Y,
+      );
+    }
+  }
+
+  const particlePositionArray = new Float32Array(fieldParticles.length * 3);
+  const particleGeo = new THREE.BufferGeometry();
+  particleGeo.setAttribute(
+    "position",
+    new THREE.BufferAttribute(particlePositionArray, 3),
+  );
+  const labelFieldParticles = new THREE.Points(
+    particleGeo,
+    new THREE.PointsMaterial({
+      color: DIAGRAM_WHITE_HEX,
+      size: PARTICLE_SIZE,
+      sizeAttenuation: true,
+      transparent: true,
+      opacity: PARTICLE_OPACITY,
+      depthWrite: false,
+    }),
+  );
+  labelFieldParticles.renderOrder = 1;
+  ringGroup.add(labelFieldParticles);
+
+  function writeFieldParticlePositions(timeSec: number) {
+    const attr = particleGeo.attributes.position as THREE.BufferAttribute;
+    const arr = attr.array as Float32Array;
+    for (let i = 0; i < fieldParticles.length; i++) {
+      const p = fieldParticles[i]!;
+      const travel = (timeSec * p.speed + p.phase) % 1;
+      // smoothstep: ゆったり加速・減速
+      const t = travel * travel * (3 - 2 * travel);
+      const r = p.rInner + (p.rOuter - p.rInner) * t;
+      const y = p.yInner + (p.yOuter - p.yInner) * t;
+      const wobble = Math.sin(timeSec * 0.9 + p.wobblePhase);
+      const a = p.angle + wobble * p.wobbleAngle * (1 - t * 0.35);
+      const rJit = r + wobble * p.wobbleR;
+      const idx = i * 3;
+      arr[idx] = Math.cos(a) * rJit;
+      arr[idx + 1] = y;
+      arr[idx + 2] = Math.sin(a) * rJit;
+    }
+    attr.needsUpdate = true;
+  }
+
+  writeFieldParticlePositions(0);
 
   // ── ハイライトアニメーション ──────────────────────────────────────────────
   type HLPhase = "idle" | "draw" | "merge" | "coin" | "shrink";
@@ -1432,7 +1565,10 @@ onMounted(async () => {
       }
     }
     lastFrameTime = now;
-    if (!reduceMotion) updateHighlight(now);
+    if (!reduceMotion) {
+      updateHighlight(now);
+      writeFieldParticlePositions(now * 0.001);
+    }
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
   };
@@ -1460,6 +1596,8 @@ onMounted(async () => {
     cancelAnimationFrame(rafId);
     clearHL();
     resizeObs.disconnect();
+    labelFieldParticles.geometry.dispose();
+    (labelFieldParticles.material as THREE.PointsMaterial).dispose();
     renderer.dispose();
     container.innerHTML = "";
   };
