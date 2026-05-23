@@ -246,6 +246,12 @@ const designTopic = [
   border-top: 1px solid var(--color-surface);
 }
 
+@media (max-width: 767px) {
+  .about-pillar {
+    gap: var(--space-sm);
+  }
+}
+
 .about-pillar:last-of-type {
   border-bottom: 1px solid var(--color-surface);
 }

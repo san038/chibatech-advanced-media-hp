@@ -15,11 +15,11 @@
           <h1 class="hero__headline">
             <span class="hero__headline-line">
               <span class="hero__headline-line__bar" aria-hidden="true" />
-              <span class="hero__headline-line__text">新時代の</span>
+              <span class="hero__headline-line__text">新時代の想像力、</span>
             </span>
             <span class="hero__headline-line hero__headline-line--delay">
               <span class="hero__headline-line__bar" aria-hidden="true" />
-              <span class="hero__headline-line__text">創造力を育む</span>
+              <span class="hero__headline-line__text">3つの領域の先へ</span>
             </span>
           </h1>
         </div>
@@ -121,7 +121,7 @@
   align-items: flex-start;
   gap: 0.35em;
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 6vw, var(--text-7xl));
+  font-size: clamp(2.125rem, 5vw, var(--text-6xl));
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1;
