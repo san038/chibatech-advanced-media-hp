@@ -52,8 +52,12 @@ const TIER_KEYWORD_LABEL_Y = 0.04;
 const TIER_HUB_Y = 0.42;
 const TIER_HUB_LABEL_Y = 0.48;
 const TIER_CENTER_DISK_Y = 0.82;
-/** 中心サークル Y から学科ラベルを何 px 上に置くか */
-const CENTER_TITLE_PX_ABOVE_CIRCLE = 1;
+/** 中心リング外周に沿った学科ラベルの半径（ワールド単位） */
+const CENTER_LABEL_ARC_R = CENTER_HUB_R * 0.8;
+/** 弧の中心角（度）— 90°=+Z（カメラ正面） */
+const CENTER_LABEL_ARC_CENTER_DEG = 0;
+const CENTER_LABEL_FONT_PX = 22;
+const CENTER_LABEL_CHAR_PLANE_H = 0.28;
 /** 学科ラベルより合成ワードをどれだけ上（ワールド Y）に置くか */
 const COIN_LABEL_OFFSET_ABOVE_TITLE = 0.4;
 /** ラベル平面の高さ（ワールド単位） */
@@ -872,49 +876,83 @@ onMounted(async () => {
     return line;
   }
 
-  /** 中央テキスト平面（円内・中央寄せ） */
-  function createCenteredTextPlane(
+  /** 中心円周（半径 R）に沿って 1 文字ずつ弧上に配置 */
+  function createArcCenterLabel(
     text: string,
     colorCss: string,
     fontPx: number,
-    planeH: number,
+    charPlaneH: number,
+    radius: number,
+    y: number,
+    arcCenterDeg: number,
     opacity: number,
-  ): THREE.Mesh {
+  ): THREE.Group {
+    const group = new THREE.Group();
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const font = `600 ${fontPx}px var(--font-body, system-ui, sans-serif)`;
     const probe = document.createElement("canvas").getContext("2d")!;
     probe.font = font;
-    const textW = probe.measureText(text).width;
-    const padX = 10;
-    const padY = 6;
-    const logicalW = textW + padX * 2;
-    const logicalH = fontPx + padY * 2;
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.ceil(logicalW * dpr);
-    canvas.height = Math.ceil(logicalH * dpr);
-    const ctx = canvas.getContext("2d")!;
-    ctx.scale(dpr, dpr);
-    ctx.font = font;
-    ctx.fillStyle = colorCss;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, logicalW / 2, logicalH / 2);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter;
-    texture.generateMipmaps = false;
-    const planeW = planeH * (logicalW / logicalH);
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(planeW, planeH),
-      new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        opacity,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      }),
-    );
-    mesh.userData.labelTexture = texture;
-    return mesh;
+
+    const chars = [...text];
+    const widths = chars.map((ch) => probe.measureText(ch).width);
+    const totalPx = widths.reduce((a, b) => a + b, 0);
+    const pxToWorld = charPlaneH / fontPx;
+    const arcSpan = (totalPx * pxToWorld) / radius;
+    const arcCenter = (arcCenterDeg * Math.PI) / 180;
+    let angle = arcCenter - arcSpan / 2;
+
+    const charRadial = new THREE.Vector3();
+    const charTangent = new THREE.Vector3();
+    const charBasis = new THREE.Matrix4();
+
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i]!;
+      const wPx = widths[i]!;
+      const charArc = (wPx * pxToWorld) / radius;
+      const midAngle = angle + charArc / 2;
+      angle += charArc;
+
+      const padX = 2;
+      const padY = 4;
+      const logicalW = wPx + padX * 2;
+      const logicalH = fontPx + padY * 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.ceil(logicalW * dpr);
+      canvas.height = Math.ceil(logicalH * dpr);
+      const ctx = canvas.getContext("2d")!;
+      ctx.scale(dpr, dpr);
+      ctx.font = font;
+      ctx.fillStyle = colorCss;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(ch, logicalW / 2, logicalH / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      texture.generateMipmaps = false;
+      const planeW = charPlaneH * (logicalW / logicalH);
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(planeW, charPlaneH),
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          opacity,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        }),
+      );
+      mesh.userData.labelTexture = texture;
+
+      charRadial.set(Math.cos(midAngle), 0, Math.sin(midAngle));
+      charTangent.set(-Math.sin(midAngle), 0, Math.cos(midAngle));
+      // XZ 平面に寝かせる: 接線=横、半径方向=縦、法線=+Y
+      charBasis.makeBasis(charTangent, charRadial, up);
+      mesh.quaternion.setFromRotationMatrix(charBasis);
+      mesh.position.set(charRadial.x * radius, y, charRadial.z * radius);
+      mesh.renderOrder = 10;
+      group.add(mesh);
+    }
+    return group;
   }
 
   // 中心サークル + タイトル
@@ -944,20 +982,20 @@ onMounted(async () => {
   centerRing.position.y = TIER_CENTER_DISK_Y + 0.001;
   ringGroup.add(centerRing);
 
-  const centerTitle = createCenteredTextPlane(
+  const centerLabelGroup = createArcCenterLabel(
     CENTER_LABEL_TEXT,
     DIAGRAM_WHITE_CSS,
-    22,
-    0.38,
+    CENTER_LABEL_FONT_PX,
+    CENTER_LABEL_CHAR_PLANE_H,
+    CENTER_LABEL_ARC_R,
+    TIER_CENTER_DISK_Y + 0.002,
+    CENTER_LABEL_ARC_CENTER_DEG,
     0.95,
   );
-  centerTitle.rotation.x = -Math.PI / 2;
-  centerTitle.position.y = ringLocalYFromCirclePx(CENTER_TITLE_PX_ABOVE_CIRCLE);
-  centerTitle.renderOrder = 10;
-  ringGroup.add(centerTitle);
+  ringGroup.add(centerLabelGroup);
 
   function getCoinLabelY(): number {
-    return centerTitle.position.y + COIN_LABEL_OFFSET_ABOVE_TITLE;
+    return TIER_CENTER_DISK_Y + COIN_LABEL_OFFSET_ABOVE_TITLE;
   }
 
   // 中間ドット（3領域）+ 中心との接続 + キーワードへの枝
@@ -1585,9 +1623,6 @@ onMounted(async () => {
     camera.updateProjectionMatrix();
     renderer.setSize(cw, ch);
     labelRenderer.setSize(cw, ch);
-    centerTitle.position.y = ringLocalYFromCirclePx(
-      CENTER_TITLE_PX_ABOVE_CIRCLE,
-    );
     if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
   });
   resizeObs.observe(container);
