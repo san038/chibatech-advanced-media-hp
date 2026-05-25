@@ -81,8 +81,10 @@ const LABEL_OPACITY_DIM = 0.58;
 const LABEL_OPACITY_ACTIVE = 1;
 
 // アニメーションタイミング（SVG版と同じ値）
-const HIGHLIGHT_DRAW_MS = 1200;
-const HIGHLIGHT_MERGE_MS = 1500;
+const HIGHLIGHT_DRAW_MS = 750;
+const HIGHLIGHT_MERGE_MS = 850;
+/** キーワード→中心（線の伸長＋先端ドット移動）の合計時間 */
+const HIGHLIGHT_PATH_MS = HIGHLIGHT_DRAW_MS + HIGHLIGHT_MERGE_MS;
 const COIN_POP_MS = 450;
 /** 合成ワードを不透明度100%で表示し続ける時間（読み取り用） */
 const COIN_HOLD_MS = 5000;
@@ -1544,7 +1546,7 @@ onMounted(async () => {
   }
 
   // ── ハイライトアニメーション ──────────────────────────────────────────────
-  type HLPhase = "idle" | "draw" | "merge" | "coin" | "shrink";
+  type HLPhase = "idle" | "draw" | "coin" | "shrink";
   let hlPhase: HLPhase = "idle";
   let hlStartTime = 0;
   let hlPicked: Keyword3D[] = [];
@@ -1662,6 +1664,21 @@ onMounted(async () => {
     return line;
   }
 
+  /** progress: 0=キーワード側, 1=中心（線の描画範囲と先端ドットを同期） */
+  function applyHighlightPathProgress(progress: number) {
+    const t = Math.max(0, Math.min(1, progress));
+    for (let i = 0; i < hlLines.length; i++) {
+      const line = hlLines[i];
+      const path = hlPaths[i];
+      const cnt = line.geometry.attributes["position"]!.count;
+      line.geometry.setDrawRange(0, Math.max(1, Math.floor(t * cnt)));
+      const traveler = hlTravelDots[i];
+      if (path && traveler) {
+        traveler.position.copy(samplePath(path, t));
+      }
+    }
+  }
+
   /** fadeT: 0=表示, 1=非表示（キーワード側から中心へ消える + 不透明度） */
   function applyHighlightLinesFade(fadeT: number) {
     const t = Math.max(0, Math.min(1, fadeT));
@@ -1718,7 +1735,7 @@ onMounted(async () => {
 
       const traveler = createTravelDot();
       traveler.position.copy(path[0]!);
-      traveler.visible = false;
+      traveler.visible = true;
       ringGroup.add(traveler);
       hlTravelDots.push(traveler);
     }
@@ -1728,17 +1745,7 @@ onMounted(async () => {
     hlPhase = "draw";
     hlStartTime = performance.now();
 
-    after(HIGHLIGHT_DRAW_MS, startMerge);
-  }
-
-  // ─── フェーズ: MERGE ─────────────────────────────────────────────────────
-  function startMerge() {
-    hlPhase = "merge";
-    hlStartTime = performance.now();
-    for (const traveler of hlTravelDots) {
-      traveler.visible = true;
-    }
-    after(HIGHLIGHT_MERGE_MS, startCoin);
+    after(HIGHLIGHT_PATH_MS, startCoin);
   }
 
   // ─── フェーズ: COIN ──────────────────────────────────────────────────────
@@ -1823,24 +1830,10 @@ onMounted(async () => {
   function updateHighlight(now: number) {
     const elapsed = now - hlStartTime;
 
-    // DRAW: ラインを描画
+    // DRAW: ライン伸長と先端の黄色ドットを同期
     if (hlPhase === "draw") {
-      const t = easeOut(Math.min(1, elapsed / HIGHLIGHT_DRAW_MS));
-      for (const line of hlLines) {
-        const cnt = line.geometry.attributes["position"]!.count;
-        line.geometry.setDrawRange(0, Math.max(1, Math.floor(t * cnt)));
-      }
-    }
-
-    // MERGE: 移動用ドットが曲線に沿って中心へ（キーワードのドットはそのまま）
-    if (hlPhase === "merge") {
-      const t = easeInOutCubic(Math.min(1, elapsed / HIGHLIGHT_MERGE_MS));
-      for (let i = 0; i < hlTravelDots.length; i++) {
-        const path = hlPaths[i];
-        const traveler = hlTravelDots[i];
-        if (!path || !traveler) continue;
-        traveler.position.copy(samplePath(path, t));
-      }
+      const t = easeOut(Math.min(1, elapsed / HIGHLIGHT_PATH_MS));
+      applyHighlightPathProgress(t);
     }
 
     // COIN: 中央ドット爆発 + 造語ラベル
