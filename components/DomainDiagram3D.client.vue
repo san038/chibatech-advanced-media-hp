@@ -46,8 +46,14 @@ const RING_R = 5.2;
 const DOT_R = 0.1;
 const CENTER_LABEL_TEXT = "知能メディア工学科";
 const CENTER_HUB_R = 0.78;
-const DOMAIN_HUB_R = 2.15;
-const DOMAIN_HUB_DOT_R = 0.13;
+/** 領域ラベル（弧上テキスト）の半径 — SVG innerPolar r≈148 / R=210 を換算 */
+const DOMAIN_LABEL_ARC_R = RING_R * (148 / 210);
+/** 色付き領域弧（キーワードリングのやや内側） */
+const DOMAIN_ARC_R = RING_R * (198 / 210);
+const DOMAIN_ARC_PAD_DEG = 5;
+const DOMAIN_ARC_SAMPLES = 56;
+/** 領域弧の壁高さ（キーワードドット直径と同じ） */
+const DOMAIN_ARC_WALL_H = DOT_R * 2;
 /** DomainDiagram の .domain-diagram__link-path に合わせる */
 const GRAY_LINK_COLOR = 0xb8b3b0;
 const GRAY_LINK_OPACITY = 0.32;
@@ -136,31 +142,40 @@ const angMediaToDesign = equalArcDots(-90, 30, 15);
 
 type HubKey = "design" | "knowledge" | "media";
 
-const DOMAIN_HUBS: {
+/** 3領域の120°扇形（DomainDiagram の angMediaToDesign / angDesignToKnowledge / angKnowledgeToMedia） */
+const DOMAIN_SECTORS: {
   key: HubKey;
   label: string;
-  angleDeg: number;
+  startDeg: number;
+  endDeg: number;
+  arcCenterDeg: number;
   hex: number;
   css: string;
 }[] = [
   {
     key: "design",
     label: "情報デザイン",
-    angleDeg: -30,
+    startDeg: -90,
+    endDeg: 30,
+    arcCenterDeg: -30,
     hex: DOMAIN_HEX.design,
     css: DOMAIN_CSS.design,
   },
   {
     key: "knowledge",
     label: "知能工学",
-    angleDeg: 90,
+    startDeg: 30,
+    endDeg: 150,
+    arcCenterDeg: 90,
     hex: DOMAIN_HEX.knowledge,
     css: DOMAIN_CSS.knowledge,
   },
   {
     key: "media",
     label: "メディア工学",
-    angleDeg: 210,
+    startDeg: 150,
+    endDeg: 270,
+    arcCenterDeg: 210,
     hex: DOMAIN_HEX.media,
     css: DOMAIN_CSS.media,
   },
@@ -1424,28 +1439,80 @@ onMounted(async () => {
     return TIER_CENTER_DISK_Y + COIN_LABEL_OFFSET_ABOVE_TITLE;
   }
 
-  // 中間ドット（3領域）
-  for (const hub of DOMAIN_HUBS) {
-    const hubPos = posAtAngle(hub.angleDeg, DOMAIN_HUB_R, TIER_HUB_Y);
+  /** 領域の色付き半弧（キーワードリング内側・ドットと同高さの壁） */
+  function createDomainSectorArcWall(
+    startDeg: number,
+    endDeg: number,
+    color: number,
+  ): THREE.Mesh {
+    const a0 = startDeg + DOMAIN_ARC_PAD_DEG;
+    const a1 = endDeg - DOMAIN_ARC_PAD_DEG;
+    const y0 = TIER_KEYWORD_Y - DOT_R;
+    const y1 = y0 + DOMAIN_ARC_WALL_H;
+    const positions: number[] = [];
+    const indices: number[] = [];
 
-    const hubDot = new THREE.Mesh(
-      new THREE.SphereGeometry(DOMAIN_HUB_DOT_R, 12, 12),
-      new THREE.MeshBasicMaterial({ color: hub.hex }),
+    for (let i = 0; i <= DOMAIN_ARC_SAMPLES; i++) {
+      const t = i / DOMAIN_ARC_SAMPLES;
+      const deg = a0 + (a1 - a0) * t;
+      const p = posAtAngle(deg, DOMAIN_ARC_R, 0);
+      positions.push(p.x, y0, p.z, p.x, y1, p.z);
+    }
+
+    for (let i = 0; i < DOMAIN_ARC_SAMPLES; i++) {
+      const b0 = i * 2;
+      const t0 = i * 2 + 1;
+      const b1 = (i + 1) * 2;
+      const t1 = (i + 1) * 2 + 1;
+      indices.push(b0, t0, b1, b1, t0, t1);
+    }
+
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(positions, 3),
     );
-    hubDot.position.copy(hubPos);
-    ringGroup.add(hubDot);
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
 
-    const hubLabel = createRadialLabelMesh(
-      hub.label,
-      hub.css,
-      hub.angleDeg,
-      0.9,
-      DOMAIN_HUB_R,
-      HUB_LABEL_PLANE_H,
-      TIER_HUB_LABEL_Y,
+    const wall = new THREE.Mesh(
+      geo,
+      new THREE.MeshStandardMaterial({
+        color,
+        transparent: true,
+        opacity: 0.92,
+        roughness: 0.55,
+        metalness: 0.08,
+        side: THREE.DoubleSide,
+      }),
+    );
+    wall.renderOrder = 1;
+    return wall;
+  }
+
+  const domainArcGroup = new THREE.Group();
+  for (const sector of DOMAIN_SECTORS) {
+    domainArcGroup.add(
+      createDomainSectorArcWall(sector.startDeg, sector.endDeg, sector.hex),
+    );
+  }
+  ringGroup.add(domainArcGroup);
+
+  for (const sector of DOMAIN_SECTORS) {
+    const domainLabelGroup = createArcCenterLabel(
+      sector.label,
+      sector.css,
       HUB_LABEL_FONT_PX,
+      HUB_LABEL_PLANE_H,
+      DOMAIN_LABEL_ARC_R,
+      TIER_HUB_LABEL_Y,
+      sector.arcCenterDeg,
+      0.95,
     );
-    ringGroup.add(hubLabel);
+    for (const child of domainLabelGroup.children) {
+      child.renderOrder = 4;
+    }
+    ringGroup.add(domainLabelGroup);
   }
 
   /** 円周 XZ 平面にラベルを配置（中心角度に傾け、外側へ左寄せ） */
