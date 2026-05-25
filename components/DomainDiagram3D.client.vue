@@ -84,8 +84,9 @@ const LABEL_OPACITY_ACTIVE = 1;
 const HIGHLIGHT_DRAW_MS = 1200;
 const HIGHLIGHT_MERGE_MS = 1500;
 const COIN_POP_MS = 450;
-const COIN_HOLD_MS = 2000;
-const COIN_FADE_MS = 800;
+/** 合成ワードを不透明度100%で表示し続ける時間（読み取り用） */
+const COIN_HOLD_MS = 5000;
+const COIN_FADE_MS = 1200;
 /** 合成ワードの下からスライドイン距離（px） */
 const COIN_SLIDE_IN_PX = 28;
 /** 合成ワード（CSS2D）のフォントサイズ */
@@ -99,6 +100,8 @@ const CENTER_SPHERE_R = 0.38;
 const HIGHLIGHT_LINE_END_PX_BELOW_CIRCLE = 1;
 const TRAVEL_DOT_R = 0.11;
 const TRAVEL_DOT_COLOR = 0xffd54f;
+/** ハイライト曲線の不透明度（フェード時の基準値） */
+const HL_LINE_OPACITY = 0.88;
 
 // ── Keyword data ───────────────────────────────────────────────────────────────
 interface KeywordSegment {
@@ -1061,7 +1064,7 @@ function pickCompositeHighlight(): { word: string; keywords: Keyword3D[] } {
 }
 
 function buildSourceKeywordsLine(kws: Keyword3D[]): string {
-  return kws.map((kw) => `＜${kw.label}＞`).join("＋");
+  return kws.map((kw) => kw.label).join("＋");
 }
 
 // ── イージング ────────────────────────────────────────────────────────────────
@@ -1653,10 +1656,22 @@ onMounted(async () => {
       new THREE.LineBasicMaterial({
         color: TRAVEL_DOT_COLOR,
         transparent: true,
-        opacity: 0.88,
+        opacity: HL_LINE_OPACITY,
       }),
     );
     return line;
+  }
+
+  /** fadeT: 0=表示, 1=非表示（キーワード側から中心へ消える + 不透明度） */
+  function applyHighlightLinesFade(fadeT: number) {
+    const t = Math.max(0, Math.min(1, fadeT));
+    const remain = 1 - t;
+    for (const line of hlLines) {
+      const cnt = line.geometry.attributes["position"]!.count;
+      const start = Math.floor(t * cnt);
+      line.geometry.setDrawRange(start, Math.max(0, cnt - start));
+      (line.material as THREE.LineBasicMaterial).opacity = remain * HL_LINE_OPACITY;
+    }
   }
 
   function samplePath(path: THREE.Vector3[], t: number): THREE.Vector3 {
@@ -1798,6 +1813,7 @@ onMounted(async () => {
     }
     disposeCenterSphere();
     disposeTravelDots();
+    disposeHighlightLines();
     applyKeywordVisibility(null);
 
     after(HIGHLIGHT_SHRINK_MS + HIGHLIGHT_PAUSE_MS, startCycle);
@@ -1863,6 +1879,7 @@ onMounted(async () => {
           hlCoinAnimEl.style.transform = "translateY(0)";
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
+        applyHighlightLinesFade(0);
       } else {
         const fadeT = easeOut(
           Math.min(1, (elapsed - fadeStart) / COIN_FADE_MS),
@@ -1880,16 +1897,7 @@ onMounted(async () => {
           hlCoinAnimEl.style.transform = `translateY(${-10 * fadeT}px)`;
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
-      }
-    }
-
-    // SHRINK: ドット側から中心側へ消える
-    if (hlPhase === "shrink") {
-      const t = easeIn(Math.min(1, elapsed / HIGHLIGHT_SHRINK_MS));
-      for (const line of hlLines) {
-        const cnt = line.geometry.attributes["position"]!.count;
-        const start = Math.floor(t * cnt);
-        line.geometry.setDrawRange(start, Math.max(0, cnt - start));
+        applyHighlightLinesFade(fadeT);
       }
     }
   }
