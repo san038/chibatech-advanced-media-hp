@@ -87,7 +87,7 @@ const HIGHLIGHT_MERGE_MS = 850;
 const HIGHLIGHT_PATH_MS = HIGHLIGHT_DRAW_MS + HIGHLIGHT_MERGE_MS;
 const COIN_POP_MS = 450;
 /** 合成ワード表示直後のワンショット・グリッチ時間 */
-const COIN_GLITCH_MS = 420;
+const COIN_GLITCH_MS = 220;
 /** 合成ワードを不透明度100%で表示し続ける時間（読み取り用） */
 const COIN_HOLD_MS = 5000;
 const COIN_FADE_MS = 1200;
@@ -2012,14 +2012,14 @@ onUnmounted(() => {
   left: -2px;
   opacity: 1;
   text-shadow: 1px 0 #5eb8ff;
-  animation: diagram-3d-glitch-a 0.42s steps(7) 1 forwards;
+  animation: diagram-3d-glitch-a 0.2s steps(4) 1 forwards;
 }
 
 .diagram-3d-coin-glitch--active::after {
   left: 2px;
   opacity: 1;
   text-shadow: -1px 0 #ff6b7a;
-  animation: diagram-3d-glitch-b 0.48s steps(7) 1 forwards;
+  animation: diagram-3d-glitch-b 0.22s steps(4) 1 forwards;
 }
 
 .diagram-3d-coin-glitch--settled::before,
