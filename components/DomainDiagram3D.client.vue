@@ -86,15 +86,13 @@ const HIGHLIGHT_MERGE_MS = 850;
 /** キーワード→中心（線の伸長＋先端ドット移動）の合計時間 */
 const HIGHLIGHT_PATH_MS = HIGHLIGHT_DRAW_MS + HIGHLIGHT_MERGE_MS;
 const COIN_POP_MS = 450;
+/** 合成ワード表示直後のワンショット・グリッチ時間 */
+const COIN_GLITCH_MS = 420;
 /** 合成ワードを不透明度100%で表示し続ける時間（読み取り用） */
 const COIN_HOLD_MS = 5000;
 const COIN_FADE_MS = 1200;
 /** 合成ワードの下からスライドイン距離（px） */
 const COIN_SLIDE_IN_PX = 28;
-/** 合成ワード（CSS2D）のフォントサイズ */
-const COIN_WORD_FONT = "clamp(20px, 2.8vw, 36px)";
-/** 合成元キーワード行のフォントサイズ */
-const COIN_SOURCE_FONT = "clamp(10px, 1.15vw, 13px)";
 const HIGHLIGHT_SHRINK_MS = 600;
 const HIGHLIGHT_PAUSE_MS = 250;
 const CENTER_SPHERE_R = 0.38;
@@ -1128,6 +1126,18 @@ onMounted(async () => {
   const reduceMotion =
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
+  function createCoinWordEl(displayText: string): HTMLSpanElement {
+    const el = document.createElement("span");
+    el.textContent = displayText;
+    if (reduceMotion) {
+      el.className = "diagram-3d-coin-panel__word";
+      return el;
+    }
+    el.className = "diagram-3d-coin-panel__word diagram-3d-coin-glitch";
+    el.dataset.text = displayText;
+    return el;
+  }
+
   const [THREE, { CSS2DRenderer, CSS2DObject }] = await Promise.all([
     import("three"),
     import("three/addons/renderers/CSS2DRenderer.js"),
@@ -1557,6 +1567,7 @@ onMounted(async () => {
   let hlTravelDots: THREE.Mesh[] = [];
   let hlCenterSphere: THREE.Mesh | null = null;
   let hlCoinAnimEl: HTMLDivElement | null = null;
+  let hlCoinWordEl: HTMLSpanElement | null = null;
   let hlCoinObj: InstanceType<typeof CSS2DObject> | null = null;
   let hlTimeouts: ReturnType<typeof setTimeout>[] = [];
 
@@ -1768,42 +1779,31 @@ onMounted(async () => {
       textAlign: "center",
     });
     hlCoinAnimEl = document.createElement("div");
+    hlCoinAnimEl.className = "diagram-3d-coin-panel";
     Object.assign(hlCoinAnimEl.style, {
-      display: "inline-flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "0.35em",
       transform: `translateY(${COIN_SLIDE_IN_PX}px)`,
       opacity: "0",
-      fontFamily: "var(--font-display, system-ui, sans-serif)",
-      whiteSpace: "nowrap",
     });
     const coinSourceEl = document.createElement("span");
+    coinSourceEl.className = "diagram-3d-coin-panel__source";
     coinSourceEl.textContent = sourceLine;
-    Object.assign(coinSourceEl.style, {
-      display: "block",
-      fontSize: COIN_SOURCE_FONT,
-      fontWeight: "500",
-      color: DIAGRAM_WHITE_CSS,
-      opacity: "0.72",
-      letterSpacing: "0.02em",
-      lineHeight: "1.2",
-    });
-    const coinTextEl = document.createElement("span");
-    coinTextEl.textContent = `"${word}"`;
-    Object.assign(coinTextEl.style, {
-      display: "block",
-      fontSize: COIN_WORD_FONT,
-      fontWeight: "700",
-      color: DIAGRAM_WHITE_CSS,
-      letterSpacing: "-0.02em",
-      lineHeight: "1.15",
-    });
-    hlCoinAnimEl.append(coinSourceEl, coinTextEl);
+    hlCoinWordEl = createCoinWordEl(`"${word}"`);
+    hlCoinAnimEl.append(coinSourceEl, hlCoinWordEl);
     coinWrap.appendChild(hlCoinAnimEl);
     hlCoinObj = new CSS2DObject(coinWrap);
     hlCoinObj.position.set(0, getCoinLabelY(), 0);
     scene.add(hlCoinObj);
+
+    if (hlCoinWordEl && !reduceMotion) {
+      after(COIN_POP_MS, () => {
+        hlCoinWordEl?.classList.add("diagram-3d-coin-glitch--active");
+      });
+      after(COIN_POP_MS + COIN_GLITCH_MS, () => {
+        if (!hlCoinWordEl) return;
+        hlCoinWordEl.classList.remove("diagram-3d-coin-glitch--active");
+        hlCoinWordEl.classList.add("diagram-3d-coin-glitch--settled");
+      });
+    }
 
     after(COIN_POP_MS + COIN_HOLD_MS + COIN_FADE_MS, startShrink);
   }
@@ -1817,6 +1817,7 @@ onMounted(async () => {
       scene.remove(hlCoinObj);
       hlCoinObj = null;
       hlCoinAnimEl = null;
+      hlCoinWordEl = null;
     }
     disposeCenterSphere();
     disposeTravelDots();
@@ -1950,5 +1951,165 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+</style>
+
+<style>
+.diagram-3d-coin-panel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35em;
+  font-family: var(--font-display, system-ui, sans-serif);
+  white-space: nowrap;
+}
+
+.diagram-3d-coin-panel__source,
+.diagram-3d-coin-panel__word {
+  display: inline-block;
+  width: fit-content;
+  max-width: 100%;
+  background: #000000;
+  padding: 0.2em 0.45em;
+  color: #ffffff;
+}
+
+.diagram-3d-coin-panel__source {
+  font-size: clamp(10px, 1.15vw, 13px);
+  font-weight: 500;
+  opacity: 0.72;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.diagram-3d-coin-panel__word {
+  font-size: clamp(20px, 2.8vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.diagram-3d-coin-glitch {
+  position: relative;
+}
+
+.diagram-3d-coin-glitch::before,
+.diagram-3d-coin-glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000000;
+  color: #ffffff;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.diagram-3d-coin-glitch--active::before {
+  left: -2px;
+  opacity: 1;
+  text-shadow: 1px 0 #5eb8ff;
+  animation: diagram-3d-glitch-a 0.42s steps(7) 1 forwards;
+}
+
+.diagram-3d-coin-glitch--active::after {
+  left: 2px;
+  opacity: 1;
+  text-shadow: -1px 0 #ff6b7a;
+  animation: diagram-3d-glitch-b 0.48s steps(7) 1 forwards;
+}
+
+.diagram-3d-coin-glitch--settled::before,
+.diagram-3d-coin-glitch--settled::after {
+  display: none;
+}
+
+@keyframes diagram-3d-glitch-a {
+  0% {
+    clip-path: inset(82% 0 6% 0);
+  }
+  8% {
+    clip-path: inset(12% 0 78% 0);
+  }
+  16% {
+    clip-path: inset(44% 0 38% 0);
+  }
+  24% {
+    clip-path: inset(70% 0 14% 0);
+  }
+  32% {
+    clip-path: inset(22% 0 58% 0);
+  }
+  40% {
+    clip-path: inset(58% 0 28% 0);
+  }
+  48% {
+    clip-path: inset(6% 0 88% 0);
+  }
+  56% {
+    clip-path: inset(36% 0 48% 0);
+  }
+  64% {
+    clip-path: inset(90% 0 4% 0);
+  }
+  72% {
+    clip-path: inset(18% 0 68% 0);
+  }
+  80% {
+    clip-path: inset(62% 0 22% 0);
+  }
+  88% {
+    clip-path: inset(30% 0 52% 0);
+  }
+  100% {
+    clip-path: inset(82% 0 6% 0);
+  }
+}
+
+@keyframes diagram-3d-glitch-b {
+  0% {
+    clip-path: inset(8% 0 84% 0);
+  }
+  10% {
+    clip-path: inset(76% 0 10% 0);
+  }
+  20% {
+    clip-path: inset(32% 0 54% 0);
+  }
+  30% {
+    clip-path: inset(64% 0 20% 0);
+  }
+  40% {
+    clip-path: inset(4% 0 92% 0);
+  }
+  50% {
+    clip-path: inset(48% 0 36% 0);
+  }
+  60% {
+    clip-path: inset(88% 0 2% 0);
+  }
+  70% {
+    clip-path: inset(26% 0 60% 0);
+  }
+  80% {
+    clip-path: inset(54% 0 32% 0);
+  }
+  90% {
+    clip-path: inset(14% 0 72% 0);
+  }
+  100% {
+    clip-path: inset(8% 0 84% 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagram-3d-coin-glitch::before,
+  .diagram-3d-coin-glitch::after {
+    animation: none;
+    content: none;
+  }
 }
 </style>

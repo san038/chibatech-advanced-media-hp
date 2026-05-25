@@ -15,11 +15,9 @@
           <h1 class="hero__headline">
             <span class="hero__headline-line">
               <span class="hero__headline-line__bar" aria-hidden="true" />
-              <span class="hero__headline-line__text">新時代の想像力、</span>
-            </span>
-            <span class="hero__headline-line hero__headline-line--delay">
-              <span class="hero__headline-line__bar" aria-hidden="true" />
-              <span class="hero__headline-line__text">3領域のその先へ</span>
+              <span class="hero__headline-line__text"
+                >新時代の想像力、3領域のその先へ</span
+              >
             </span>
           </h1>
         </div>
@@ -94,11 +92,10 @@
 .hero__text-area {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   text-align: left;
   gap: var(--space-md);
   width: 100%;
-  max-width: 860px;
 }
 
 .hero__title-block {
@@ -136,7 +133,7 @@
 .hero__headline-line__bar {
   position: absolute;
   inset: 0;
-  background-color: #0f0e1a;
+  /* background-color: #0f0e1a; */
   transform: scaleX(0);
   transform-origin: left;
   animation: hero-bar-expand 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
@@ -172,7 +169,7 @@
     opacity: 0;
   }
   to {
-    opacity: 1;
+    opacity: 0.8;
   }
 }
 
