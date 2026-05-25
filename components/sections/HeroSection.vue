@@ -1,23 +1,55 @@
 <template>
-  <section class="hero">
+  <section
+    class="hero"
+    :class="{
+      'hero--intro-center': introPhase === 'center',
+      'hero--intro-slide': introPhase === 'slide',
+      'hero--intro-reveal': introPhase === 'reveal',
+      'hero--intro-done': introPhase === 'done',
+    }"
+  >
     <!-- Background visual element -->
     <div class="hero__bg" aria-hidden="true">
       <div class="hero__diagram">
-        <DomainDiagram3D />
+        <DomainDiagram3D :defer-highlight="introPhase !== 'done'" />
       </div>
       <div class="hero__bg-overlay" />
     </div>
 
-    <!-- Title + scroll: anchored above bottom -->
+    <!-- 初回表示: 黒画面 -->
+    <div
+      v-if="introPhase !== 'done'"
+      class="hero__intro-curtain"
+      aria-hidden="true"
+    />
+
+    <!-- Title + scroll: 同一ブロックが中央 → 下部へ移動 -->
     <div class="hero__bottom">
       <div class="hero__text-area">
         <div class="hero__title-block">
+          <p class="hero__site-title" :aria-label="SITE_TITLE">
+            <span
+              v-for="(ch, i) in siteTitleChars"
+              :key="`st-${i}`"
+              class="hero__type-char"
+              :class="{ 'hero__type-char--shown': i < visibleSiteCount }"
+              aria-hidden="true"
+              >{{ ch }}</span
+            >
+          </p>
           <h1 class="hero__headline">
             <span class="hero__headline-line">
               <span class="hero__headline-line__bar" aria-hidden="true" />
-              <span class="hero__headline-line__text"
-                >新時代の想像力、3領域のその先へ</span
-              >
+              <span class="hero__headline-line__text" :aria-label="HEADLINE">
+                <span
+                  v-for="(ch, i) in headlineChars"
+                  :key="`hl-${i}`"
+                  class="hero__type-char"
+                  :class="{ 'hero__type-char--shown': i < visibleHeadlineCount }"
+                  aria-hidden="true"
+                  >{{ ch }}</span
+                >
+              </span>
             </span>
           </h1>
         </div>
@@ -31,7 +63,109 @@
   </section>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { onMounted, onUnmounted, ref } from "vue";
+
+type IntroPhase = "center" | "slide" | "reveal" | "done";
+
+const SITE_TITLE = "千葉工業大学メディア工学科";
+const HEADLINE = "新時代の想像力、3領域のその先へ";
+
+const INTRO_CHAR_MS = 52;
+const INTRO_AFTER_TYPE_MS = 700;
+const INTRO_TITLE_SLIDE_MS = 900;
+const INTRO_DIAGRAM_REVEAL_MS = 1400;
+
+const introPhase = ref<IntroPhase>("center");
+const introTimeouts: ReturnType<typeof setTimeout>[] = [];
+const siteTitleChars = splitChars(SITE_TITLE);
+const headlineChars = splitChars(HEADLINE);
+const visibleSiteCount = ref(0);
+const visibleHeadlineCount = ref(0);
+
+function splitChars(text: string): string[] {
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const seg = new Intl.Segmenter("ja", { granularity: "grapheme" });
+    return [...seg.segment(text)].map((s) => s.segment);
+  }
+  return [...text];
+}
+
+function afterIntro(ms: number, fn: () => void) {
+  introTimeouts.push(setTimeout(fn, ms));
+}
+
+function clearIntroTimeouts() {
+  for (const t of introTimeouts) clearTimeout(t);
+  introTimeouts.length = 0;
+}
+
+function typeChars(
+  total: number,
+  setVisible: (n: number) => void,
+  onComplete: () => void,
+) {
+  let i = 0;
+  const step = () => {
+    i += 1;
+    setVisible(i);
+    if (i >= total) {
+      onComplete();
+      return;
+    }
+    afterIntro(INTRO_CHAR_MS, step);
+  };
+  step();
+}
+
+function scheduleRevealPhases() {
+  afterIntro(INTRO_TITLE_SLIDE_MS, () => {
+    introPhase.value = "reveal";
+  });
+  afterIntro(INTRO_TITLE_SLIDE_MS + INTRO_DIAGRAM_REVEAL_MS, () => {
+    introPhase.value = "done";
+  });
+}
+
+function startSlidePhase() {
+  introPhase.value = "slide";
+  scheduleRevealPhases();
+}
+
+function startTypewriterIntro() {
+  introPhase.value = "center";
+  visibleSiteCount.value = 0;
+  visibleHeadlineCount.value = 0;
+
+  typeChars(siteTitleChars.length, (n) => {
+    visibleSiteCount.value = n;
+  }, () => {
+    typeChars(headlineChars.length, (n) => {
+      visibleHeadlineCount.value = n;
+    }, () => {
+      afterIntro(INTRO_AFTER_TYPE_MS, startSlidePhase);
+    });
+  });
+}
+
+onMounted(() => {
+  const reduceMotion =
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+
+  if (reduceMotion) {
+    visibleSiteCount.value = siteTitleChars.length;
+    visibleHeadlineCount.value = headlineChars.length;
+    introPhase.value = "done";
+    return;
+  }
+
+  startTypewriterIntro();
+});
+
+onUnmounted(() => {
+  clearIntroTimeouts();
+});
+</script>
 
 <style scoped>
 .hero {
@@ -43,6 +177,9 @@
   justify-content: flex-end;
   background-color: #1c1b1b;
   overflow: hidden;
+  /* コピー位置: 画面中央 → Scroll 直上（レイアウト上の自然位置） */
+  --hero-copy-y-center: calc(-50vh + 7.5rem);
+  --hero-copy-y-rest: 0;
 }
 
 /* Background */
@@ -60,9 +197,15 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  opacity: 0;
+  transition: opacity 1.1s ease;
 }
 
-/* 下部タイトル帯の可読性 */
+.hero--intro-reveal .hero__diagram,
+.hero--intro-done .hero__diagram {
+  opacity: 1;
+}
+
 .hero__bg-overlay {
   position: absolute;
   inset: 0;
@@ -74,12 +217,33 @@
     rgba(28, 27, 27, 0.85) 28%,
     transparent 72%
   );
+  opacity: 0;
+  transition: opacity 1s ease 0.35s;
+}
+
+.hero--intro-reveal .hero__bg-overlay,
+.hero--intro-done .hero__bg-overlay {
+  opacity: 1;
+}
+
+/* 初回表示オーバーレイ */
+.hero__intro-curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background: #000000;
+  pointer-events: none;
+  transition: opacity 0.9s ease;
+}
+
+.hero--intro-reveal .hero__intro-curtain {
+  opacity: 0;
 }
 
 /* Bottom block: title (left) + scroll (center) */
 .hero__bottom {
   position: relative;
-  z-index: 3;
+  z-index: 9;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -93,7 +257,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: left;
+  text-align: center;
   gap: var(--space-md);
   width: 100%;
 }
@@ -101,27 +265,49 @@
 .hero__title-block {
   display: inline-flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-sm);
+  align-items: center;
+  gap: 0.65em;
+  transform: translateY(var(--hero-copy-y, 0));
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-.hero__label {
-  color: var(--color-on-surface-muted);
-  letter-spacing: 0.06em;
+.hero--intro-center {
+  --hero-copy-y: var(--hero-copy-y-center);
+}
+
+.hero--intro-slide,
+.hero--intro-reveal,
+.hero--intro-done {
+  --hero-copy-y: var(--hero-copy-y-rest);
+}
+
+.hero__type-char {
   opacity: 0;
-  animation: hero-fade-in 0.6s ease 1.3s forwards;
+}
+
+.hero__type-char--shown {
+  opacity: 1;
+}
+
+.hero__site-title {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(0.8125rem, 1.6vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: rgba(252, 249, 248, 0.72);
 }
 
 .hero__headline {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.35em;
   font-family: var(--font-display);
-  font-size: clamp(2.125rem, 5vw, var(--text-6xl));
+  font-size: clamp(1.5rem, 4.2vw, 2.75rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: 1.15;
 }
 
 .hero__headline-line {
@@ -133,26 +319,26 @@
 .hero__headline-line__bar {
   position: absolute;
   inset: 0;
-  /* background-color: #0f0e1a; */
   transform: scaleX(0);
   transform-origin: left;
-  animation: hero-bar-expand 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
 }
 
-.hero__headline-line--delay .hero__headline-line__bar {
-  animation-delay: 0.4s;
+.hero--intro-center .hero__headline-line__bar,
+.hero--intro-slide .hero__headline-line__bar,
+.hero--intro-reveal .hero__headline-line__bar {
+  opacity: 0;
+}
+
+.hero--intro-done .hero__headline-line__bar {
+  opacity: 1;
+  animation: hero-bar-expand 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
 }
 
 .hero__headline-line__text {
   position: relative;
   z-index: 1;
   color: #fcf9f8;
-  opacity: 0;
-  animation: hero-fade-in 0.3s ease 0.75s forwards;
-}
-
-.hero__headline-line--delay .hero__headline-line__text {
-  animation-delay: 1s;
+  opacity: 0.8;
 }
 
 @keyframes hero-bar-expand {
@@ -181,6 +367,9 @@
   align-items: center;
   gap: 0.5rem;
   opacity: 0;
+}
+
+.hero--intro-done .hero__scroll-indicator {
   animation: hero-fade-in 0.6s ease 1.6s forwards;
 }
 
@@ -201,6 +390,9 @@
     rgba(252, 249, 248, 0.45),
     transparent
   );
+}
+
+.hero--intro-done .hero__scroll-line {
   animation: scroll-line 1.6s ease-in-out infinite;
 }
 
@@ -233,21 +425,53 @@
     padding-right: var(--space-md);
   }
 
-  .hero__text-area {
-    align-items: center;
-    text-align: center;
-  }
-
-  .hero__title-block {
-    align-items: center;
-  }
-
-  .hero__headline {
-    align-items: center;
+  .hero {
+    --hero-copy-y-center: calc(-50vh + 6.5rem);
+    --hero-copy-y-rest: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hero__diagram {
+    opacity: 1;
+    transition: none;
+  }
+
+  .hero__bg-overlay {
+    opacity: 1;
+    transition: none;
+  }
+
+  .hero__intro-curtain {
+    display: none;
+  }
+
+  .hero__text-area,
+  .hero__title-block {
+    transform: none;
+    transition: none;
+  }
+
+  .hero__type-char {
+    opacity: 1;
+  }
+
+  .hero__headline-line__bar {
+    transform: scaleX(1);
+    animation: none;
+    opacity: 1;
+  }
+
+  .hero__headline-line__text {
+    opacity: 0.8;
+    animation: none;
+  }
+
+  .hero__scroll-indicator {
+    opacity: 1;
+    animation: none;
+  }
+
   .hero__scroll-line {
     animation: none;
     opacity: 0.4;

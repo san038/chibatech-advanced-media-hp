@@ -1,11 +1,11 @@
 <template>
   <div class="top-page">
     <HeroSection />
+    <NewsPreviewSection />
     <VisionSection />
     <CourseSection />
     <ProjectPreviewSection />
     <LaboratoryPreviewSection />
-    <NewsPreviewSection />
     <CtaSection />
   </div>
 </template>

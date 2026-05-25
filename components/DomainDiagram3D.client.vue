@@ -3,7 +3,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
+
+const props = withDefaults(
+  defineProps<{
+    /** false になるまでキーワードハイライト循環を開始しない */
+    deferHighlight?: boolean;
+  }>(),
+  { deferHighlight: false },
+);
 
 const containerRef = ref<HTMLDivElement | null>(null);
 let disposeFn: (() => void) | null = null;
@@ -1916,8 +1924,18 @@ onMounted(async () => {
   };
   rafId = requestAnimationFrame(animate);
 
-  // アニメーション開始
-  if (!reduceMotion) startCycle();
+  let highlightStarted = false;
+  function tryStartHighlight() {
+    if (highlightStarted || reduceMotion || props.deferHighlight) return;
+    highlightStarted = true;
+    startCycle();
+  }
+
+  watch(
+    () => props.deferHighlight,
+    () => tryStartHighlight(),
+    { immediate: true },
+  );
 
   // リサイズ対応
   const resizeObs = new ResizeObserver(() => {
