@@ -56,8 +56,10 @@ const DOMAIN_LABEL_ARC_R = RING_R * (148 / 210);
 const DOMAIN_ARC_R = RING_R * (198 / 210);
 const DOMAIN_ARC_PAD_DEG = 5;
 const DOMAIN_ARC_SAMPLES = 56;
-/** 領域弧の壁高さ（キーワードドット直径と同じ） */
-const DOMAIN_ARC_WALL_H = DOT_R * 2;
+/** 領域弧の壁高さ（ドットよりやや低め・ドット高さ基準で中央揃え） */
+const DOMAIN_ARC_WALL_H = DOT_R * 0.85;
+/** 中心サークル周囲の白壁（ドット直径と同じ） */
+const CENTER_HUB_WALL_H = DOT_R * 2;
 /** DomainDiagram の .domain-diagram__link-path に合わせる */
 const GRAY_LINK_COLOR = 0xb8b3b0;
 const GRAY_LINK_OPACITY = 0.32;
@@ -81,7 +83,7 @@ const CENTER_LABEL_ARC_OPPOSITE_OFFSET_DEG = 180;
 const CENTER_LABEL_FONT_PX = 22;
 const CENTER_LABEL_CHAR_PLANE_H = 0.28;
 /** 学科ラベルより合成ワードをどれだけ上（ワールド Y）に置くか */
-const COIN_LABEL_OFFSET_ABOVE_TITLE = 0.4;
+const COIN_LABEL_OFFSET_ABOVE_TITLE = 0.9;
 /** ラベル平面の高さ（ワールド単位） */
 const LABEL_PLANE_H = 0.62;
 const HUB_LABEL_PLANE_H = 0.72;
@@ -1399,7 +1401,7 @@ onMounted(async () => {
     new THREE.CylinderGeometry(
       CENTER_HUB_R,
       CENTER_HUB_R,
-      DOMAIN_ARC_WALL_H,
+      CENTER_HUB_WALL_H,
       64,
       1,
       true,
@@ -1474,8 +1476,8 @@ onMounted(async () => {
   ): THREE.Mesh {
     const a0 = startDeg + DOMAIN_ARC_PAD_DEG;
     const a1 = endDeg - DOMAIN_ARC_PAD_DEG;
-    const y0 = TIER_KEYWORD_Y - DOT_R;
-    const y1 = y0 + DOMAIN_ARC_WALL_H;
+    const y0 = TIER_KEYWORD_Y - DOMAIN_ARC_WALL_H / 2;
+    const y1 = TIER_KEYWORD_Y + DOMAIN_ARC_WALL_H / 2;
     const positions: number[] = [];
     const indices: number[] = [];
 
@@ -1800,7 +1802,8 @@ onMounted(async () => {
       const cnt = line.geometry.attributes["position"]!.count;
       const start = Math.floor(t * cnt);
       line.geometry.setDrawRange(start, Math.max(0, cnt - start));
-      (line.material as THREE.LineBasicMaterial).opacity = remain * HL_LINE_OPACITY;
+      (line.material as THREE.LineBasicMaterial).opacity =
+        remain * HL_LINE_OPACITY;
     }
   }
 
