@@ -638,25 +638,426 @@ const keywords: Keyword3D[] = [
   },
 ];
 
-// ── 造語生成（各キーワードの segments から1つ選び、文字列をそのまま連結） ───
-function normalizeSegmentText(text: string): string {
-  return text
-    .replace(/[（(][^）)]*[）)]/g, "")
-    .split(/[/／]/)[0]!
-    .trim();
+// ── 事前定義の合成ワード（抽選 → 紐づくキーワードで合成演出） ─────────────────
+interface CompositeWordDef {
+  word: string;
+  keywordIds: string[];
+  /** 目視確認用（keywordIds と同順・ロジックでは未使用） */
+  keywordLabels: string[];
 }
 
-function pickRandomSegment(segments: KeywordSegment[]): KeywordSegment {
-  return segments[Math.floor(Math.random() * segments.length)]!;
-}
+const COMPOSITE_WORDS: CompositeWordDef[] = [
+  {
+    word: "インテリジェント音響空間",
+    keywordIds: ["mk4", "m1", "md3"],
+    keywordLabels: [
+      "インテリジェント拡声システム",
+      "３D音響",
+      "音環境デザイン",
+    ],
+  },
+  {
+    word: "マルチモーダル認識",
+    keywordIds: ["md1", "mk3", "k4"],
+    keywordLabels: ["マルチモーダルインタフェース", "画像認識", "環境認識"],
+  },
+  {
+    word: "深層メディアアート",
+    keywordIds: ["k11", "m7", "d1"],
+    keywordLabels: [
+      "ディープラーニング",
+      "画像/映像合成",
+      "テクノロジーアート",
+    ],
+  },
+  {
+    word: "VRデータビジュアライゼーション",
+    keywordIds: ["m9", "all1", "d9"],
+    keywordLabels: [
+      "バーチャルリアリティ",
+      "データ可視化",
+      "ビジュアライゼーション",
+    ],
+  },
+  {
+    word: "音声認識デザイン",
+    keywordIds: ["mk2", "md2"],
+    keywordLabels: ["音声認識", "サウンドデザイン"],
+  },
+  {
+    word: "エージェント型UI",
+    keywordIds: ["all5", "d7"],
+    keywordLabels: [
+      "インタフェースエージェント",
+      "ユーザインタフェースデザイン",
+    ],
+  },
+  {
+    word: "人工知能IoTプロダクト",
+    keywordIds: ["all2", "d8", "k9"],
+    keywordLabels: [
+      "IoT（Internet of Things）",
+      "プロダクトデザイン/デジタルファブリケーション",
+      "人工知能",
+    ],
+  },
+  {
+    word: "拡張現実エクスペリエンス",
+    keywordIds: ["mk1", "d4", "m9"],
+    keywordLabels: [
+      "AR（拡張現実）",
+      "ユーザエクスペリエンスデザイン/人間中心設計",
+      "バーチャルリアリティ",
+    ],
+  },
+  {
+    word: "ビッグデータ音響分析",
+    keywordIds: ["k8", "mk5", "k6"],
+    keywordLabels: ["ビッグデータ", "音の情景分析", "データマイニング"],
+  },
+  {
+    word: "歌声合成AI",
+    keywordIds: ["m5", "k10", "k9"],
+    keywordLabels: ["歌声合成", "機械学習", "人工知能"],
+  },
+  {
+    word: "科学的メディア表現",
+    keywordIds: ["md5", "m6", "d10"],
+    keywordLabels: [
+      "サイエンティフィック・ビジュアライゼーション",
+      "画像/映像処理",
+      "コミュニケーションデザイン",
+    ],
+  },
+  {
+    word: "ユビキタス音響ネットワーク",
+    keywordIds: ["k1", "m3", "k5"],
+    keywordLabels: [
+      "ユビキタスコンピューティング",
+      "音声伝達",
+      "コンピュータネットワーク",
+    ],
+  },
+  {
+    word: "ITSマルチエージェント",
+    keywordIds: ["k2", "k7", "k4"],
+    keywordLabels: [
+      "ITS（Intelligent Transport Systems）",
+      "マルチエージェントシステム",
+      "環境認識",
+    ],
+  },
+  {
+    word: "テキスト音声インタフェース",
+    keywordIds: ["k3", "mk2"],
+    keywordLabels: ["テキストマイニング", "音声認識"],
+  },
+  {
+    word: "インテリジェント映像デザイン",
+    keywordIds: ["all4", "d5", "m6"],
+    keywordLabels: [
+      "インテリジェントインタフェースデザイン",
+      "映像・CG・アニメーションデザイン",
+      "画像/映像処理",
+    ],
+  },
+  {
+    word: "ソーシャルメディア工学",
+    keywordIds: ["d2", "md4", "k9"],
+    keywordLabels: ["ソーシャルデザイン", "メディアデザイン", "人工知能"],
+  },
+  {
+    word: "音場AIシミュレーション",
+    keywordIds: ["m2", "k10", "m4"],
+    keywordLabels: ["音場シミュレーション", "機械学習", "話者認識"],
+  },
+  {
+    word: "3D音響Webデザイン",
+    keywordIds: ["d6", "m1"],
+    keywordLabels: ["Webデザイン/アプリケーションデザイン", "３D音響"],
+  },
+  {
+    word: "ITSサービスデザイン",
+    keywordIds: ["k2", "m8", "d3"],
+    keywordLabels: [
+      "ITS（Intelligent Transport Systems）",
+      "画像/映像符号化と伝送",
+      "サービスデザイン",
+    ],
+  },
+  {
+    word: "デジタル音響ファブリケーション",
+    keywordIds: ["d8", "md2", "m2"],
+    keywordLabels: [
+      "プロダクトデザイン/デジタルファブリケーション",
+      "サウンドデザイン",
+      "音場シミュレーション",
+    ],
+  },
+  {
+    word: "映像符号化伝送工学",
+    keywordIds: ["m8", "k5"],
+    keywordLabels: ["画像/映像符号化と伝送", "コンピュータネットワーク"],
+  },
+  {
+    word: "人間中心メディア設計",
+    keywordIds: ["d4", "md4", "all3"],
+    keywordLabels: [
+      "ユーザエクスペリエンスデザイン/人間中心設計",
+      "メディアデザイン",
+      "インテリジェントプロダクトデザイン",
+    ],
+  },
+  {
+    word: "話者適応音声合成",
+    keywordIds: ["m4", "m5", "k10"],
+    keywordLabels: ["話者認識", "歌声合成", "機械学習"],
+  },
+  {
+    word: "リアルタイム映像認識",
+    keywordIds: ["m6", "mk3", "k10"],
+    keywordLabels: ["画像/映像処理", "画像認識", "機械学習"],
+  },
+  {
+    word: "機械学習音響解析",
+    keywordIds: ["k10", "mk5", "m2"],
+    keywordLabels: ["機械学習", "音の情景分析", "音場シミュレーション"],
+  },
+  {
+    word: "バーチャルサウンドスケープ",
+    keywordIds: ["m9", "md3", "md2"],
+    keywordLabels: [
+      "バーチャルリアリティ",
+      "音環境デザイン",
+      "サウンドデザイン",
+    ],
+  },
+  {
+    word: "リアルタイム映像処理",
+    keywordIds: ["k11", "m6", "mk3"],
+    keywordLabels: ["ディープラーニング", "画像/映像処理", "画像認識"],
+  },
+  {
+    word: "IoTサービスデザイン",
+    keywordIds: ["d3", "all2", "k1"],
+    keywordLabels: [
+      "サービスデザイン",
+      "IoT（Internet of Things）",
+      "ユビキタスコンピューティング",
+    ],
+  },
+  {
+    word: "通信ネットワークメディア",
+    keywordIds: ["k5", "m8", "m3"],
+    keywordLabels: [
+      "コンピュータネットワーク",
+      "画像/映像符号化と伝送",
+      "音声伝達",
+    ],
+  },
+  {
+    word: "CG生成AI",
+    keywordIds: ["k9", "d5", "m7"],
+    keywordLabels: [
+      "人工知能",
+      "映像・CG・アニメーションデザイン",
+      "画像/映像合成",
+    ],
+  },
+  {
+    word: "テキストマイニングデザイン",
+    keywordIds: ["k3", "all1", "d9"],
+    keywordLabels: [
+      "テキストマイニング",
+      "データ可視化",
+      "ビジュアライゼーション",
+    ],
+  },
+  {
+    word: "エージェント協調システム",
+    keywordIds: ["k7", "all5", "mk4"],
+    keywordLabels: [
+      "マルチエージェントシステム",
+      "インタフェースエージェント",
+      "インテリジェント拡声システム",
+    ],
+  },
+  {
+    word: "AR音響ガイダンス",
+    keywordIds: ["mk1", "m1", "d7"],
+    keywordLabels: [
+      "AR（拡張現実）",
+      "３D音響",
+      "ユーザインタフェースデザイン",
+    ],
+  },
+  {
+    word: "3D音場ビジュアライゼーション",
+    keywordIds: ["m1", "m2", "d9"],
+    keywordLabels: [
+      "３D音響",
+      "音場シミュレーション",
+      "ビジュアライゼーション",
+    ],
+  },
+  {
+    word: "スマート拡声工学",
+    keywordIds: ["mk4", "k2", "m3"],
+    keywordLabels: [
+      "インテリジェント拡声システム",
+      "ITS（Intelligent Transport Systems）",
+      "音声伝達",
+    ],
+  },
+  {
+    word: "音声UI/UX",
+    keywordIds: ["d4", "mk2", "d7"],
+    keywordLabels: [
+      "ユーザエクスペリエンスデザイン/人間中心設計",
+      "音声認識",
+      "ユーザインタフェースデザイン",
+    ],
+  },
+  {
+    word: "ジェネラティブテクノロジーアート",
+    keywordIds: ["d1", "m7", "k11"],
+    keywordLabels: [
+      "テクノロジーアート",
+      "画像/映像合成",
+      "ディープラーニング",
+    ],
+  },
+  {
+    word: "AIプロダクトデザイン",
+    keywordIds: ["d8", "d3", "k9"],
+    keywordLabels: [
+      "プロダクトデザイン/デジタルファブリケーション",
+      "サービスデザイン",
+      "人工知能",
+    ],
+  },
+  {
+    word: "音響コミュニケーションデザイン",
+    keywordIds: ["d10", "md2", "m3"],
+    keywordLabels: [
+      "コミュニケーションデザイン",
+      "サウンドデザイン",
+      "音声伝達",
+    ],
+  },
+  {
+    word: "音の情景ビジュアリゼーション",
+    keywordIds: ["k6", "mk5", "all1"],
+    keywordLabels: ["データマイニング", "音の情景分析", "データ可視化"],
+  },
+  {
+    word: "映像ストリーミング工学",
+    keywordIds: ["m8", "k5", "m7"],
+    keywordLabels: [
+      "画像/映像符号化と伝送",
+      "コンピュータネットワーク",
+      "画像/映像合成",
+    ],
+  },
+  {
+    word: "話者認識インタフェース",
+    keywordIds: ["m4", "md1", "all4"],
+    keywordLabels: [
+      "話者認識",
+      "マルチモーダルインタフェース",
+      "インテリジェントインタフェースデザイン",
+    ],
+  },
+  {
+    word: "歌声メディアアート",
+    keywordIds: ["m5", "d1", "md4"],
+    keywordLabels: ["歌声合成", "テクノロジーアート", "メディアデザイン"],
+  },
+  {
+    word: "ITS環境認識メディア",
+    keywordIds: ["k2", "k4", "m6"],
+    keywordLabels: [
+      "ITS（Intelligent Transport Systems）",
+      "環境認識",
+      "画像/映像処理",
+    ],
+  },
+  {
+    word: "音声環境UX",
+    keywordIds: ["m3", "d4"],
+    keywordLabels: ["音声伝達", "ユーザエクスペリエンスデザイン/人間中心設計"],
+  },
+  {
+    word: "符号化映像工学",
+    keywordIds: ["m8", "d5"],
+    keywordLabels: [
+      "画像/映像符号化と伝送",
+      "映像・CG・アニメーションデザイン",
+    ],
+  },
+  {
+    word: "音響エージェント",
+    keywordIds: ["all5", "mk2"],
+    keywordLabels: ["インタフェースエージェント", "音声認識"],
+  },
+  {
+    word: "画像生成メディア工学",
+    keywordIds: ["m6", "k9", "md4"],
+    keywordLabels: ["画像/映像処理", "人工知能", "メディアデザイン"],
+  },
+  {
+    word: "音場シミュレーションWeb",
+    keywordIds: ["d6", "m2", "md2"],
+    keywordLabels: [
+      "Webデザイン/アプリケーションデザイン",
+      "音場シミュレーション",
+      "サウンドデザイン",
+    ],
+  },
+  {
+    word: "ソーシャルIoT",
+    keywordIds: ["d2", "all2", "d3"],
+    keywordLabels: [
+      "ソーシャルデザイン",
+      "IoT（Internet of Things）",
+      "サービスデザイン",
+    ],
+  },
+  {
+    word: "音響マルチエージェント",
+    keywordIds: ["k7", "mk5", "md3"],
+    keywordLabels: [
+      "マルチエージェントシステム",
+      "音の情景分析",
+      "音環境デザイン",
+    ],
+  },
+  {
+    word: "ビッグデータ映像解析",
+    keywordIds: ["k8", "m6", "mk3"],
+    keywordLabels: ["ビッグデータ", "画像/映像処理", "画像認識"],
+  },
+  {
+    word: "インテリジェント音響",
+    keywordIds: ["all3", "md2", "m1"],
+    keywordLabels: [
+      "インテリジェントプロダクトデザイン",
+      "サウンドデザイン",
+      "３D音響",
+    ],
+  },
+];
 
-function buildPortmanteauPart(kw: Keyword3D): string {
-  if (kw.segments.length === 0) return "";
-  return normalizeSegmentText(pickRandomSegment(kw.segments).text);
-}
+const keywordById = new Map(keywords.map((k) => [k.id, k]));
 
-function buildPortmanteau(kws: Keyword3D[]): string {
-  return kws.map((kw) => buildPortmanteauPart(kw)).join("");
+function pickCompositeHighlight(): { word: string; keywords: Keyword3D[] } {
+  const entry =
+    COMPOSITE_WORDS[Math.floor(Math.random() * COMPOSITE_WORDS.length)]!;
+  const keywordsForEntry = entry.keywordIds
+    .map((id) => keywordById.get(id))
+    .filter((k): k is Keyword3D => k != null)
+    .sort((a, b) => a.angleDeg - b.angleDeg);
+  return { word: entry.word, keywords: keywordsForEntry };
 }
 
 function buildSourceKeywordsLine(kws: Keyword3D[]): string {
@@ -1144,6 +1545,7 @@ onMounted(async () => {
   let hlPhase: HLPhase = "idle";
   let hlStartTime = 0;
   let hlPicked: Keyword3D[] = [];
+  let hlCompositeWord = "";
   let hlPickedIds = new Set<string>();
   let hlLines: THREE.Line[] = [];
   let hlPaths: THREE.Vector3[][] = [];
@@ -1284,10 +1686,9 @@ onMounted(async () => {
   function startCycle() {
     clearHL();
 
-    // 3つ抽選・角度順にソート
-    hlPicked = shuffled(keywords)
-      .slice(0, 3)
-      .sort((a, b) => a.angleDeg - b.angleDeg);
+    const composite = pickCompositeHighlight();
+    hlCompositeWord = composite.word;
+    hlPicked = composite.keywords;
     hlPickedIds = new Set(hlPicked.map((k) => k.id));
 
     disposeHighlightLines();
@@ -1337,7 +1738,7 @@ onMounted(async () => {
 
     // ── 造語ラベル（CSS2DRenderer が外側 div の transform を毎フレーム上書きするため、
     //    スライドは内側 span で行う）
-    const word = buildPortmanteau(hlPicked);
+    const word = hlCompositeWord;
     const sourceLine = buildSourceKeywordsLine(hlPicked);
     const coinWrap = document.createElement("div");
     Object.assign(coinWrap.style, {
