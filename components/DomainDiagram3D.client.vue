@@ -46,6 +46,10 @@ const RING_R = 5.2;
 const DOT_R = 0.1;
 const CENTER_LABEL_TEXT = "知能メディア工学科";
 const CENTER_HUB_R = 0.78;
+/** 中心の白リングの線幅（ワールド単位） */
+const CENTER_RING_THICKNESS = 0.04;
+const CENTER_RING_OUTER_R = CENTER_HUB_R;
+const CENTER_RING_INNER_R = CENTER_RING_OUTER_R - CENTER_RING_THICKNESS;
 /** 領域ラベル（弧上テキスト）の半径 — SVG innerPolar r≈148 / R=210 を換算 */
 const DOMAIN_LABEL_ARC_R = RING_R * (148 / 210);
 /** 色付き領域弧（キーワードリングのやや内側） */
@@ -1390,9 +1394,32 @@ onMounted(async () => {
     return group;
   }
 
+  // 中心サークル周囲の白い壁（キーワードドットと同高さ）
+  const centerHubWall = new THREE.Mesh(
+    new THREE.CylinderGeometry(
+      CENTER_HUB_R,
+      CENTER_HUB_R,
+      DOMAIN_ARC_WALL_H,
+      64,
+      1,
+      true,
+    ),
+    new THREE.MeshStandardMaterial({
+      color: DIAGRAM_WHITE_HEX,
+      transparent: true,
+      opacity: 0.9,
+      roughness: 0.5,
+      metalness: 0.06,
+      side: THREE.DoubleSide,
+    }),
+  );
+  centerHubWall.position.y = TIER_KEYWORD_Y;
+  centerHubWall.renderOrder = 1;
+  ringGroup.add(centerHubWall);
+
   // 中心サークル + タイトル
   const centerDisk = new THREE.Mesh(
-    new THREE.CircleGeometry(CENTER_HUB_R * 0.88, 64),
+    new THREE.CircleGeometry(CENTER_RING_INNER_R, 64),
     new THREE.MeshBasicMaterial({
       color: DIAGRAM_BG_HEX,
       transparent: true,
@@ -1405,7 +1432,7 @@ onMounted(async () => {
   ringGroup.add(centerDisk);
 
   const centerRing = new THREE.Mesh(
-    new THREE.RingGeometry(CENTER_HUB_R * 0.88, CENTER_HUB_R, 64),
+    new THREE.RingGeometry(CENTER_RING_INNER_R, CENTER_RING_OUTER_R, 64),
     new THREE.MeshBasicMaterial({
       color: DIAGRAM_WHITE_HEX,
       transparent: true,
