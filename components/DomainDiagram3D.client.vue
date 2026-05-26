@@ -25,13 +25,16 @@ type Domain =
   | "media-design"
   | "all";
 
+const DEPARTMENT_CSS = "#3bbac6";
+const DEPARTMENT_HEX = 0x3bbac6;
+
 const DOMAIN_CSS: Record<Domain, string> = {
   media: "#a30a61",
   knowledge: "#007d3b",
   design: "#00549f",
   "media-knowledge": "#7a7574",
   "media-design": "#7a7574",
-  all: "#7a7574",
+  all: DEPARTMENT_CSS,
 };
 const DOMAIN_HEX: Record<Domain, number> = {
   media: 0xa30a61,
@@ -39,17 +42,13 @@ const DOMAIN_HEX: Record<Domain, number> = {
   design: 0x00549f,
   "media-knowledge": 0x7a7574,
   "media-design": 0x7a7574,
-  all: 0x7a7574,
+  all: DEPARTMENT_HEX,
 };
 
 const RING_R = 5.2;
 const DOT_R = 0.1;
 const CENTER_LABEL_TEXT = "知能メディア工学科";
 const CENTER_HUB_R = 0.78;
-/** 中心の白リングの線幅（ワールド単位） */
-const CENTER_RING_THICKNESS = 0.04;
-const CENTER_RING_OUTER_R = CENTER_HUB_R;
-const CENTER_RING_INNER_R = CENTER_RING_OUTER_R - CENTER_RING_THICKNESS;
 /** 領域ラベル（弧上テキスト）の半径 — SVG innerPolar r≈148 / R=210 を換算 */
 const DOMAIN_LABEL_ARC_R = RING_R * (148 / 210);
 /** 色付き領域弧（キーワードリングのやや内側） */
@@ -1407,7 +1406,7 @@ onMounted(async () => {
       true,
     ),
     new THREE.MeshStandardMaterial({
-      color: DIAGRAM_WHITE_HEX,
+      color: DEPARTMENT_HEX,
       transparent: true,
       opacity: 0.9,
       roughness: 0.5,
@@ -1421,9 +1420,9 @@ onMounted(async () => {
 
   // 中心サークル + タイトル
   const centerDisk = new THREE.Mesh(
-    new THREE.CircleGeometry(CENTER_RING_INNER_R, 64),
+    new THREE.CircleGeometry(CENTER_HUB_R, 64),
     new THREE.MeshBasicMaterial({
-      color: DIAGRAM_BG_HEX,
+      color: DEPARTMENT_HEX,
       transparent: true,
       opacity: 0.98,
       side: THREE.DoubleSide,
@@ -1432,19 +1431,6 @@ onMounted(async () => {
   centerDisk.rotation.x = -Math.PI / 2;
   centerDisk.position.y = TIER_CENTER_DISK_Y;
   ringGroup.add(centerDisk);
-
-  const centerRing = new THREE.Mesh(
-    new THREE.RingGeometry(CENTER_RING_INNER_R, CENTER_RING_OUTER_R, 64),
-    new THREE.MeshBasicMaterial({
-      color: DIAGRAM_WHITE_HEX,
-      transparent: true,
-      opacity: 0.5,
-      side: THREE.DoubleSide,
-    }),
-  );
-  centerRing.rotation.x = -Math.PI / 2;
-  centerRing.position.y = TIER_CENTER_DISK_Y + 0.001;
-  ringGroup.add(centerRing);
 
   const centerLabelArcCenters = [
     CENTER_LABEL_ARC_CENTER_DEG,

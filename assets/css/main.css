@@ -11,7 +11,10 @@
   --color-on-surface: #1c1b1b;
   --color-on-surface-muted: #5a5756;
   --color-on-surface-faint: #9a9594;
-  --color-primary: #a30a61;
+  --color-primary: #3bbac6;
+  --color-department: #3bbac6;
+  --color-department-bg: rgba(59, 186, 198, 0.08);
+  --color-department-mid: rgba(59, 186, 198, 0.16);
   --color-secondary: #007d3b;
   --color-tertiary: #00549f;
   --color-on-primary: #ffffff;

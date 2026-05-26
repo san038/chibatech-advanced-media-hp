@@ -243,7 +243,7 @@ const COLORS: Record<Domain, string> = {
   design: "#00549f",
   "media-knowledge": "#7a7574",
   "media-design": "#7a7574",
-  all: "#7a7574",
+  all: "#3bbac6",
 };
 
 function domainColor(domain: Domain): string {
