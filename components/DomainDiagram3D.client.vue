@@ -45,65 +45,48 @@ const DOMAIN_HEX: Record<Domain, number> = {
   all: DEPARTMENT_HEX,
 };
 
-const RING_R = 5.2;
-const DOT_R = 0.1;
 const CENTER_LABEL_TEXT = "知能メディア工学科";
 const CENTER_HUB_R = 0.78;
-/** 領域ラベル（弧上テキスト）の半径 — SVG innerPolar r≈148 / R=210 を換算 */
-const DOMAIN_LABEL_ARC_R = RING_R * (148 / 210);
-/** 色付き領域弧（キーワードリングのやや内側） */
-const DOMAIN_ARC_R = RING_R * (198 / 210);
-const DOMAIN_ARC_PAD_DEG = 5;
-const DOMAIN_ARC_SAMPLES = 56;
-/** 領域弧の壁高さ（ドットよりやや低め・ドット高さ基準で中央揃え） */
-const DOMAIN_ARC_WALL_H = DOT_R * 0.85;
-/** 中心サークル周囲の白壁（ドット直径と同じ） */
-const CENTER_HUB_WALL_H = DOT_R * 2;
-/** DomainDiagram の .domain-diagram__link-path に合わせる */
-const GRAY_LINK_COLOR = 0xb8b3b0;
-const GRAY_LINK_OPACITY = 0.32;
-const DIAGRAM_WHITE_HEX = 0xffffff;
+/** 周辺リングの半径（XZ・360° ランダム配置） */
+const KEYWORD_RING_R_MIN = 2.7;
+const KEYWORD_RING_R_MAX = 3.95;
+/** ハイライト合体点（画面中央 XZ） */
+const MERGE_POINT_Y = 0.42;
+/** 周辺キーワードの見た目（奥行きばらつき） */
+const LABEL_SCALE_BASE = 0.72;
+const LABEL_SCALE_VAR = 0.28;
+const LABEL_OPACITY_BASE = 0.42;
+const LABEL_OPACITY_VAR = 0.38;
+const LABEL_OPACITY_PEAK = 0.88;
+/** ふよふよ漂い */
+const FLOAT_AMP = 0.14;
+const FLOAT_AMP_Y = 0.05;
+const FLOAT_SPEED = 0.28;
 const DIAGRAM_WHITE_CSS = "#ffffff";
-const DIAGRAM_BG_HEX = 0x1c1b1b;
-/** SVG gap=9, R=210 を 3D 円周に換算したラベルとドット間距離 */
-const LABEL_GAP = (9 / 210) * RING_R * 0.85;
-/** Y 階層: キーワード < 領域ハブ < 中心 */
-const TIER_KEYWORD_Y = 0;
-const TIER_KEYWORD_LABEL_Y = 0.04;
-const TIER_HUB_Y = 0.42;
-const TIER_HUB_LABEL_Y = 0.48;
-const TIER_CENTER_DISK_Y = TIER_KEYWORD_Y + 0.1;
-/** 中心リング外周に沿った学科ラベルの半径（ワールド単位） */
-const CENTER_LABEL_ARC_R = CENTER_HUB_R * 0.8;
-/** 弧の中心角（度）— 0°=+X */
-const CENTER_LABEL_ARC_CENTER_DEG = 0;
-/** 反対側ラベルの中心角オフセット（度） */
-const CENTER_LABEL_ARC_OPPOSITE_OFFSET_DEG = 180;
+/** Y 階層: キーワード < 領域ラベル < 中心 */
+const TIER_KEYWORD_LABEL_Y = 0.06;
+const TIER_CENTER_DISK_Y = 0.1;
+const CENTER_HUB_WALL_H = 0.14;
 const CENTER_LABEL_FONT_PX = 22;
 const CENTER_LABEL_CHAR_PLANE_H = 0.28;
 /** 学科ラベルより合成ワードをどれだけ上（ワールド Y）に置くか */
 const COIN_LABEL_OFFSET_ABOVE_TITLE = 0.9;
 /** ラベル平面の高さ（ワールド単位） */
 const LABEL_PLANE_H = 0.62;
-const HUB_LABEL_PLANE_H = 0.72;
-const HUB_LABEL_FONT_PX = 64;
 /** ラベル Canvas のフォントサイズ（px）— 平面サイズに合わせて調整 */
-const LABEL_FONT_PX = 36;
-/** リングを手前に寝かせる傾き（rad・負で上端が手前に） */
-const RING_TILT_X = 0.2;
-const CAMERA_FOV = 46;
-/** キーワードリングの回転速度（rad/s）— 約90秒で1周 */
-const RING_ROTATION_RAD_PER_S = (2 * Math.PI) / 90;
-const DOT_OPACITY_DIM = 0.42;
-const DOT_OPACITY_ACTIVE = 1;
-const LABEL_OPACITY_DIM = 0.58;
+const LABEL_FONT_PX = 42;
+/** ラベル平面の高さ（ワールド単位） */
+const LABEL_PLANE_H_KW = 0.76;
+/** 真上投影（Orthographic）の表示範囲（ワールド単位・高さ） */
+const ORTHO_VIEW_HEIGHT = 9.5;
 const LABEL_OPACITY_ACTIVE = 1;
+/** ハイライト時の手前スケール */
+const LABEL_SCALE_HIGHLIGHT = 1.22;
 
-// アニメーションタイミング（SVG版と同じ値）
-const HIGHLIGHT_DRAW_MS = 750;
-const HIGHLIGHT_MERGE_MS = 850;
-/** キーワード→中心（線の伸長＋先端ドット移動）の合計時間 */
-const HIGHLIGHT_PATH_MS = HIGHLIGHT_DRAW_MS + HIGHLIGHT_MERGE_MS;
+// アニメーションタイミング
+/** 周辺 → 中央へ一直線で合体する時間 */
+const HIGHLIGHT_TO_CENTER_MS = 1100;
+const HIGHLIGHT_PATH_MS = HIGHLIGHT_TO_CENTER_MS;
 const COIN_POP_MS = 450;
 /** 合成ワード表示直後のワンショット・グリッチ時間 */
 const COIN_GLITCH_MS = 220;
@@ -112,15 +95,9 @@ const COIN_HOLD_MS = 5000;
 const COIN_FADE_MS = 1200;
 /** 合成ワードの下からスライドイン距離（px） */
 const COIN_SLIDE_IN_PX = 28;
-const HIGHLIGHT_SHRINK_MS = 600;
+/** 合成ワード消去後、周辺の元位置でキーワードをフェードインする時間 */
+const HIGHLIGHT_KEYWORD_FADE_IN_MS = 700;
 const HIGHLIGHT_PAUSE_MS = 250;
-const CENTER_SPHERE_R = 0.38;
-/** ハイライト曲線の終点: 中心サークル下端から何 px 下か */
-const HIGHLIGHT_LINE_END_PX_BELOW_CIRCLE = 1;
-const TRAVEL_DOT_R = 0.11;
-const TRAVEL_DOT_COLOR = 0xffd54f;
-/** ハイライト曲線の不透明度（フェード時の基準値） */
-const HL_LINE_OPACITY = 0.88;
 
 // ── Keyword data ───────────────────────────────────────────────────────────────
 interface KeywordSegment {
@@ -1081,6 +1058,57 @@ const COMPOSITE_WORDS: CompositeWordDef[] = [
 
 const keywordById = new Map(keywords.map((k) => [k.id, k]));
 
+interface Vec3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+interface KeywordLayout {
+  anchorX: number;
+  anchorY: number;
+  anchorZ: number;
+  baseScale: number;
+  baseOpacity: number;
+  floatPhase: number;
+}
+
+function hash01(seed: string): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h * 31 + seed.charCodeAt(i)) | 0;
+  }
+  return (Math.abs(h) % 10000) / 10000;
+}
+
+function buildKeywordLayouts(): Map<string, KeywordLayout> {
+  const layouts = new Map<string, KeywordLayout>();
+
+  keywords.forEach((kw) => {
+    const angle = hash01(`${kw.id}-ang`) * Math.PI * 2;
+    const radius =
+      KEYWORD_RING_R_MIN +
+      hash01(`${kw.id}-r`) * (KEYWORD_RING_R_MAX - KEYWORD_RING_R_MIN);
+    const depth = hash01(`${kw.id}-depth`);
+
+    layouts.set(kw.id, {
+      anchorX: Math.cos(angle) * radius,
+      anchorY: TIER_KEYWORD_LABEL_Y + (depth - 0.5) * 0.08,
+      anchorZ: Math.sin(angle) * radius,
+      baseScale: LABEL_SCALE_BASE + depth * LABEL_SCALE_VAR,
+      baseOpacity: LABEL_OPACITY_BASE + depth * LABEL_OPACITY_VAR,
+      floatPhase: hash01(`${kw.id}-ph`) * Math.PI * 2,
+    });
+  });
+  return layouts;
+}
+
+function anchorPosition(layout: KeywordLayout, target: Vec3): Vec3 {
+  return target.set(layout.anchorX, layout.anchorY, layout.anchorZ);
+}
+
+const keywordLayouts = buildKeywordLayouts();
+
 function pickCompositeHighlight(): { word: string; keywords: Keyword3D[] } {
   const entry =
     COMPOSITE_WORDS[Math.floor(Math.random() * COMPOSITE_WORDS.length)]!;
@@ -1101,49 +1129,6 @@ function easeOut(t: number) {
 }
 function easeIn(t: number) {
   return t * t;
-}
-/** 爆発的ポップイン（coin フェーズの中央ドット用） */
-function easeOutBack(t: number) {
-  const c1 = 1.70158;
-  const c3 = c1 + 1;
-  return 1 + c3 * (t - 1) ** 3 + c1 * (t - 1) ** 2;
-}
-function easeInOutCubic(t: number) {
-  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
-}
-
-function shuffled<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j]!, a[i]!];
-  }
-  return a;
-}
-
-function edgeKey(a: string, b: string): string {
-  return a < b ? `${a}|${b}` : `${b}|${a}`;
-}
-
-/** DomainDiagram.buildGrayLinks と同じ接続ルール（各ノード最大3本・重複なし） */
-function buildGrayLinkPairs(
-  nodes: Keyword3D[],
-): { key: string; from: Keyword3D; to: Keyword3D }[] {
-  const seen = new Set<string>();
-  const links: { key: string; from: Keyword3D; to: Keyword3D }[] = [];
-  for (const kw of shuffled(nodes)) {
-    const peers = shuffled(nodes.filter((k) => k.id !== kw.id));
-    let n = 0;
-    for (const t of peers) {
-      if (n >= 3) break;
-      const k = edgeKey(kw.id, t.id);
-      if (seen.has(k)) continue;
-      seen.add(k);
-      n++;
-      links.push({ key: k, from: kw, to: t });
-    }
-  }
-  return links;
 }
 
 // ── onMounted: Three.js セットアップ ─────────────────────────────────────────
@@ -1174,17 +1159,26 @@ onMounted(async () => {
   // Scene
   const scene = new THREE.Scene();
 
-  // Camera（透視 — 寝かせたリングに奥行きをつける）
   const w = container.clientWidth || 800;
   const h = container.clientHeight || 500;
-  const camera = new THREE.PerspectiveCamera(CAMERA_FOV, w / h, 0.1, 200);
-  camera.position.set(0, 5.2, 10.5);
-  camera.lookAt(0, 0, 0);
 
-  const outward = new THREE.Vector3();
-  const up = new THREE.Vector3(0, 1, 0);
-  const tangent = new THREE.Vector3();
-  const labelBasis = new THREE.Matrix4();
+  function fitOrthoCamera(cam: THREE.OrthographicCamera, cw: number, ch: number) {
+    const aspect = cw / Math.max(1, ch);
+    const halfH = ORTHO_VIEW_HEIGHT / 2;
+    const halfW = halfH * aspect;
+    cam.left = -halfW;
+    cam.right = halfW;
+    cam.top = halfH;
+    cam.bottom = -halfH;
+    cam.updateProjectionMatrix();
+  }
+
+  // 真上からの正射投影（Y 軸方向を見下ろす）
+  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 200);
+  camera.position.set(0, 20, 0);
+  camera.up.set(0, 0, -1);
+  camera.lookAt(0, 0, 0);
+  fitOrthoCamera(camera, w, h);
 
   // WebGL renderer
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -1224,175 +1218,106 @@ onMounted(async () => {
   fillLight.position.set(-6, 1, -8);
   scene.add(fillLight);
 
-  // ── ドット & ラベル（リンググループで常時回転） ───────────────────────────────
-  const ringGroup = new THREE.Group();
-  ringGroup.rotation.x = RING_TILT_X;
-  scene.add(ringGroup);
+  // ── キーワードクラウド（領域クラスター + 奥行き） ─────────────────────────────
+  const sceneGroup = new THREE.Group();
+  scene.add(sceneGroup);
 
-  const branchGroup = new THREE.Group();
-  ringGroup.add(branchGroup);
+  const mergePoint = new THREE.Vector3(0, MERGE_POINT_Y, 0);
 
-  /** 中心サークル Y から px 分だけずらした ring ローカル Y（+ が上） */
-  function ringLocalYFromCirclePx(pxOffset: number): number {
-    const local = new THREE.Vector3(0, TIER_CENTER_DISK_Y, 0);
-    const world = ringGroup.localToWorld(local.clone());
-    const dist = camera.position.distanceTo(world);
-    const vh = Math.max(1, container.clientHeight);
-    const worldPerPx =
-      (2 * Math.tan((CAMERA_FOV * Math.PI) / 180 / 2) * dist) / vh;
-    return TIER_CENTER_DISK_Y + worldPerPx * pxOffset;
-  }
-
-  const dotGeo = new THREE.SphereGeometry(DOT_R, 8, 8);
-  const dotMeshMap = new Map<string, THREE.Mesh>();
   const labelMeshMap = new Map<string, THREE.Mesh>();
-  const dotOrigPos = new Map<string, THREE.Vector3>();
+  const restLabelScale = new Map<string, number>();
+  const anchorScratch = new THREE.Vector3();
+  const baseScratch = new THREE.Vector3();
 
-  function posAtAngle(angleDeg: number, r: number, y = 0.006): THREE.Vector3 {
-    const rad = (angleDeg * Math.PI) / 180;
-    return new THREE.Vector3(r * Math.cos(rad), y, r * Math.sin(rad));
+  // ── ハイライト状態（updateKeywordMotion より先に宣言） ───────────────────────
+  type HLPhase = "idle" | "draw" | "coin" | "shrink";
+  let hlPhase: HLPhase = "idle";
+  let hlStartTime = 0;
+  let hlPicked: Keyword3D[] = [];
+  let hlCompositeWord = "";
+  let hlPickedIds = new Set<string>();
+  let hlCoinAnimEl: HTMLDivElement | null = null;
+  let hlCoinWordEl: HTMLSpanElement | null = null;
+  let hlCoinObj: InstanceType<typeof CSS2DObject> | null = null;
+  let hlTimeouts: ReturnType<typeof setTimeout>[] = [];
+
+  /** 周辺固定位置でふよふよ漂う */
+  function applyKeywordFloat(
+    layout: KeywordLayout,
+    timeSec: number,
+    label: THREE.Mesh,
+  ) {
+    const ph = layout.floatPhase;
+    const t = timeSec * FLOAT_SPEED;
+    const wobbleX =
+      Math.sin(t + ph) * 0.5 + Math.sin(t * 0.73 + ph * 1.15) * 0.5;
+    const wobbleZ =
+      Math.cos(t * 0.81 + ph * 0.9) * 0.5 +
+      Math.sin(t * 0.52 + ph * 1.3) * 0.5;
+    const wobbleY =
+      Math.sin(t * 0.64 + ph * 1.05) * 0.5 +
+      Math.cos(t * 0.48 + ph * 0.75) * 0.5;
+    label.position.set(
+      layout.anchorX + wobbleX * FLOAT_AMP,
+      layout.anchorY + wobbleY * FLOAT_AMP_Y,
+      layout.anchorZ + wobbleZ * FLOAT_AMP,
+    );
+    label.scale.setScalar(layout.baseScale);
+    const mat = label.material as THREE.MeshBasicMaterial;
+    mat.opacity = layout.baseOpacity;
+    label.visible = true;
+    label.renderOrder = 2;
   }
 
-  function kwPos(kw: Keyword3D): THREE.Vector3 {
-    return posAtAngle(kw.angleDeg, RING_R, TIER_KEYWORD_Y);
-  }
-
-  /** DomainDiagram.bezierTowardCenter 相当（中心方向へ引いた三次ベジェ） */
-  function addBezierTowardCenter(from: Keyword3D, to: Keyword3D) {
-    const p0 = kwPos(from);
-    const p3 = kwPos(to);
-    const center = new THREE.Vector3(0, TIER_KEYWORD_Y, 0);
-    const t1 = 0.4 + Math.random() * 0.16;
-    const t2 = 0.4 + Math.random() * 0.16;
-    const c1 = new THREE.Vector3(
-      p0.x + t1 * (center.x - p0.x),
-      p0.y + t1 * (center.y - p0.y),
-      p0.z + t1 * (center.z - p0.z),
-    );
-    const c2 = new THREE.Vector3(
-      p3.x + t2 * (center.x - p3.x),
-      p3.y + t2 * (center.y - p3.y),
-      p3.z + t2 * (center.z - p3.z),
-    );
-    const jitter = (2.5 + Math.random() * 3.5) * (RING_R / 210);
-    c1.x += (Math.random() - 0.5) * jitter;
-    c1.y += (Math.random() - 0.5) * jitter;
-    c1.z += (Math.random() - 0.5) * jitter;
-    c2.x += (Math.random() - 0.5) * jitter;
-    c2.y += (Math.random() - 0.5) * jitter;
-    c2.z += (Math.random() - 0.5) * jitter;
-
-    const pts: THREE.Vector3[] = [];
-    const SAMPLES = 36;
-    for (let i = 0; i <= SAMPLES; i++) {
-      const t = i / SAMPLES;
-      const mt = 1 - t;
-      pts.push(
-        new THREE.Vector3(
-          mt * mt * mt * p0.x +
-            3 * mt * mt * t * c1.x +
-            3 * mt * t * t * c2.x +
-            t * t * t * p3.x,
-          mt * mt * mt * p0.y +
-            3 * mt * mt * t * c1.y +
-            3 * mt * t * t * c2.y +
-            t * t * t * p3.y,
-          mt * mt * mt * p0.z +
-            3 * mt * mt * t * c1.z +
-            3 * mt * t * t * c2.z +
-            t * t * t * p3.z,
-        ),
-      );
-    }
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const line = new THREE.Line(
-      geo,
-      new THREE.LineBasicMaterial({
-        color: GRAY_LINK_COLOR,
-        transparent: true,
-        opacity: GRAY_LINK_OPACITY,
-      }),
-    );
-    branchGroup.add(line);
-  }
-
-  /** 中心円周（半径 R）に沿って 1 文字ずつ弧上に配置 */
-  function createArcCenterLabel(
+  /** XZ 平面上のフラットラベル（真上カメラ用・回転固定） */
+  function createFlatLabel(
     text: string,
     colorCss: string,
     fontPx: number,
-    charPlaneH: number,
-    radius: number,
-    y: number,
-    arcCenterDeg: number,
+    planeH: number,
     opacity: number,
-  ): THREE.Group {
-    const group = new THREE.Group();
+    fontWeight = 500,
+  ): THREE.Mesh {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const font = `600 ${fontPx}px var(--font-body, system-ui, sans-serif)`;
+    const font = `${fontWeight} ${fontPx}px var(--font-body, system-ui, sans-serif)`;
     const probe = document.createElement("canvas").getContext("2d")!;
     probe.font = font;
+    const textW = probe.measureText(text).width;
+    const padX = 8;
+    const padY = 6;
+    const logicalW = textW + padX * 2;
+    const logicalH = fontPx + padY * 2;
 
-    const chars = [...text];
-    const widths = chars.map((ch) => probe.measureText(ch).width);
-    const totalPx = widths.reduce((a, b) => a + b, 0);
-    const pxToWorld = charPlaneH / fontPx;
-    const arcSpan = (totalPx * pxToWorld) / radius;
-    const arcCenter = (arcCenterDeg * Math.PI) / 180;
-    let angle = arcCenter - arcSpan / 2;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(logicalW * dpr);
+    canvas.height = Math.ceil(logicalH * dpr);
+    const ctx = canvas.getContext("2d")!;
+    ctx.scale(dpr, dpr);
+    ctx.font = font;
+    ctx.fillStyle = colorCss;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, logicalW / 2, logicalH / 2);
 
-    const charRadial = new THREE.Vector3();
-    const charTangent = new THREE.Vector3();
-    const charBasis = new THREE.Matrix4();
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
 
-    for (let i = 0; i < chars.length; i++) {
-      const ch = chars[i]!;
-      const wPx = widths[i]!;
-      const charArc = (wPx * pxToWorld) / radius;
-      const midAngle = angle + charArc / 2;
-      angle += charArc;
-
-      const padX = 2;
-      const padY = 4;
-      const logicalW = wPx + padX * 2;
-      const logicalH = fontPx + padY * 2;
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.ceil(logicalW * dpr);
-      canvas.height = Math.ceil(logicalH * dpr);
-      const ctx = canvas.getContext("2d")!;
-      ctx.scale(dpr, dpr);
-      ctx.font = font;
-      ctx.fillStyle = colorCss;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(ch, logicalW / 2, logicalH / 2);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.minFilter = THREE.LinearFilter;
-      texture.generateMipmaps = false;
-      const planeW = charPlaneH * (logicalW / logicalH);
-      const mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(planeW, charPlaneH),
-        new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: true,
-          opacity,
-          depthWrite: false,
-          side: THREE.DoubleSide,
-        }),
-      );
-      mesh.userData.labelTexture = texture;
-
-      charRadial.set(Math.cos(midAngle), 0, Math.sin(midAngle));
-      charTangent.set(-Math.sin(midAngle), 0, Math.cos(midAngle));
-      // XZ 平面に寝かせる: 接線=横、半径方向=縦、法線=+Y
-      charBasis.makeBasis(charTangent, charRadial, up);
-      mesh.quaternion.setFromRotationMatrix(charBasis);
-      mesh.position.set(charRadial.x * radius, y, charRadial.z * radius);
-      mesh.renderOrder = 10;
-      group.add(mesh);
-    }
-    return group;
+    const planeW = planeH * (logicalW / logicalH);
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(planeW, planeH),
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    );
+    mesh.userData.labelTexture = texture;
+    mesh.rotation.x = -Math.PI / 2;
+    return mesh;
   }
 
   // 中心サークル周囲の白い壁（キーワードドットと同高さ）
@@ -1414,9 +1339,9 @@ onMounted(async () => {
       side: THREE.DoubleSide,
     }),
   );
-  centerHubWall.position.y = TIER_KEYWORD_Y;
+  centerHubWall.position.y = TIER_CENTER_DISK_Y;
   centerHubWall.renderOrder = 1;
-  ringGroup.add(centerHubWall);
+  sceneGroup.add(centerHubWall);
 
   // 中心サークル + タイトル
   const centerDisk = new THREE.Mesh(
@@ -1430,390 +1355,144 @@ onMounted(async () => {
   );
   centerDisk.rotation.x = -Math.PI / 2;
   centerDisk.position.y = TIER_CENTER_DISK_Y;
-  ringGroup.add(centerDisk);
+  sceneGroup.add(centerDisk);
 
-  const centerLabelArcCenters = [
-    CENTER_LABEL_ARC_CENTER_DEG,
-    CENTER_LABEL_ARC_CENTER_DEG + CENTER_LABEL_ARC_OPPOSITE_OFFSET_DEG,
-  ];
-  for (const arcCenterDeg of centerLabelArcCenters) {
-    const centerLabelGroup = createArcCenterLabel(
-      CENTER_LABEL_TEXT,
-      DIAGRAM_WHITE_CSS,
-      CENTER_LABEL_FONT_PX,
-      CENTER_LABEL_CHAR_PLANE_H,
-      CENTER_LABEL_ARC_R,
-      TIER_CENTER_DISK_Y + 0.002,
-      arcCenterDeg,
-      0.95,
-    );
-    ringGroup.add(centerLabelGroup);
-  }
+  const centerTitle = createFlatLabel(
+    CENTER_LABEL_TEXT,
+    DIAGRAM_WHITE_CSS,
+    CENTER_LABEL_FONT_PX,
+    CENTER_LABEL_CHAR_PLANE_H,
+    0.95,
+    600,
+  );
+  centerTitle.position.set(0, TIER_CENTER_DISK_Y + 0.02, 0);
+  centerTitle.renderOrder = 10;
+  sceneGroup.add(centerTitle);
 
   function getCoinLabelY(): number {
-    return TIER_CENTER_DISK_Y + COIN_LABEL_OFFSET_ABOVE_TITLE;
+    return MERGE_POINT_Y + 0.55;
   }
 
-  /** 領域の色付き半弧（キーワードリング内側・ドットと同高さの壁） */
-  function createDomainSectorArcWall(
-    startDeg: number,
-    endDeg: number,
-    color: number,
-  ): THREE.Mesh {
-    const a0 = startDeg + DOMAIN_ARC_PAD_DEG;
-    const a1 = endDeg - DOMAIN_ARC_PAD_DEG;
-    const y0 = TIER_KEYWORD_Y - DOMAIN_ARC_WALL_H / 2;
-    const y1 = TIER_KEYWORD_Y + DOMAIN_ARC_WALL_H / 2;
-    const positions: number[] = [];
-    const indices: number[] = [];
-
-    for (let i = 0; i <= DOMAIN_ARC_SAMPLES; i++) {
-      const t = i / DOMAIN_ARC_SAMPLES;
-      const deg = a0 + (a1 - a0) * t;
-      const p = posAtAngle(deg, DOMAIN_ARC_R, 0);
-      positions.push(p.x, y0, p.z, p.x, y1, p.z);
-    }
-
-    for (let i = 0; i < DOMAIN_ARC_SAMPLES; i++) {
-      const b0 = i * 2;
-      const t0 = i * 2 + 1;
-      const b1 = (i + 1) * 2;
-      const t1 = (i + 1) * 2 + 1;
-      indices.push(b0, t0, b1, b1, t0, t1);
-    }
-
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute(
-      "position",
-      new THREE.Float32BufferAttribute(positions, 3),
-    );
-    geo.setIndex(indices);
-    geo.computeVertexNormals();
-
-    const wall = new THREE.Mesh(
-      geo,
-      new THREE.MeshStandardMaterial({
-        color,
-        transparent: true,
-        opacity: 0.92,
-        roughness: 0.55,
-        metalness: 0.08,
-        side: THREE.DoubleSide,
-      }),
-    );
-    wall.renderOrder = 1;
-    return wall;
-  }
-
-  const domainArcGroup = new THREE.Group();
-  for (const sector of DOMAIN_SECTORS) {
-    domainArcGroup.add(
-      createDomainSectorArcWall(sector.startDeg, sector.endDeg, sector.hex),
-    );
-  }
-  ringGroup.add(domainArcGroup);
-
-  for (const sector of DOMAIN_SECTORS) {
-    const domainLabelGroup = createArcCenterLabel(
-      sector.label,
-      sector.css,
-      HUB_LABEL_FONT_PX,
-      HUB_LABEL_PLANE_H,
-      DOMAIN_LABEL_ARC_R,
-      TIER_HUB_LABEL_Y,
-      sector.arcCenterDeg,
-      0.95,
-    );
-    for (const child of domainLabelGroup.children) {
-      child.renderOrder = 4;
-    }
-    ringGroup.add(domainLabelGroup);
-  }
-
-  /** 円周 XZ 平面にラベルを配置（中心角度に傾け、外側へ左寄せ） */
-  function createRadialLabelMesh(
+  function createKeywordLabelMesh(
     text: string,
-    colorCss: string,
-    angleDeg: number,
-    opacity: number,
-    anchorR = RING_R,
-    planeH = LABEL_PLANE_H,
-    labelY = TIER_KEYWORD_LABEL_Y,
-    fontPx = LABEL_FONT_PX,
+    layout: KeywordLayout,
   ): THREE.Mesh {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const font = `500 ${fontPx}px var(--font-body, system-ui, sans-serif)`;
-
-    const probe = document.createElement("canvas").getContext("2d")!;
-    probe.font = font;
-    const textW = probe.measureText(text).width;
-    const padX = 8;
-    const padY = 6;
-    const logicalW = textW + padX * 2;
-    const logicalH = fontPx + padY * 2;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.ceil(logicalW * dpr);
-    canvas.height = Math.ceil(logicalH * dpr);
-    const ctx = canvas.getContext("2d")!;
-    ctx.scale(dpr, dpr);
-    ctx.font = font;
-    ctx.fillStyle = colorCss;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, padX, logicalH / 2);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.generateMipmaps = false;
-
-    const planeW = planeH * (logicalW / logicalH);
-    const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(planeW, planeH),
-      new THREE.MeshBasicMaterial({
-        map: texture,
-        transparent: true,
-        opacity,
-        depthWrite: false,
-        side: THREE.DoubleSide,
-      }),
+    const mesh = createFlatLabel(
+      text,
+      DIAGRAM_WHITE_CSS,
+      LABEL_FONT_PX,
+      LABEL_PLANE_H_KW,
+      LABEL_OPACITY_PEAK,
     );
-
-    const rad = (angleDeg * Math.PI) / 180;
-    outward.set(Math.cos(rad), 0, Math.sin(rad));
-    tangent.crossVectors(up, outward).normalize();
-
-    const innerR = anchorR + LABEL_GAP;
-    mesh.position.set(
-      outward.x * (innerR + planeW / 2),
-      labelY,
-      outward.z * (innerR + planeW / 2),
-    );
-
-    // XZ 平面に固定（ビルボードなし）: 法線 +Y、テキストは外側へ左寄せ
-    labelBasis.makeBasis(outward, tangent, up);
-    mesh.quaternion.setFromRotationMatrix(labelBasis);
+    anchorPosition(layout, mesh.position);
+    mesh.scale.setScalar(layout.baseScale);
     mesh.renderOrder = 2;
-
-    mesh.userData.labelTexture = texture;
-    mesh.userData.planeW = planeW;
-    mesh.userData.innerR = innerR;
-    mesh.userData.angleDeg = angleDeg;
     return mesh;
   }
 
   function applyKeywordVisibility(pickedIds: Set<string> | null) {
+    if (!pickedIds) return;
     for (const kw of keywords) {
-      const selected = pickedIds?.has(kw.id) ?? false;
-      (dotMeshMap.get(kw.id)!.material as THREE.MeshBasicMaterial).opacity =
-        selected ? DOT_OPACITY_ACTIVE : DOT_OPACITY_DIM;
-      (labelMeshMap.get(kw.id)!.material as THREE.MeshBasicMaterial).opacity =
-        selected ? LABEL_OPACITY_ACTIVE : LABEL_OPACITY_DIM;
+      const selected = pickedIds.has(kw.id);
+      const labelMat = labelMeshMap.get(kw.id)!
+        .material as THREE.MeshBasicMaterial;
+      if (selected) {
+        labelMat.opacity = LABEL_OPACITY_ACTIVE;
+      } else {
+        labelMat.opacity = LABEL_OPACITY_PEAK * 0.2;
+      }
+    }
+  }
+
+  /** 選択キーワードを周辺の元位置へ即座に戻し、不透明度0からフェードイン */
+  function snapPickedLabelsToAnchor(timeSec: number) {
+    for (const kw of hlPicked) {
+      const layout = keywordLayouts.get(kw.id)!;
+      const label = labelMeshMap.get(kw.id)!;
+      applyKeywordFloat(layout, timeSec, label);
+      label.renderOrder = 2;
+      (label.material as THREE.MeshBasicMaterial).opacity = 0;
+      label.visible = true;
+    }
+  }
+
+  /** 全キーワードの位置・スケール（漂いは常時、ハイライト時は一直線で中央へ） */
+  function updateKeywordMotion(timeSec: number, now: number) {
+    let toCenterT = 1;
+    if (hlPhase === "draw") {
+      const elapsed = now - hlStartTime;
+      toCenterT = Math.min(1, elapsed / HIGHLIGHT_TO_CENTER_MS);
+    }
+
+    for (const kw of keywords) {
+      const layout = keywordLayouts.get(kw.id)!;
+      const label = labelMeshMap.get(kw.id)!;
+      anchorPosition(layout, anchorScratch);
+
+      const isPicked = hlPickedIds.has(kw.id);
+      const inMergeMotion = isPicked && hlPhase === "draw";
+      const dimmed =
+        hlPickedIds.size > 0 && !isPicked && hlPhase !== "idle";
+
+      if (inMergeMotion) {
+        baseScratch.lerpVectors(anchorScratch, mergePoint, toCenterT);
+        label.position.copy(baseScratch);
+        const baseScale = restLabelScale.get(kw.id)!;
+        const scale =
+          baseScale + (LABEL_SCALE_HIGHLIGHT - baseScale) * toCenterT;
+        label.scale.setScalar(scale);
+        const mat = label.material as THREE.MeshBasicMaterial;
+        mat.opacity = LABEL_OPACITY_ACTIVE * (1 - Math.max(0, (toCenterT - 0.88) / 0.12));
+        label.visible = toCenterT < 0.98;
+        label.renderOrder = 20;
+      } else if (isPicked && hlPhase === "coin") {
+        label.visible = false;
+      } else if (isPicked && hlPhase === "shrink") {
+        applyKeywordFloat(layout, timeSec, label);
+        const fadeT = easeOut(
+          Math.min(1, (now - hlStartTime) / HIGHLIGHT_KEYWORD_FADE_IN_MS),
+        );
+        (label.material as THREE.MeshBasicMaterial).opacity =
+          LABEL_OPACITY_ACTIVE * fadeT;
+        label.visible = true;
+        label.renderOrder = 2;
+      } else {
+        applyKeywordFloat(layout, timeSec, label);
+        if (dimmed) {
+          const mat = label.material as THREE.MeshBasicMaterial;
+          mat.opacity *= 0.22;
+        }
+      }
     }
   }
 
   for (const kw of keywords) {
-    const rad = (kw.angleDeg * Math.PI) / 180;
-    const dx = Math.cos(rad);
-    const dz = Math.sin(rad);
-
-    // 各ドットは固有のマテリアル（opacity を個別制御するため）
-    const mat = new THREE.MeshBasicMaterial({
-      color: DIAGRAM_WHITE_HEX,
-      transparent: true,
-      opacity: DOT_OPACITY_DIM,
-    });
-    const dot = new THREE.Mesh(dotGeo, mat);
-    dot.position.set(RING_R * dx, TIER_KEYWORD_Y, RING_R * dz);
-    ringGroup.add(dot);
-    dotMeshMap.set(kw.id, dot);
-    dotOrigPos.set(kw.id, dot.position.clone());
-
-    // ラベル（Canvas テクスチャ平面 — 円周に沿って角度傾斜）
-    const labelMesh = createRadialLabelMesh(
-      kw.label,
-      DIAGRAM_WHITE_CSS,
-      kw.angleDeg,
-      LABEL_OPACITY_DIM,
-    );
+    const layout = keywordLayouts.get(kw.id)!;
+    const labelMesh = createKeywordLabelMesh(kw.label, layout);
     labelMeshMap.set(kw.id, labelMesh);
-    ringGroup.add(labelMesh);
+    restLabelScale.set(kw.id, layout.baseScale);
+    sceneGroup.add(labelMesh);
   }
-
-  for (const link of buildGrayLinkPairs(keywords)) {
-    addBezierTowardCenter(link.from, link.to);
-  }
-
-  // ── ハイライトアニメーション ──────────────────────────────────────────────
-  type HLPhase = "idle" | "draw" | "coin" | "shrink";
-  let hlPhase: HLPhase = "idle";
-  let hlStartTime = 0;
-  let hlPicked: Keyword3D[] = [];
-  let hlCompositeWord = "";
-  let hlPickedIds = new Set<string>();
-  let hlLines: THREE.Line[] = [];
-  let hlPaths: THREE.Vector3[][] = [];
-  let hlTravelDots: THREE.Mesh[] = [];
-  let hlCenterSphere: THREE.Mesh | null = null;
-  let hlCoinAnimEl: HTMLDivElement | null = null;
-  let hlCoinWordEl: HTMLSpanElement | null = null;
-  let hlCoinObj: InstanceType<typeof CSS2DObject> | null = null;
-  let hlTimeouts: ReturnType<typeof setTimeout>[] = [];
-
-  function getHighlightCenterTarget(): THREE.Vector3 {
-    return new THREE.Vector3(
-      0,
-      ringLocalYFromCirclePx(-HIGHLIGHT_LINE_END_PX_BELOW_CIRCLE),
-      0,
-    );
-  }
-
-  function disposeHighlightLines() {
-    for (const line of hlLines) {
-      ringGroup.remove(line);
-      line.geometry.dispose();
-      (line.material as THREE.LineBasicMaterial).dispose();
-    }
-    hlLines = [];
-  }
-
-  function disposeTravelDots() {
-    for (const mesh of hlTravelDots) {
-      ringGroup.remove(mesh);
-      mesh.geometry.dispose();
-      (mesh.material as THREE.Material).dispose();
-    }
-    hlTravelDots = [];
-    hlPaths = [];
-  }
+  updateKeywordMotion(0, performance.now());
 
   function clearHL() {
     for (const t of hlTimeouts) clearTimeout(t);
     hlTimeouts = [];
-    disposeCenterSphere();
-    disposeHighlightLines();
-    disposeTravelDots();
+    if (hlCoinObj) {
+      scene.remove(hlCoinObj);
+      hlCoinObj = null;
+      hlCoinAnimEl = null;
+      hlCoinWordEl = null;
+    }
   }
   function after(ms: number, fn: () => void) {
     hlTimeouts.push(setTimeout(fn, ms));
   }
 
-  function disposeCenterSphere() {
-    if (!hlCenterSphere) return;
-    ringGroup.remove(hlCenterSphere);
-    hlCenterSphere.geometry.dispose();
-    (hlCenterSphere.material as THREE.Material).dispose();
-    hlCenterSphere = null;
-  }
-
-  function createCenterSphere() {
-    disposeCenterSphere();
-    hlCenterSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(CENTER_SPHERE_R, 40, 40),
-      new THREE.MeshBasicMaterial({
-        color: TRAVEL_DOT_COLOR,
-        transparent: true,
-        opacity: 0,
-        depthTest: true,
-        depthWrite: true,
-      }),
-    );
-    hlCenterSphere.scale.setScalar(0.001);
-    hlCenterSphere.position.set(0, TIER_CENTER_DISK_Y, 0);
-    // 中心円・枝線より手前、タイトル・造語より奥
-    hlCenterSphere.renderOrder = 8;
-    ringGroup.add(hlCenterSphere);
-  }
-
-  /** キーワード → 中心サークル下端付近への曲線パス */
-  function buildPathToCenter(kw: Keyword3D): THREE.Vector3[] {
-    const p0 = kwPos(kw);
-    const p1 = getHighlightCenterTarget();
-    const ctrl = new THREE.Vector3(
-      (p0.x + p1.x) * 0.38,
-      p0.y + (p1.y - p0.y) * 0.5,
-      (p0.z + p1.z) * 0.38,
-    );
-    const SAMPLES = 56;
-    const pts: THREE.Vector3[] = [];
-    for (let i = 0; i <= SAMPLES; i++) {
-      const t = i / SAMPLES;
-      const mt = 1 - t;
-      pts.push(
-        new THREE.Vector3(
-          mt * mt * p0.x + 2 * mt * t * ctrl.x + t * t * p1.x,
-          mt * mt * p0.y + 2 * mt * t * ctrl.y + t * t * p1.y,
-          mt * mt * p0.z + 2 * mt * t * ctrl.z + t * t * p1.z,
-        ),
-      );
+  function setPickedLabelsVisible(visible: boolean) {
+    for (const kw of hlPicked) {
+      labelMeshMap.get(kw.id)!.visible = visible;
     }
-    return pts;
-  }
-
-  function createHighlightLine(path: THREE.Vector3[]): THREE.Line {
-    const geo = new THREE.BufferGeometry().setFromPoints(path);
-    geo.setDrawRange(0, 0);
-    const line = new THREE.Line(
-      geo,
-      new THREE.LineBasicMaterial({
-        color: TRAVEL_DOT_COLOR,
-        transparent: true,
-        opacity: HL_LINE_OPACITY,
-      }),
-    );
-    return line;
-  }
-
-  /** progress: 0=キーワード側, 1=中心（線の描画範囲と先端ドットを同期） */
-  function applyHighlightPathProgress(progress: number) {
-    const t = Math.max(0, Math.min(1, progress));
-    for (let i = 0; i < hlLines.length; i++) {
-      const line = hlLines[i];
-      const path = hlPaths[i];
-      const cnt = line.geometry.attributes["position"]!.count;
-      line.geometry.setDrawRange(0, Math.max(1, Math.floor(t * cnt)));
-      const traveler = hlTravelDots[i];
-      if (path && traveler) {
-        traveler.position.copy(samplePath(path, t));
-      }
-    }
-  }
-
-  /** fadeT: 0=表示, 1=非表示（キーワード側から中心へ消える + 不透明度） */
-  function applyHighlightLinesFade(fadeT: number) {
-    const t = Math.max(0, Math.min(1, fadeT));
-    const remain = 1 - t;
-    for (const line of hlLines) {
-      const cnt = line.geometry.attributes["position"]!.count;
-      const start = Math.floor(t * cnt);
-      line.geometry.setDrawRange(start, Math.max(0, cnt - start));
-      (line.material as THREE.LineBasicMaterial).opacity =
-        remain * HL_LINE_OPACITY;
-    }
-  }
-
-  function samplePath(path: THREE.Vector3[], t: number): THREE.Vector3 {
-    const f = Math.max(0, Math.min(1, t)) * (path.length - 1);
-    const i = Math.floor(f);
-    const u = f - i;
-    const a = path[i]!;
-    const b = path[Math.min(i + 1, path.length - 1)]!;
-    return new THREE.Vector3().lerpVectors(a, b, u);
-  }
-
-  function createTravelDot(): THREE.Mesh {
-    const dot = new THREE.Mesh(
-      new THREE.SphereGeometry(TRAVEL_DOT_R, 12, 12),
-      new THREE.MeshBasicMaterial({
-        color: TRAVEL_DOT_COLOR,
-        transparent: true,
-        opacity: 1,
-        depthWrite: false,
-      }),
-    );
-    dot.renderOrder = 20;
-    return dot;
   }
 
   // ─── フェーズ: DRAW ──────────────────────────────────────────────────────
@@ -1825,21 +1504,8 @@ onMounted(async () => {
     hlPicked = composite.keywords;
     hlPickedIds = new Set(hlPicked.map((k) => k.id));
 
-    disposeHighlightLines();
-    disposeTravelDots();
-
     for (const kw of hlPicked) {
-      const path = buildPathToCenter(kw);
-      hlPaths.push(path);
-      const line = createHighlightLine(path);
-      ringGroup.add(line);
-      hlLines.push(line);
-
-      const traveler = createTravelDot();
-      traveler.position.copy(path[0]!);
-      traveler.visible = true;
-      ringGroup.add(traveler);
-      hlTravelDots.push(traveler);
+      labelMeshMap.get(kw.id)!.visible = true;
     }
 
     applyKeywordVisibility(hlPickedIds);
@@ -1855,10 +1521,7 @@ onMounted(async () => {
     hlPhase = "coin";
     hlStartTime = performance.now();
 
-    disposeTravelDots();
-
-    // 中央ドット爆発（造語と同タイミング）
-    createCenterSphere();
+    setPickedLabelsVisible(false);
 
     // ── 造語ラベル（CSS2DRenderer が外側 div の transform を毎フレーム上書きするため、
     //    スライドは内側 span で行う）
@@ -1899,10 +1562,11 @@ onMounted(async () => {
     after(COIN_POP_MS + COIN_HOLD_MS + COIN_FADE_MS, startShrink);
   }
 
-  // ─── フェーズ: SHRINK ────────────────────────────────────────────────────
+  // ─── フェーズ: SHRINK（元位置でフェードイン、中央からの復帰なし） ─────────
   function startShrink() {
     hlPhase = "shrink";
     hlStartTime = performance.now();
+    snapPickedLabelsToAnchor(hlStartTime / 1000);
 
     if (hlCoinObj) {
       scene.remove(hlCoinObj);
@@ -1910,42 +1574,24 @@ onMounted(async () => {
       hlCoinAnimEl = null;
       hlCoinWordEl = null;
     }
-    disposeCenterSphere();
-    disposeTravelDots();
-    disposeHighlightLines();
-    applyKeywordVisibility(null);
 
-    after(HIGHLIGHT_SHRINK_MS + HIGHLIGHT_PAUSE_MS, startCycle);
+    after(HIGHLIGHT_KEYWORD_FADE_IN_MS + HIGHLIGHT_PAUSE_MS, () => {
+      applyKeywordVisibility(null);
+      hlPhase = "idle";
+      startCycle();
+    });
   }
 
   // ── フレームごとの連続アニメーション更新 ─────────────────────────────────
   function updateHighlight(now: number) {
     const elapsed = now - hlStartTime;
 
-    // DRAW: ライン伸長と先端の黄色ドットを同期
-    if (hlPhase === "draw") {
-      const t = easeOut(Math.min(1, elapsed / HIGHLIGHT_PATH_MS));
-      applyHighlightPathProgress(t);
-    }
-
-    // COIN: 中央ドット爆発 + 造語ラベル
     if (hlPhase === "coin") {
-      const centerMat = hlCenterSphere?.material as
-        | THREE.MeshBasicMaterial
-        | undefined;
       const fadeStart = COIN_POP_MS + COIN_HOLD_MS;
       const popProgress = Math.min(1, elapsed / COIN_POP_MS);
 
       if (elapsed <= COIN_POP_MS) {
-        const burstScale = easeOutBack(popProgress);
         const burstOpacity = easeOut(Math.min(1, popProgress * 1.35));
-
-        if (hlCenterSphere) {
-          hlCenterSphere.scale.setScalar(Math.max(0.001, burstScale));
-          hlCenterSphere.position.y = TIER_CENTER_DISK_Y;
-        }
-        if (centerMat) centerMat.opacity = burstOpacity * 0.92;
-
         if (hlCoinAnimEl) {
           const slideT = easeOut(popProgress);
           const slideY = (1 - slideT) * COIN_SLIDE_IN_PX;
@@ -1954,53 +1600,42 @@ onMounted(async () => {
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
       } else if (elapsed <= fadeStart) {
-        if (hlCenterSphere) {
-          hlCenterSphere.scale.setScalar(1);
-          hlCenterSphere.position.y = TIER_CENTER_DISK_Y;
-        }
-        if (centerMat) centerMat.opacity = 0.92;
         if (hlCoinAnimEl) {
           hlCoinAnimEl.style.opacity = "1";
           hlCoinAnimEl.style.transform = "translateY(0)";
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
-        applyHighlightLinesFade(0);
       } else {
         const fadeT = easeOut(
           Math.min(1, (elapsed - fadeStart) / COIN_FADE_MS),
         );
         const remain = 1 - fadeT;
-
-        if (hlCenterSphere) {
-          hlCenterSphere.scale.setScalar(1);
-          hlCenterSphere.position.y = TIER_CENTER_DISK_Y;
-        }
-        if (centerMat) centerMat.opacity = remain * 0.92;
-
         if (hlCoinAnimEl) {
           hlCoinAnimEl.style.opacity = String(remain);
           hlCoinAnimEl.style.transform = `translateY(${-10 * fadeT}px)`;
         }
         if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
-        applyHighlightLinesFade(fadeT);
       }
     }
   }
 
   // ── メインアニメーションループ ────────────────────────────────────────────
   let rafId = 0;
-  let lastFrameTime = 0;
   const animate = (now: number) => {
     rafId = requestAnimationFrame(animate);
-    if (lastFrameTime > 0) {
-      const delta = Math.min(0.05, (now - lastFrameTime) / 1000);
-      if (!reduceMotion) {
-        ringGroup.rotation.y += RING_ROTATION_RAD_PER_S * delta;
+    const timeSec = now / 1000;
+    if (reduceMotion) {
+      for (const kw of keywords) {
+        const layout = keywordLayouts.get(kw.id)!;
+        const label = labelMeshMap.get(kw.id)!;
+        anchorPosition(layout, label.position);
+        label.scale.setScalar(layout.baseScale);
+        (label.material as THREE.MeshBasicMaterial).opacity = layout.baseOpacity;
+        label.visible = true;
       }
-    }
-    lastFrameTime = now;
-    if (!reduceMotion) {
+    } else {
       updateHighlight(now);
+      updateKeywordMotion(timeSec, now);
     }
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
@@ -2024,8 +1659,7 @@ onMounted(async () => {
   const resizeObs = new ResizeObserver(() => {
     const cw = container.clientWidth;
     const ch = container.clientHeight;
-    camera.aspect = cw / ch;
-    camera.updateProjectionMatrix();
+    fitOrthoCamera(camera, cw, ch);
     renderer.setSize(cw, ch);
     labelRenderer.setSize(cw, ch);
     if (hlCoinObj) hlCoinObj.position.y = getCoinLabelY();
