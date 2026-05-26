@@ -218,8 +218,8 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
 }
 
 .labs-filter__btn.active {
-  background-color: var(--color-on-surface);
-  color: #fcf9f8;
+  background-color: var(--color-department);
+  color: var(--color-on-primary);
 }
 
 .labs-filter__btn--media.active {

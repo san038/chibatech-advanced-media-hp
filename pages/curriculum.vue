@@ -243,7 +243,7 @@ const features = [
 }
 
 .curriculum-legend__mark--req {
-  color: var(--color-media);
+  color: var(--color-department);
   font-size: var(--text-sm);
   line-height: 1;
 }
@@ -402,7 +402,7 @@ const features = [
 }
 
 .timeline__course--required .timeline__course-marker {
-  color: var(--color-media);
+  color: var(--color-department);
   font-size: var(--text-xs);
 }
 
@@ -421,8 +421,8 @@ const features = [
 .timeline__research-callout {
   margin-top: var(--space-sm);
   padding: var(--space-md);
-  background: color-mix(in srgb, var(--color-media) 8%, var(--color-surface));
-  border-left: 3px solid var(--color-media);
+  background: var(--color-department-bg);
+  border-left: 3px solid var(--color-department);
 }
 
 .timeline__research-title {

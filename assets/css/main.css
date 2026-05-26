@@ -23,6 +23,12 @@
   --color-department: #3bbac6;
   --color-department-bg: rgba(59, 186, 198, 0.08);
   --color-department-mid: rgba(59, 186, 198, 0.16);
+  --color-selection-bg: var(--color-department-mid);
+  --color-selection-fg: var(--color-on-surface);
+  --color-selection-on-dark-bg: rgba(59, 186, 198, 0.38);
+  --color-selection-on-dark-fg: #fcf9f8;
+
+  accent-color: var(--color-primary);
   --color-secondary: #007d3b;
   --color-tertiary: #00549f;
   --color-on-primary: #ffffff;
@@ -739,8 +745,27 @@ h6 {
    ============================================ */
 
 ::selection {
-  background-color: var(--color-media-mid);
-  color: var(--color-on-surface);
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+}
+
+::-moz-selection {
+  background-color: var(--color-selection-bg);
+  color: var(--color-selection-fg);
+}
+
+.bg-dark ::selection,
+.bg-dark-surface ::selection,
+.page-hero ::selection {
+  background-color: var(--color-selection-on-dark-bg);
+  color: var(--color-selection-on-dark-fg);
+}
+
+.bg-dark ::-moz-selection,
+.bg-dark-surface ::-moz-selection,
+.page-hero ::-moz-selection {
+  background-color: var(--color-selection-on-dark-bg);
+  color: var(--color-selection-on-dark-fg);
 }
 
 /* ============================================
@@ -756,7 +781,19 @@ h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-on-surface-faint);
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 35%,
+    var(--color-on-surface-faint)
+  );
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-primary) 55%,
+    var(--color-on-surface-muted)
+  );
 }
 
 /* ============================================
