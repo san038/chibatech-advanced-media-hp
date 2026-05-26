@@ -315,7 +315,7 @@ const formatDateIso = (dateStr: string): string => {
 }
 
 .news-preview__item:hover .news-preview__article-title {
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 
 .news-preview__desc {
@@ -343,7 +343,7 @@ const formatDateIso = (dateStr: string): string => {
 
 .news-preview__item:hover .news-preview__arrow {
   transform: translateX(4px);
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 
 @media (max-width: 767px) {

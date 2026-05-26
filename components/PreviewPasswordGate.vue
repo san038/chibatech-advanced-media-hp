@@ -133,7 +133,7 @@ function onSubmit() {
 .gate__error {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-primary);
+  color: var(--color-media);
 }
 
 .gate__submit {

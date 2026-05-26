@@ -12,6 +12,14 @@
   --color-on-surface-muted: #5a5756;
   --color-on-surface-faint: #9a9594;
   --color-primary: #3bbac6;
+  --color-primary-hover: color-mix(in srgb, var(--color-primary) 78%, var(--color-dark));
+  /** サイト全体のテキストリンク（#3bbac6 をやや暗くした色） */
+  --color-link: var(--color-primary-hover);
+  --color-link-hover: color-mix(
+    in srgb,
+    var(--color-primary-hover) 88%,
+    var(--color-dark)
+  );
   --color-department: #3bbac6;
   --color-department-bg: rgba(59, 186, 198, 0.08);
   --color-department-mid: rgba(59, 186, 198, 0.16);
@@ -638,11 +646,14 @@ h6 {
   font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-on-surface);
-  transition: gap var(--transition-base);
+  transition:
+    gap var(--transition-base),
+    color var(--transition-base);
 }
 
 .link-arrow:hover {
   gap: 1rem;
+  color: var(--color-link);
 }
 
 .link-arrow::after {
@@ -657,6 +668,22 @@ h6 {
 
 .link-arrow--light {
   color: #fcf9f8;
+}
+
+.link-arrow--light:hover {
+  color: rgba(252, 249, 248, 0.75);
+}
+
+/* インラインのテキストリンク（ナビ・ボタン・カード全体リンクを除く） */
+.text-link {
+  color: var(--color-on-surface);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color var(--transition-base);
+}
+
+.text-link:hover {
+  color: var(--color-link);
 }
 
 /* ============================================

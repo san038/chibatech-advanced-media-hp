@@ -4,7 +4,7 @@
       <div class="projects__header">
         <p class="section-label">学びの現場</p>
         <h2 class="projects__title text-display-md">
-          授業では、常に<br>
+          授業では、常に<br />
           つくり、試し、発表する。
         </h2>
       </div>
@@ -42,43 +42,43 @@ const projectImageUrl = (index: number) =>
   `url(${publicPath(`images/img${index}.jpg`)})`;
 
 type PreviewProject = {
-  tag: string
-  title: string
-  lead: string
-  theme: 'media' | 'knowledge' | 'design' | 'dark'
-  size: 'wide' | 'narrow'
-}
+  tag: string;
+  title: string;
+  lead: string;
+  theme: "media" | "knowledge" | "design" | "dark";
+  size: "wide" | "narrow";
+};
 
 const previewProjects: PreviewProject[] = [
   {
-    tag: 'メディア工学',
-    title: '音響インスタレーション制作',
-    lead: '3Dサウンドと空間知覚の研究。体験型音響展示の設計・実装プロジェクト。',
-    theme: 'media',
-    size: 'wide',
+    tag: "メディア工学",
+    title: "音響インスタレーション制作",
+    lead: "3Dサウンドと空間知覚の研究。体験型音響展示の設計・実装プロジェクト。",
+    theme: "media",
+    size: "wide",
   },
   {
-    tag: '知識工学',
-    title: 'AIモデル構築演習',
-    lead: '感情認識AIの開発と精度改善。データセット設計から評価まで。',
-    theme: 'knowledge',
-    size: 'narrow',
+    tag: "知識工学",
+    title: "AIモデル構築演習",
+    lead: "感情認識AIの開発と精度改善。データセット設計から評価まで。",
+    theme: "knowledge",
+    size: "narrow",
   },
   {
-    tag: '情報デザイン',
-    title: 'データ可視化演習',
-    lead: 'Webインタラクティブ可視化。探索的なデータ表現を実装します。',
-    theme: 'design',
-    size: 'narrow',
+    tag: "情報デザイン",
+    title: "データ可視化演習",
+    lead: "Webインタラクティブ可視化。探索的なデータ表現を実装します。",
+    theme: "design",
+    size: "narrow",
   },
   {
-    tag: 'メディア工学',
-    title: 'XRプロトタイプ展示会',
-    lead: '学期末成果発表。学生が開発したVRコンテンツを学内外に公開するデモイベント。',
-    theme: 'dark',
-    size: 'wide',
+    tag: "メディア工学",
+    title: "XRプロトタイプ展示会",
+    lead: "学期末成果発表。学生が開発したVRコンテンツを学内外に公開するデモイベント。",
+    theme: "dark",
+    size: "wide",
   },
-]
+];
 </script>
 
 <style scoped>
@@ -92,7 +92,7 @@ const previewProjects: PreviewProject[] = [
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  max-width: 560px;
+  max-width: 800px;
 }
 
 .projects__title {

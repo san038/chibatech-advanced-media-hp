@@ -253,9 +253,14 @@ const formatDateIso = (dateStr: string): string => {
 }
 
 .news-error__link {
-  color: var(--color-primary);
+  color: var(--color-on-surface);
   text-decoration: underline;
   text-underline-offset: 3px;
+  transition: color var(--transition-base);
+}
+
+.news-error__link:hover {
+  color: var(--color-link);
 }
 
 /* Empty */
@@ -364,7 +369,7 @@ const formatDateIso = (dateStr: string): string => {
 }
 
 .news-article:hover .news-article__title {
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 
 .news-article__desc {
@@ -404,7 +409,7 @@ const formatDateIso = (dateStr: string): string => {
 
 .news-article:hover .news-article__arrow {
   transform: translateX(4px);
-  color: var(--color-primary);
+  color: var(--color-link);
 }
 
 /* Attribution */
@@ -415,8 +420,13 @@ const formatDateIso = (dateStr: string): string => {
 }
 
 .news-attribution__link {
-  color: var(--color-primary);
+  color: var(--color-on-surface);
   text-decoration: underline;
   text-underline-offset: 3px;
+  transition: color var(--transition-base);
+}
+
+.news-attribution__link:hover {
+  color: var(--color-link);
 }
 </style>

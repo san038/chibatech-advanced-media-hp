@@ -105,7 +105,7 @@ const previewLabs: Laboratory[] = laboratories;
 
 @media (min-width: 640px) {
   .lab-preview__link {
-    padding-left: var(--space-xs);
+    padding-left: var(--space-md);
     padding-right: var(--space-md);
     margin-left: calc(-1 * var(--space-xs));
     margin-right: calc(-1 * var(--space-xs));
@@ -120,10 +120,10 @@ const previewLabs: Laboratory[] = laboratories;
   .lab-preview__cell:nth-child(even) .lab-preview__link {
     margin-left: 0;
   }
+}
 
-  .lab-preview__link:hover {
-    background-color: var(--color-surface-low);
-  }
+.lab-preview__link:hover {
+  background-color: var(--color-department-bg);
 }
 
 @media (max-width: 639px) {
