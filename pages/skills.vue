@@ -106,7 +106,7 @@ const skills = [
     id: "creativity",
     name: "創造力",
     nameEn: "Creativity",
-    color: "#a14e58",
+    color: "#a30a61",
     description:
       "存在しないものを構想し、形にする力。メディア工学の技術と情報デザインの感性を組み合わせることで、誰も見たことのない体験や表現を生み出す能力を育てます。",
     activities: [
@@ -120,7 +120,7 @@ const skills = [
     id: "inquiry",
     name: "探究力",
     nameEn: "Inquiry",
-    color: "#3d6b4a",
+    color: "#007d3b",
     description:
       "問いを立て、仮説を検証し続ける力。知識工学の研究手法を通じて、物事の本質を掘り下げる粘り強さと方法論を身につけます。",
     activities: [
@@ -148,7 +148,7 @@ const skills = [
     id: "expression",
     name: "表現力",
     nameEn: "Expression",
-    color: "#4a6fa3",
+    color: "#00549f",
     description:
       "考えを的確に、美しく伝える力。タイポグラフィ・レイアウト・データ可視化を通じて、複雑な情報を誰にでも伝わる形に翻訳するスキルを磨きます。",
     activities: [

@@ -173,20 +173,17 @@ const infoLinks = [
 
 .footer__pillar--media {
   width: 33.333%;
-  background-color: var(--color-media-on-dark);
-  opacity: 0.85;
+  background-color: var(--color-media);
 }
 
 .footer__pillar--knowledge {
   width: 33.333%;
-  background-color: var(--color-knowledge-on-dark);
-  opacity: 0.85;
+  background-color: var(--color-knowledge);
 }
 
 .footer__pillar--design {
   width: 33.333%;
-  background-color: var(--color-design-on-dark);
-  opacity: 0.85;
+  background-color: var(--color-design);
 }
 
 /* Bottom */

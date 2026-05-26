@@ -26,17 +26,17 @@ type Domain =
   | "all";
 
 const DOMAIN_CSS: Record<Domain, string> = {
-  media: "#a14e58",
-  knowledge: "#3d6b4a",
-  design: "#4a6fa3",
+  media: "#a30a61",
+  knowledge: "#007d3b",
+  design: "#00549f",
   "media-knowledge": "#7a7574",
   "media-design": "#7a7574",
   all: "#7a7574",
 };
 const DOMAIN_HEX: Record<Domain, number> = {
-  media: 0xa14e58,
-  knowledge: 0x3d6b4a,
-  design: 0x4a6fa3,
+  media: 0xa30a61,
+  knowledge: 0x007d3b,
+  design: 0x00549f,
   "media-knowledge": 0x7a7574,
   "media-design": 0x7a7574,
   all: 0x7a7574,

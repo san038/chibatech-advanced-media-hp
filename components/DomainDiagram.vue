@@ -20,9 +20,9 @@
           x2="840"
           y2="535"
         >
-          <stop offset="0%" stop-color="#d94a55" />
-          <stop offset="48%" stop-color="#3d6eb8" />
-          <stop offset="100%" stop-color="#2a9d5f" />
+          <stop offset="0%" stop-color="#a30a61" />
+          <stop offset="48%" stop-color="#00549f" />
+          <stop offset="100%" stop-color="#007d3b" />
         </linearGradient>
         <linearGradient
           :id="highlightFillGradientId"
@@ -32,9 +32,9 @@
           x2="840"
           y2="535"
         >
-          <stop offset="0%" stop-color="#d94a55" stop-opacity="0.38" />
-          <stop offset="48%" stop-color="#3d6eb8" stop-opacity="0.32" />
-          <stop offset="100%" stop-color="#2a9d5f" stop-opacity="0.38" />
+          <stop offset="0%" stop-color="#a30a61" stop-opacity="0.38" />
+          <stop offset="48%" stop-color="#00549f" stop-opacity="0.32" />
+          <stop offset="100%" stop-color="#007d3b" stop-opacity="0.38" />
         </linearGradient>
       </defs>
       <circle
@@ -238,9 +238,9 @@ interface DomainLabelSpec {
 }
 
 const COLORS: Record<Domain, string> = {
-  media: "#a14e58",
-  knowledge: "#3d6b4a",
-  design: "#4a6fa3",
+  media: "#a30a61",
+  knowledge: "#007d3b",
+  design: "#00549f",
   "media-knowledge": "#7a7574",
   "media-design": "#7a7574",
   all: "#7a7574",
