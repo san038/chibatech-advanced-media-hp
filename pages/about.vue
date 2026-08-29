@@ -38,87 +38,115 @@
     <!-- Three Pillars -->
     <section id="pillars" class="about-pillars section-padding bg-surface-low">
       <div class="container">
-        <p class="section-label">Three Pillars</p>
-        <h2
-          class="about-pillars__title text-display-md"
-          style="margin-top: var(--space-md); margin-bottom: var(--space-xl)"
-        >
-          3つの専門領域
-        </h2>
+        <header class="about-pillars__head">
+          <p class="section-label">Three Pillars</p>
+          <h2 class="about-pillars__title text-display-md">3つの専門領域</h2>
+          <p class="about-pillars__lead">
+            メディア工学を土台に、知識工学と情報デザインが交わる。それぞれが独立した専門でありながら、ひとつの学びとしてつながります。
+          </p>
+        </header>
 
-        <!-- Pillar: Media Engineering -->
-        <div id="media" class="about-pillar about-pillar--media">
-          <div class="about-pillar__accent about-pillar__accent--media" />
-          <div class="about-pillar__body">
-            <div class="about-pillar__header">
-              <span class="tag tag-media">メディア工学</span>
-              <span class="about-pillar__en">Media Engineering</span>
-            </div>
-            <h3 class="about-pillar__name">音・映像・インタラクション</h3>
-            <p class="about-pillar__desc">
-              人間の五感信号処理・映像符号化・XR技術・センサーシステムといった領域を通じて、新しい体験の形を追求します。
-            </p>
-            <div class="about-pillar__topics">
-              <div
-                v-for="topic in mediaTopic"
-                :key="topic.name"
-                class="about-pillar__topic"
+        <div class="about-pillars__list">
+          <!-- Pillar: Media Engineering -->
+          <article id="media" class="about-pillar about-pillar--media">
+            <figure class="about-pillar__figure">
+              <img
+                :src="publicPath('images/course1.jpg')"
+                alt="メディア工学領域"
+                class="about-pillar__photo"
+                width="1280"
+                height="960"
+                loading="lazy"
+                decoding="async"
               >
-                <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
-                <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
+            </figure>
+            <div class="about-pillar__body">
+              <div class="about-pillar__head">
+                <p class="about-pillar__num">01</p>
+                <div class="about-pillar__names">
+                  <h3 class="about-pillar__name">メディア工学</h3>
+                  <p class="about-pillar__en">Media Engineering</p>
+                </div>
               </div>
+              <p class="about-pillar__tagline">音・映像・インタラクション</p>
+              <p class="about-pillar__desc">
+                本学科の目指す「リアル」を超えるコミュニケーションを創りだすために、現在の水準をはるかに超える音響・映像の３次元再生技術とその伝送技術、ロボットと人間の高度なコミュニケーションを支える音響・映像の認識技術が必要不可欠です。そのための本領域では、音響・映像の物理的特性や視聴覚を中心とした人間の知覚のメカニズム、高度な信号処理技術を理解することを目的とした「音響工学基礎／応用」、「音声工学」、「画像処理基礎／応用」などの科目が開設されています。さらにこれらの複数の講義を通して身につけた知識・技術の高度な応用を学ぶ「バーチャルリアリティ」や、実体験を通じて学びを深化させる「メディア工学実験」などの魅力的な科目が揃っています。
+              </p>
+              <ul class="about-pillar__tags">
+                <li v-for="topic in mediaTopic" :key="topic.name">
+                  {{ topic.name }}
+                </li>
+              </ul>
             </div>
-          </div>
-        </div>
+          </article>
 
-        <!-- Pillar: Knowledge Engineering -->
-        <div id="knowledge" class="about-pillar about-pillar--knowledge">
-          <div class="about-pillar__accent about-pillar__accent--knowledge" />
-          <div class="about-pillar__body">
-            <div class="about-pillar__header">
-              <span class="tag tag-knowledge">知識工学</span>
-              <span class="about-pillar__en">Knowledge Engineering</span>
-            </div>
-            <h3 class="about-pillar__name">AI・データ・知識</h3>
-            <p class="about-pillar__desc">
-              機械学習・深層学習・自然言語処理・知識グラフなど、AIと知識処理の中核技術を学びます。データから意味を抽出し、世界の仕組みを数学的に記述する能力を養います。
-            </p>
-            <div class="about-pillar__topics">
-              <div
-                v-for="topic in knowledgeTopic"
-                :key="topic.name"
-                class="about-pillar__topic"
+          <!-- Pillar: Knowledge Engineering -->
+          <article id="knowledge" class="about-pillar about-pillar--knowledge">
+            <figure class="about-pillar__figure">
+              <img
+                :src="publicPath('images/course2.jpg')"
+                alt="知識工学領域"
+                class="about-pillar__photo"
+                width="1280"
+                height="960"
+                loading="lazy"
+                decoding="async"
               >
-                <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
-                <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
+            </figure>
+            <div class="about-pillar__body">
+              <div class="about-pillar__head">
+                <p class="about-pillar__num">02</p>
+                <div class="about-pillar__names">
+                  <h3 class="about-pillar__name">知識工学</h3>
+                  <p class="about-pillar__en">Knowledge Engineering</p>
+                </div>
               </div>
+              <p class="about-pillar__tagline">AI・データ・知識</p>
+              <p class="about-pillar__desc">
+                人間のように思考することができる人工知能を応用しビックデータを解析することで、今までは知り得なかった新しい知見・知識を得ることができるようになってきています。そのため本領域では、データや情報から知識をどのように表現し創出するのかを学ぶ「人工知能基礎」、「知識工学」、「機械学習」、「データマイニング」や、データ・情報・知識をどのように流通・蓄積させるかを学ぶ「コンピュータネットワーク」、「データベース工学」などの科目が開設されています。さらには、これらの講義を通して身につけた知識・技術の応用例を学び体験する「ネットワーク・データ工学実験」、「ネットワーク・データ工学応用」などの科目がそろっています。
+              </p>
+              <ul class="about-pillar__tags">
+                <li v-for="topic in knowledgeTopic" :key="topic.name">
+                  {{ topic.name }}
+                </li>
+              </ul>
             </div>
-          </div>
-        </div>
+          </article>
 
-        <!-- Pillar: Information Design -->
-        <div id="design" class="about-pillar about-pillar--design">
-          <div class="about-pillar__accent about-pillar__accent--design" />
-          <div class="about-pillar__body">
-            <div class="about-pillar__header">
-              <span class="tag tag-design">情報デザイン</span>
-              <span class="about-pillar__en">Information Design</span>
-            </div>
-            <h3 class="about-pillar__name">UX・可視化・コミュニケーション</h3>
-            <p class="about-pillar__desc">
-              情報を人に届けるための設計を学びます。ユーザー体験設計・データ可視化・タイポグラフィ・コミュニケーションデザインを通じ、技術と人間の橋渡し役になる力を磨きます。
-            </p>
-            <div class="about-pillar__topics">
-              <div
-                v-for="topic in designTopic"
-                :key="topic.name"
-                class="about-pillar__topic"
+          <!-- Pillar: Information Design -->
+          <article id="design" class="about-pillar about-pillar--design">
+            <figure class="about-pillar__figure">
+              <img
+                :src="publicPath('images/course3.jpg')"
+                alt="情報デザイン領域"
+                class="about-pillar__photo"
+                width="1280"
+                height="960"
+                loading="lazy"
+                decoding="async"
               >
-                <h4 class="about-pillar__topic-name">{{ topic.name }}</h4>
-                <p class="about-pillar__topic-desc">{{ topic.desc }}</p>
+            </figure>
+            <div class="about-pillar__body">
+              <div class="about-pillar__head">
+                <p class="about-pillar__num">03</p>
+                <div class="about-pillar__names">
+                  <h3 class="about-pillar__name">情報デザイン</h3>
+                  <p class="about-pillar__en">Information Design</p>
+                </div>
               </div>
+              <p class="about-pillar__tagline">
+                UX・可視化・コミュニケーション
+              </p>
+              <p class="about-pillar__desc">
+                これからの社会やユーザーに「使いやすく魅力的なモノやシステム」を提供できるデザイン能力を持つ人材が求められています。そのためには、先進的な技術と情報デザインの学びが不可欠です。ユーザーを理解し、大胆な発想でアイデアを具体的なカタチにし、先進的なデザインを作り出します。そのため本領域では、デザインの基礎知識を体験的に学びます。次に、総合的なデザインスキルを身につけるために「情報デザイン基礎／応用」、「人間中心設計」、「デジタルファブリケーション」などの科目が開設されています。さらには、先進的なデザインの学びを体験する「テクノロジーアート」、「フィジカルインターフェース」、「ユーザエクスペリエンスデザイン」などの応用科目もそろっています。
+              </p>
+              <ul class="about-pillar__tags">
+                <li v-for="topic in designTopic" :key="topic.name">
+                  {{ topic.name }}
+                </li>
+              </ul>
             </div>
-          </div>
+          </article>
         </div>
       </div>
     </section>
@@ -157,6 +185,8 @@ useSeoMeta({
   description:
     "メディア工学・知識工学・情報デザインの3つの柱を横断する知能メディア工学科の学びの特徴をご紹介します。",
 });
+
+const publicPath = usePublicPath();
 
 const mediaTopic = [
   {
@@ -209,162 +239,221 @@ const designTopic = [
 .about-philosophy__inner {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
 }
 
+/* 大見出しの下に説明文を素直に積む（横並びだと日本語見出しが折れて読みにくい） */
 .about-philosophy__content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
-@media (min-width: 1024px) {
-  .about-philosophy__content {
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
-  }
+.about-philosophy__title {
+  max-width: 24em;
+  word-break: auto-phrase;
 }
 
 .about-philosophy__text {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+  max-width: 34em;
 }
 
 .about-philosophy__text p {
   font-family: var(--font-body);
   font-size: var(--text-md);
-  line-height: 1.8;
+  line-height: 1.85;
   color: var(--color-on-surface-muted);
 }
 
-/* Pillars */
-.about-pillar {
-  display: flex;
-  gap: var(--space-lg);
-  padding: var(--space-xl) 0;
-  border-top: 1px solid var(--color-surface);
+/* Three Pillars */
+.about-pillars__head {
+  max-width: 62ch;
 }
 
-@media (max-width: 767px) {
+.about-pillars__title {
+  margin-top: var(--space-sm);
+  color: var(--color-on-surface);
+}
+
+.about-pillars__lead {
+  margin-top: var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  line-height: 1.85;
+  color: var(--color-on-surface-muted);
+}
+
+.about-pillars__list {
+  margin-top: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--space-lg), 8vw, var(--space-xl));
+}
+
+.about-pillar {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 900px) {
   .about-pillar {
-    gap: var(--space-sm);
+    grid-template-columns: 1.1fr 1fr;
+    gap: clamp(var(--space-lg), 6vw, 5rem);
+    align-items: stretch;
+  }
+
+  /* 知識工学は画像を右にして左右交互のリズムをつくる */
+  .about-pillar--knowledge .about-pillar__figure {
+    order: 2;
   }
 }
 
-.about-pillar:last-of-type {
-  border-bottom: 1px solid var(--color-surface);
+/* 画像（このセクションの主役） */
+.about-pillar__figure {
+  margin: 0;
 }
 
-.about-pillar__accent {
-  width: 3px;
-  flex-shrink: 0;
-  align-self: stretch;
+.about-pillar__photo {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 3px;
+  background-color: var(--color-surface);
 }
 
-.about-pillar__accent--media {
-  background-color: var(--color-media);
-}
-.about-pillar__accent--knowledge {
-  background-color: var(--color-knowledge);
-}
-.about-pillar__accent--design {
-  background-color: var(--color-design);
+@media (min-width: 900px) {
+  .about-pillar__figure {
+    display: flex;
+  }
+
+  .about-pillar__photo {
+    height: 100%;
+    aspect-ratio: auto;
+    min-height: 24rem;
+  }
 }
 
+/* 本文 */
 .about-pillar__body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  flex: 1;
+  align-items: flex-start;
+  max-width: 54ch;
 }
 
-.about-pillar__header {
+/* 見出し: 数字 ＋ 右にコース名／英語名 */
+.about-pillar__head {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: clamp(0.9rem, 2vw, 1.5rem);
 }
 
-.about-pillar__en {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: 400;
-  color: var(--color-on-surface-faint);
-  letter-spacing: 0.04em;
+.about-pillar__names {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  /* 数字の中央をコース名の中央に合わせるための調整（英語名の分だけ上に余白） */
+  padding-top: 1rem;
+}
+
+.about-pillar__num {
+  flex-shrink: 0;
+  position: relative;
+  top: 0.08em; /* 数字が視覚的に上に見えるぶんを少しだけ下げる */
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5.4vw, 3.6rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .about-pillar__name {
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 3vw, var(--text-3xl));
-  font-weight: 600;
-  color: var(--color-on-surface);
+  font-size: clamp(1.6rem, 2.8vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.1;
   letter-spacing: -0.02em;
 }
 
-.about-pillar__desc {
+.about-pillar__en {
   font-family: var(--font-body);
-  font-size: var(--text-md);
-  line-height: 1.8;
-  color: var(--color-on-surface-muted);
-  max-width: 60ch;
-}
-
-.about-pillar__topics {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-md);
-  margin-top: var(--space-sm);
-}
-
-@media (min-width: 768px) {
-  .about-pillar__topics {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.about-pillar__topic {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: var(--space-sm);
-}
-
-.about-pillar--media .about-pillar__topic {
-  background-color: var(--color-media-bg);
-}
-
-.about-pillar--knowledge .about-pillar__topic {
-  background-color: var(--color-knowledge-bg);
-}
-
-.about-pillar--design .about-pillar__topic {
-  background-color: var(--color-design-bg);
-}
-
-.about-pillar__topic-name {
-  font-family: var(--font-display);
-  font-size: var(--text-base);
+  font-size: 0.72rem;
   font-weight: 600;
-  color: var(--color-on-surface);
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.about-pillar--media .about-pillar__topic-name {
+/* 数字・コース名・英語名すべて領域色に */
+.about-pillar--media .about-pillar__num,
+.about-pillar--media .about-pillar__name,
+.about-pillar--media .about-pillar__en {
   color: var(--color-media);
 }
-
-.about-pillar--knowledge .about-pillar__topic-name {
+.about-pillar--knowledge .about-pillar__num,
+.about-pillar--knowledge .about-pillar__name,
+.about-pillar--knowledge .about-pillar__en {
   color: var(--color-knowledge);
 }
-
-.about-pillar--design .about-pillar__topic-name {
+.about-pillar--design .about-pillar__num,
+.about-pillar--design .about-pillar__name,
+.about-pillar--design .about-pillar__en {
   color: var(--color-design);
 }
 
-.about-pillar__topic-desc {
+.about-pillar__tagline {
+  margin-top: var(--space-md);
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--color-on-surface);
+}
+
+.about-pillar__desc {
+  margin-top: var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.8;
+  color: var(--color-on-surface-muted);
+}
+
+.about-pillar__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+}
+
+.about-pillar__tags li {
   font-family: var(--font-body);
   font-size: var(--text-xs);
-  color: var(--color-on-surface-muted);
-  line-height: 1.7;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid;
+}
+
+.about-pillar--media .about-pillar__tags li {
+  color: var(--color-media);
+  border-color: color-mix(in srgb, var(--color-media) 35%, transparent);
+}
+.about-pillar--knowledge .about-pillar__tags li {
+  color: var(--color-knowledge);
+  border-color: color-mix(in srgb, var(--color-knowledge) 35%, transparent);
+}
+.about-pillar--design .about-pillar__tags li {
+  color: var(--color-design);
+  border-color: color-mix(in srgb, var(--color-design) 35%, transparent);
 }
 
 /* Diagram */
@@ -376,7 +465,7 @@ const designTopic = [
   width: 100%;
   max-width: 1000px;
   height: clamp(320px, 52vw, 590px);
-  margin: var(--space-xl) auto var(--space-lg);
+  margin: var(--space-lg) auto var(--space-md);
   background-color: #1c1b1b;
   overflow: hidden;
 }
