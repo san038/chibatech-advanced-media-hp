@@ -73,10 +73,9 @@ const SITE_TITLE = "千葉工業大学メディア工学科";
 const HEADLINE = "新時代のコミュニケーションをつくる";
 
 // CourseScrolly がアクティブな間はヒーローのコピーをフェードアウト
-const courseFocus = useState<"media" | "knowledge" | "design" | null>(
-  "heroFocusDomain",
-  () => null,
-);
+const courseFocus = useState<
+  "media" | "knowledge" | "design" | "all" | null
+>("heroFocusDomain", () => null);
 
 const INTRO_CHAR_MS = 52;
 const INTRO_AFTER_TYPE_MS = 700;

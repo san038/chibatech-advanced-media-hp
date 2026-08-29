@@ -1,5 +1,5 @@
 <template>
-  <section class="course-scrolly" aria-label="コース紹介">
+  <section class="course-scrolly" aria-label="コース紹介とビジョン">
     <article
       v-for="(course, i) in COURSES"
       :key="course.key"
@@ -10,7 +10,8 @@
       <div class="course-scrolly__scrim" aria-hidden="true" />
       <div class="course-scrolly__inner">
         <p class="course-scrolly__index">
-          {{ String(i + 1).padStart(2, "0") }} <span aria-hidden="true">/ 03</span>
+          {{ String(i + 1).padStart(2, "0") }}
+          <span aria-hidden="true">/ 03</span>
         </p>
         <p class="course-scrolly__label text-label">{{ course.en }}</p>
         <h2 class="course-scrolly__name">{{ course.name }}</h2>
@@ -28,6 +29,24 @@
         </NuxtLink>
       </div>
     </article>
+
+    <!-- 3領域が重なる学科 ＝ ビジョン -->
+    <article
+      :ref="(el) => setPanel(el, 3)"
+      class="course-scrolly__panel is-vision"
+      :class="{ 'is-active': activeIndex === 3 }"
+    >
+      <div class="course-scrolly__scrim" aria-hidden="true" />
+      <div class="course-scrolly__inner">
+        <p class="course-scrolly__label text-label">Vision</p>
+        <p class="course-scrolly__tagline course-scrolly__tagline--vision">
+          この世界に存在しないものを新しくつくる。<br >そのワクワクを味わってください。
+        </p>
+        <p class="course-scrolly__desc">
+          例えばサッカー中継で、ゴールキーパーから見たシュートシーンの音や映像が流れたら、臨場感に溢れ、大いに盛り上がるでしょう。その実現に向けて研究を進めるのが、本学科で取り組む学びのひとつである「メディア工学」と呼ばれる分野です。しかしこれは未来のコミュニケーションの一例に過ぎません。他にもミリオンヒット曲を作曲する人工知能、使うだけで楽しくなるツールのデザインなど、知能メディア工学科の研究には、ワクワクするような未来が詰まっています。一緒に未来が求めるコミュニケーションを創出しましょう。
+        </p>
+      </div>
+    </article>
   </section>
 </template>
 
@@ -35,6 +54,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 
 type DomainKey = "media" | "knowledge" | "design";
+type FocusKey = DomainKey | "all";
 
 interface Course {
   key: DomainKey;
@@ -81,8 +101,11 @@ const COURSES: Course[] = [
   },
 ];
 
+// パネルの並び順に対応するフォーカスキー（4枚目 = ビジョン = 3領域収束）
+const PANEL_KEYS: FocusKey[] = ["media", "knowledge", "design", "all"];
+
 // HeroFoamBg と共有。中央バンドに入ったパネルの領域をハイライトさせる
-const focusDomain = useState<DomainKey | null>("heroFocusDomain", () => null);
+const focusDomain = useState<FocusKey | null>("heroFocusDomain", () => null);
 const activeIndex = ref(-1);
 
 const panelEls: (HTMLElement | null)[] = [];
@@ -90,7 +113,7 @@ function setPanel(el: unknown, i: number) {
   panelEls[i] = el as HTMLElement | null;
 }
 
-const ratios = [0, 0, 0];
+const ratios = [0, 0, 0, 0];
 let io: IntersectionObserver | null = null;
 
 function recompute() {
@@ -103,7 +126,7 @@ function recompute() {
     }
   });
   activeIndex.value = bi;
-  focusDomain.value = bi >= 0 ? COURSES[bi].key : null;
+  focusDomain.value = bi >= 0 ? PANEL_KEYS[bi] : null;
 }
 
 onMounted(() => {
@@ -157,6 +180,16 @@ onUnmounted(() => {
   );
 }
 
+.is-vision .course-scrolly__scrim {
+  background: linear-gradient(
+    260deg,
+    rgba(20, 19, 19, 0.92) 0%,
+    rgba(20, 19, 19, 0.74) 34%,
+    rgba(20, 19, 19, 0.32) 62%,
+    rgba(20, 19, 19, 0.08) 84%
+  );
+}
+
 .course-scrolly__inner {
   position: relative;
   width: 100%;
@@ -179,6 +212,10 @@ onUnmounted(() => {
   .course-scrolly__inner {
     width: 50%;
     max-width: 34rem;
+  }
+
+  .is-vision .course-scrolly__inner {
+    max-width: 40rem;
   }
 }
 
@@ -213,6 +250,12 @@ onUnmounted(() => {
   font-weight: 500;
   line-height: 1.4;
   letter-spacing: -0.01em;
+}
+
+.course-scrolly__tagline--vision {
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .course-scrolly__desc {
@@ -267,6 +310,9 @@ onUnmounted(() => {
 .is-design .course-scrolly__label,
 .is-design .course-scrolly__index {
   color: var(--color-design-on-dark);
+}
+.is-vision .course-scrolly__label {
+  color: var(--color-primary);
 }
 
 .is-media .course-scrolly__keywords li::before {

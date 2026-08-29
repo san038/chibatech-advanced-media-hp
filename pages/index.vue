@@ -7,7 +7,6 @@
       <CourseScrolly />
     </div>
     <NewsPreviewSection />
-    <VisionSection />
     <ProjectPreviewSection />
     <LaboratoryPreviewSection />
     <CtaSection />

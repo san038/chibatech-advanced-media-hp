@@ -17,6 +17,9 @@
         :style="{ color: b.labelColor }"
         >{{ b.text }}</span
       >
+      <span ref="enclosureLabelEl" class="hero-foam__enclosure-label"
+        >知能メディア工学科</span
+      >
     </div>
   </div>
 </template>
@@ -26,16 +29,20 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 
 // ── 領域定義 ─────────────────────────────────────────────────────────────────
 type DomainKey = "media" | "knowledge" | "design";
+// "all" = 3領域を重ねて「重なった学科」を表現する収束状態
+type FocusKey = DomainKey | "all";
 type Vec3 = { x: number; y: number; z: number };
 
 // スクロール連動フォーカス（CourseScrolly から更新される共有状態）
-const focusDomain = useState<DomainKey | null>("heroFocusDomain", () => null);
+const focusDomain = useState<FocusKey | null>("heroFocusDomain", () => null);
 
 const DOMAIN_RGB: Record<DomainKey, string> = {
   media: "232, 88, 154",
   knowledge: "64, 217, 142",
   design: "90, 171, 240",
 };
+// コースカラー（--color-primary #3bbac6）。収束状態では全サークルをこの水色へ寄せる
+const DEPT_RGB = "59, 186, 198";
 const DOMAIN_LABEL: Record<DomainKey, string> = {
   media: "#f3a9cd",
   knowledge: "#8fe9bd",
@@ -115,7 +122,8 @@ interface Body {
   pos: Vec3;
   vel: Vec3;
   dir: Vec3; // 核中心からのオフセット方向(単位)
-  nrm: Vec3; // リングの法線(単位)
+  nrm: Vec3; // リングの法線(単位・現在値)
+  nrm0: Vec3; // リングの法線(単位・初期値。収束時に前面へ補間する基準)
   u: Vec3;
   v: Vec3; // リング平面の基底
   r: number; // 半径(px)
@@ -131,6 +139,7 @@ interface Body {
 
 const rootEl = ref<HTMLElement | null>(null);
 const canvasEl = ref<HTMLCanvasElement | null>(null);
+const enclosureLabelEl = ref<HTMLElement | null>(null);
 const bodies = ref<Body[]>([]);
 const interactive = ref(false);
 const dragging = ref(false);
@@ -174,6 +183,8 @@ const domainFocus: Record<DomainKey, number> = {
 let focusZoom = 1;
 // 投影の水平中心（0.5 = 中央、フォーカス時はダイアグラムを左へ寄せる）
 let viewCenterX = 0.5;
+// 収束度（0 = 通常配置、1 = 3領域を前面で重ねた状態）
+let convergence = 0;
 
 // ── ベクトル ─────────────────────────────────────────────────────────────────
 function v3(x: number, y: number, z: number): Vec3 {
@@ -198,6 +209,14 @@ function basisOf(n: Vec3): { u: Vec3; v: Vec3 } {
   const u = norm(cross(ref, n));
   const v = norm(cross(n, u));
   return { u, v };
+}
+// "r, g, b" 文字列どうしを t で補間
+function mixRgb(a: string, b: string, t: number): string {
+  const pa = a.split(",").map((s) => parseFloat(s));
+  const pb = b.split(",").map((s) => parseFloat(s));
+  return `${Math.round(pa[0] + (pb[0] - pa[0]) * t)}, ${Math.round(
+    pa[1] + (pb[1] - pa[1]) * t,
+  )}, ${Math.round(pa[2] + (pb[2] - pa[2]) * t)}`;
 }
 function clamp(x: number, lo: number, hi: number): number {
   return x < lo ? lo : x > hi ? hi : x;
@@ -268,16 +287,38 @@ function angDiff(a: number, b: number): number {
 function updateFocus(dt: number) {
   const fd = focusDomain.value;
   const rate = Math.min(1, dt * 3.5);
+  const all = fd === "all";
   (["media", "knowledge", "design"] as DomainKey[]).forEach((k) => {
-    const tgt = fd == null ? 1 : k === fd ? 1 : NONFOCUS_DIM;
+    const tgt = fd == null || all ? 1 : k === fd ? 1 : NONFOCUS_DIM;
     domainFocus[k] += (tgt - domainFocus[k]) * rate;
   });
-  focusZoom += ((fd == null ? 1 : 0.9) - focusZoom) * rate;
+  focusZoom += ((fd == null ? 1 : all ? 0.98 : 0.9) - focusZoom) * rate;
   camDistEff = camDist * focusZoom;
   // 横長画面ではフォーカス時にダイアグラムを左 30% 付近へ寄せ、右半分をテキスト用に空ける
   const wide = cssW > cssH * 1.1;
   const cxTarget = fd == null ? 0.5 : wide ? 0.3 : 0.5;
   viewCenterX += (cxTarget - viewCenterX) * rate;
+  // "all": 3領域を前面で重ねる収束状態へ
+  convergence += ((all ? 1 : 0) - convergence) * rate;
+}
+
+// 収束時、全リング（核＋キーワード）の法線を前面（カメラ方向）へ補間し、
+// すべての円が同じ角度でこちらを向いて重なるようにする
+function alignRings() {
+  const faceN = camToWorld(v3(0, 0, 1));
+  const t = convergence;
+  for (const b of bodies.value) {
+    b.nrm = norm(
+      v3(
+        b.nrm0.x + (faceN.x - b.nrm0.x) * t,
+        b.nrm0.y + (faceN.y - b.nrm0.y) * t,
+        b.nrm0.z + (faceN.z - b.nrm0.z) * t,
+      ),
+    );
+    const bs = basisOf(b.nrm);
+    b.u = bs.u;
+    b.v = bs.v;
+  }
 }
 
 // ── 初期化 ───────────────────────────────────────────────────────────────────
@@ -295,6 +336,7 @@ function buildBodies(): Body[] {
       vel: v3(0, 0, 0),
       dir: v3(0, 0, 0),
       nrm,
+      nrm0: nrm,
       u,
       v,
       r: 0,
@@ -320,6 +362,7 @@ function buildBodies(): Body[] {
       vel: v3(0, 0, 0),
       dir: randUnit(i + 11.7),
       nrm,
+      nrm0: nrm,
       u,
       v,
       r: 0,
@@ -347,10 +390,14 @@ function targetOf(b: Body): Vec3 {
   }
   const n = b.domains.length;
   const s = b.spread * minDim;
+  const cv = convergence;
+  const posK = cluster * (1 - cv); // 収束時は核を完全に重ねる（間隔 0）
+  const zK = posK * (1 - cv); // z を平面化して正面へ
+  const sK = s * (1 - cv * 0.45);
   return v3(
-    (tx / n) * cluster + b.dir.x * s,
-    (ty / n) * cluster + b.dir.y * s,
-    (tz / n) * cluster + b.dir.z * s,
+    (tx / n) * posK + b.dir.x * sK,
+    (ty / n) * posK + b.dir.y * sK,
+    (tz / n) * zK + b.dir.z * sK * (1 - cv * 0.7),
   );
 }
 
@@ -528,15 +575,21 @@ function drawBody(c: CanvasRenderingContext2D, b: Body) {
   b.sr = b.r * p.scale;
   b.zc = p.zc;
 
+  const cv = convergence;
+  // 収束時、キーワードのサークルは透明化（3領域の円だけ残す）
+  const kwVis = b.kind === "kw" ? 1 - cv : 1;
+  if (kwVis < 0.02) return;
+
   const fade = clamp((p.scale - 0.6) / 0.9, 0, 1);
   // スクロール連動フォーカス: 所属領域の強度の最大値（境界語は片側が明るければ残る）
   const ff = Math.max(...b.domains.map((d) => domainFocus[d]));
-  const fm = 0.03 + 0.97 * ff;
+  const fm = (0.03 + 0.97 * ff) * kwVis;
   const main = ringPts(b.pos, b.u, b.v, b.r, seg);
 
-  // 領域グロー
+  // 領域グロー（収束時はコースカラーの水色へ寄せる）
   for (let i = 0; i < b.domains.length; i++) {
-    const rgb = DOMAIN_RGB[b.domains[i]];
+    const rgb =
+      cv > 0.01 ? mixRgb(DOMAIN_RGB[b.domains[i]], DEPT_RGB, cv) : DOMAIN_RGB[b.domains[i]];
     c.shadowColor = `rgb(${rgb})`;
     c.shadowBlur = b.sr * (0.26 + 0.2 * fade) * (0.1 + 0.9 * ff);
     strokePoly(c, main, 0, 0, rgb, (0.14 + 0.2 * fade) * fm, 1.1);
@@ -549,11 +602,79 @@ function drawBody(c: CanvasRenderingContext2D, b: Body) {
     c,
     main,
     off,
-    (0.13 + 0.5 * fade) * fm,
+    (0.13 + 0.5 * fade) * fm * (1 - 0.45 * cv),
     (0.8 + 1.4 * fade) * (0.25 + 0.75 * ff),
   );
 
+  // 収束時: 水色の実線でくっきり縁取る
+  if (cv > 0.01 && b.kind === "core") {
+    strokePoly(
+      c,
+      main,
+      0,
+      0,
+      DEPT_RGB,
+      (0.32 + 0.34 * fade) * cv,
+      1 + 1.1 * fade,
+    );
+  }
+
   if (b.kind === "core") drawInstrument(c, b, fade, off, fm);
+}
+
+// 3領域の円を囲う正方形の四隅ブラケット＋ラベル（収束時のみ）
+const enclosureBox = { x: 0, y: 0, half: 0, valid: false };
+
+function drawEnclosure(c: CanvasRenderingContext2D) {
+  enclosureBox.valid = false;
+  if (convergence < 0.02) return;
+  const cores = bodies.value.filter((b) => b.kind === "core" && b.sr > 0);
+  if (cores.length === 0) return;
+
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const b of cores) {
+    minX = Math.min(minX, b.sx - b.sr);
+    minY = Math.min(minY, b.sy - b.sr);
+    maxX = Math.max(maxX, b.sx + b.sr);
+    maxY = Math.max(maxY, b.sy + b.sr);
+  }
+  const pad = minDim * 0.055;
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const half = Math.max(maxX - minX, maxY - minY) / 2 + pad;
+  enclosureBox.x = cx;
+  enclosureBox.y = cy;
+  enclosureBox.half = half;
+  enclosureBox.valid = true;
+
+  const a = convergence;
+  const arm = half * 0.3;
+  const corners: [number, number, number, number][] = [
+    [cx - half, cy - half, 1, 1],
+    [cx + half, cy - half, -1, 1],
+    [cx - half, cy + half, 1, -1],
+    [cx + half, cy + half, -1, -1],
+  ];
+  // 色収差付きで primary カラーの角線を描く
+  const passes: [number, string, number, number][] = [
+    [-0.8, "255, 60, 70", 0.16 * a, 1.2],
+    [0.8, "70, 150, 255", 0.16 * a, 1.2],
+    [0, DEPT_RGB, 0.85 * a, 1.6],
+  ];
+  for (const [ox, rgb, alpha, lw] of passes) {
+    c.strokeStyle = `rgba(${rgb}, ${alpha})`;
+    c.lineWidth = lw;
+    c.beginPath();
+    for (const [x, y, sx, sy] of corners) {
+      c.moveTo(x + sx * arm + ox, y);
+      c.lineTo(x + ox, y);
+      c.lineTo(x + ox, y + sy * arm);
+    }
+    c.stroke();
+  }
 }
 
 function drawInstrument(
@@ -699,8 +820,9 @@ function updateCamera(now: number, dt: number) {
   if (dragging.value) return;
 
   // スクロール連動フォーカス中は対象領域が正面に来るようイージング
-  if (focusDomain.value) {
-    const tgt = faceTarget(focusDomain.value);
+  const fd = focusDomain.value;
+  if (fd) {
+    const tgt = fd === "all" ? { yaw: 0, pitch: 0.04 } : faceTarget(fd);
     const rate = Math.min(1, dt * 2.4);
     cam.yaw += angDiff(cam.yaw, tgt.yaw) * rate;
     cam.pitch += (tgt.pitch - cam.pitch) * rate;
@@ -736,9 +858,23 @@ function renderScene() {
 
   c.globalCompositeOperation = "lighter";
   for (const idx of order) drawBody(c, bodies.value[idx]);
+  drawEnclosure(c);
   c.globalCompositeOperation = "source-over";
 
   positionLabels();
+  positionEnclosure();
+}
+
+function positionEnclosure() {
+  const el = enclosureLabelEl.value;
+  if (!el) return;
+  if (convergence < 0.05 || !enclosureBox.valid) {
+    el.style.opacity = "0";
+    return;
+  }
+  // 重なった円の中央にラベルを置く
+  el.style.transform = `translate(-50%, -50%) translate(${enclosureBox.x}px, ${enclosureBox.y}px)`;
+  el.style.opacity = (convergence * 0.95).toFixed(3);
 }
 
 function positionLabels() {
@@ -757,7 +893,12 @@ function positionLabels() {
     }px) scale(${s.toFixed(3)})`;
     const ff = Math.max(...b.domains.map((d) => domainFocus[d]));
     const base = b.kind === "core" ? 0.5 : 0.24;
-    el.style.opacity = clamp(base * near * ff * ff, 0, 1).toFixed(3);
+    // 収束時はコース／キーワードのラベルをすべて消し、中央の学科ラベルだけ残す
+    el.style.opacity = clamp(
+      base * near * ff * ff * (1 - convergence),
+      0,
+      1,
+    ).toFixed(3);
     el.style.zIndex = String(Math.round(20000 - b.zc));
   }
 }
@@ -769,6 +910,7 @@ function frame(now: number) {
   step(true);
   updateFocus(dt);
   updateCamera(now, dt);
+  alignRings();
   renderScene();
   rafId = requestAnimationFrame(frame);
 }
@@ -882,13 +1024,18 @@ onMounted(() => {
   // reduced-motion 時はアニメせず、フォーカス変化のたびに静止画を描き直す
   watch(focusDomain, (fd) => {
     if (!reduceMotion) return;
+    const all = fd === "all";
     (["media", "knowledge", "design"] as DomainKey[]).forEach((k) => {
-      domainFocus[k] = fd == null ? 1 : k === fd ? 1 : NONFOCUS_DIM;
+      domainFocus[k] = fd == null || all ? 1 : k === fd ? 1 : NONFOCUS_DIM;
     });
-    focusZoom = fd == null ? 1 : 0.9;
+    focusZoom = fd == null ? 1 : all ? 0.98 : 0.9;
     camDistEff = camDist * focusZoom;
     viewCenterX = fd == null ? 0.5 : cssW > cssH * 1.1 ? 0.3 : 0.5;
-    if (fd) {
+    convergence = all ? 1 : 0;
+    if (all) {
+      cam.yaw = 0;
+      cam.pitch = 0.04;
+    } else if (fd) {
       const t = faceTarget(fd);
       cam.yaw = t.yaw;
       cam.pitch = t.pitch;
@@ -896,6 +1043,9 @@ onMounted(() => {
       cam.yaw = 0.5;
       cam.pitch = IDLE_PITCH;
     }
+    alignRings();
+    // 収束の位置変化を静止画へ反映するため数ステップ回す
+    for (let i = 0; i < 90; i++) step(false);
     renderScene();
   });
 
@@ -1012,7 +1162,28 @@ onUnmounted(() => {
   font-size: clamp(0.58rem, 1.15vw, 0.82rem);
 }
 
+/* 3領域を囲う正方形エリア上端のラベル（収束状態のみ表示） */
+.hero-foam__enclosure-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  white-space: nowrap;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-weight: 600;
+  font-size: clamp(0.72rem, 1.6vw, 1.05rem);
+  letter-spacing: 0.24em;
+  color: var(--color-primary);
+  text-shadow:
+    0 0 5px rgba(10, 10, 12, 0.95),
+    0 0 18px rgba(10, 10, 12, 0.9);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .hero-foam__enclosure-label {
+    will-change: auto;
+  }
   .hero-foam__label {
     will-change: auto;
   }
