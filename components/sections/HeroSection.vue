@@ -7,6 +7,7 @@
       'hero--intro-reveal': introPhase === 'reveal',
       'hero--intro-done': introPhase === 'done',
       'hero--course-mode': courseFocus !== null,
+      'hero--scrolled': scrolled,
     }"
   >
     <!-- Background visual element -->
@@ -24,48 +25,68 @@
       aria-hidden="true"
     />
 
-    <!-- Title + scroll: 同一ブロックが中央 → 下部へ移動 -->
-    <div class="hero__bottom">
-      <div class="hero__text-area">
-        <div class="hero__title-block">
-          <p class="hero__site-title" :aria-label="SITE_TITLE">
-            <span
-              v-for="(ch, i) in siteTitleChars"
-              :key="`st-${i}`"
-              class="hero__type-char"
-              :class="{ 'hero__type-char--shown': i < visibleSiteCount }"
-              aria-hidden="true"
-              >{{ ch }}</span
-            >
-          </p>
-          <h1 class="hero__headline">
-            <span class="hero__headline-line">
-              <span class="hero__headline-line__bar" aria-hidden="true" />
-              <span class="hero__headline-line__text" :aria-label="HEADLINE">
-                <span
-                  v-for="(ch, i) in headlineChars"
-                  :key="`hl-${i}`"
-                  class="hero__type-char"
-                  :class="{ 'hero__type-char--shown': i < visibleHeadlineCount }"
-                  aria-hidden="true"
-                  >{{ ch }}</span
-                >
-              </span>
+    <!-- 見出し: 画面中央左・左寄せ -->
+    <div class="hero__copy">
+      <div class="hero__title-block">
+        <p class="hero__site-title" :aria-label="SITE_TITLE">
+          <span
+            v-for="(ch, i) in siteTitleChars"
+            :key="`st-${i}`"
+            class="hero__type-char"
+            :class="{ 'hero__type-char--shown': i < visibleSiteCount }"
+            aria-hidden="true"
+            >{{ ch }}</span
+          >
+        </p>
+        <h1 class="hero__headline">
+          <span class="hero__headline-line">
+            <span class="hero__headline-line__bar" aria-hidden="true" />
+            <span class="hero__headline-line__text" :aria-label="HEADLINE">
+              <span
+                v-for="(ch, i) in headlineChars"
+                :key="`hl-${i}`"
+                class="hero__type-char"
+                :class="{ 'hero__type-char--shown': i < visibleHeadlineCount }"
+                aria-hidden="true"
+                >{{ ch }}</span
+              >
             </span>
-          </h1>
-        </div>
+          </span>
+        </h1>
       </div>
+    </div>
 
-      <div class="hero__scroll-indicator" aria-hidden="true">
-        <span class="hero__scroll-text">Scroll</span>
-        <div class="hero__scroll-line" />
-      </div>
+    <!-- 最新ニュース3件: 画面左端下 -->
+    <div v-if="latestNews.length" class="hero__news">
+      <p class="hero__news-heading">News</p>
+      <ul class="hero__news-list">
+        <li
+          v-for="item in latestNews"
+          :key="item.link"
+          class="hero__news-item"
+        >
+          <a
+            :href="item.link"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hero__news-link"
+          >
+            <time class="hero__news-date">{{ formatDate(item.pubDate) }}</time>
+            <span class="hero__news-title">{{ item.title }}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="hero__scroll-indicator" aria-hidden="true">
+      <span class="hero__scroll-text">Scroll</span>
+      <div class="hero__scroll-line" />
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 
 type IntroPhase = "center" | "slide" | "reveal" | "done";
 
@@ -76,6 +97,24 @@ const HEADLINE = "新時代のコミュニケーションをつくる";
 const courseFocus = useState<
   "media" | "knowledge" | "design" | "all" | null
 >("heroFocusDomain", () => null);
+
+// 画面左端下に出す最新ニュース3件（スクロールすると隠す）
+const { articles } = useNoteArticles();
+const latestNews = computed(() => articles.value.slice(0, 3));
+const scrolled = ref(false);
+
+function onScroll() {
+  scrolled.value = window.scrollY > window.innerHeight * 0.12;
+}
+
+function formatDate(value: string): string {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}.${m}.${day}`;
+}
 
 const INTRO_CHAR_MS = 52;
 const INTRO_AFTER_TYPE_MS = 700;
@@ -155,6 +194,9 @@ function startTypewriterIntro() {
 }
 
 onMounted(() => {
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
   const reduceMotion =
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
@@ -170,6 +212,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearIntroTimeouts();
+  window.removeEventListener("scroll", onScroll);
 });
 </script>
 
@@ -178,14 +221,8 @@ onUnmounted(() => {
   position: relative;
   min-height: 100vh;
   min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
   background-color: #1c1b1b;
   overflow: hidden;
-  /* コピー位置: 画面中央 → Scroll 直上（レイアウト上の自然位置） */
-  --hero-copy-y-center: calc(-50vh + 7.5rem);
-  --hero-copy-y-rest: 0;
 }
 
 /* Background */
@@ -246,55 +283,36 @@ onUnmounted(() => {
   opacity: 0;
 }
 
-/* Bottom block: title (left) + scroll (center) */
-.hero__bottom {
-  position: relative;
+/* 見出しブロック: 画面中央・左寄せ */
+.hero__copy {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 9;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-md);
-  width: 100%;
-  padding-left: var(--space-md);
-  padding-bottom: max(var(--space-md), env(safe-area-inset-bottom, 0px));
+  padding: 0 var(--space-md);
   transition:
     opacity 0.5s ease,
     transform 0.5s ease;
 }
 
-/* CourseScrolly 進行中はヒーローのコピーを退避 */
-.hero--course-mode .hero__bottom {
+/* CourseScrolly 進行中はヒーローの前景を退避 */
+.hero--course-mode .hero__copy,
+.hero--course-mode .hero__news,
+.hero--course-mode .hero__scroll-indicator {
   opacity: 0;
-  transform: translateY(1.5rem);
   pointer-events: none;
 }
 
-.hero__text-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: var(--space-md);
-  width: 100%;
+.hero--course-mode .hero__copy {
+  transform: translateY(calc(-50% + 1.5rem));
 }
 
 .hero__title-block {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.65em;
-  transform: translateY(var(--hero-copy-y, 0));
-  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-.hero--intro-center {
-  --hero-copy-y: var(--hero-copy-y-center);
-}
-
-.hero--intro-slide,
-.hero--intro-reveal,
-.hero--intro-done {
-  --hero-copy-y: var(--hero-copy-y-rest);
 }
 
 .hero__type-char {
@@ -311,25 +329,30 @@ onUnmounted(() => {
   font-size: clamp(0.8125rem, 1.6vw, 1rem);
   font-weight: 500;
   letter-spacing: 0.12em;
+  text-align: left;
   color: rgba(252, 249, 248, 0.72);
 }
 
 .hero__headline {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.35em;
+  margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.5rem, 4.2vw, 2.75rem);
+  font-size: clamp(1.75rem, 5vw, 3.25rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.15;
+  text-align: left;
 }
 
 .hero__headline-line {
   position: relative;
   display: inline-block;
-  padding: 0.08em 0.28em;
+  /* 左は隙間なし。1行固定（背景に重なってよい） */
+  padding: 0.08em 0.28em 0.08em 0;
+  white-space: nowrap;
 }
 
 .hero__headline-line__bar {
@@ -375,9 +398,104 @@ onUnmounted(() => {
   }
 }
 
+/* 最新ニュース: 画面左端下 */
+.hero__news {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 9;
+  padding: var(--space-md);
+  padding-bottom: max(var(--space-md), env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: min(86vw, 24rem);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateY(0.75rem);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s ease;
+}
+
+.hero--intro-reveal .hero__news,
+.hero--intro-done .hero__news {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* スクロールしたらニュースは消す */
+.hero--scrolled .hero__news {
+  opacity: 0;
+  transform: translateY(0.75rem);
+  pointer-events: none;
+}
+
+.hero__news-heading {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(252, 249, 248, 0.4);
+}
+
+.hero__news-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.hero__news-item {
+  margin: 0;
+}
+
+.hero__news-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  text-decoration: none;
+  color: rgba(252, 249, 248, 0.72);
+  transition: color 150ms ease;
+}
+
+.hero__news-link:hover {
+  color: #fcf9f8;
+}
+
+.hero__news-date {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: rgba(252, 249, 248, 0.42);
+}
+
+.hero__news-link:hover .hero__news-date {
+  color: rgba(252, 249, 248, 0.66);
+}
+
+.hero__news-title {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Scroll indicator */
 .hero__scroll-indicator {
-  align-self: center;
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-md);
+  transform: translateX(-50%);
+  z-index: 9;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -435,15 +553,19 @@ onUnmounted(() => {
 }
 
 @media (max-width: 767px) {
-  .hero__bottom {
-    align-items: center;
-    padding-left: var(--space-md);
-    padding-right: var(--space-md);
+  .hero__copy {
+    top: 42%;
   }
 
-  .hero {
-    --hero-copy-y-center: calc(-50vh + 6.5rem);
-    --hero-copy-y-rest: 0;
+  .hero__news {
+    max-width: min(92vw, 26rem);
+  }
+
+  /* ニュースと重ならないよう Scroll を右下へ */
+  .hero__scroll-indicator {
+    left: auto;
+    right: var(--space-md);
+    transform: none;
   }
 }
 
@@ -462,18 +584,18 @@ onUnmounted(() => {
     display: none;
   }
 
-  .hero__text-area,
   .hero__title-block {
     transform: none;
     transition: none;
   }
 
-  .hero__bottom {
+  .hero__copy,
+  .hero__news {
     transition: opacity 0.2s linear;
   }
 
-  .hero--course-mode .hero__bottom {
-    transform: none;
+  .hero--course-mode .hero__copy {
+    transform: translateY(-50%);
   }
 
   .hero__type-char {

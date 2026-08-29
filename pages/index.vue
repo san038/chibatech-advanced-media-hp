@@ -7,8 +7,6 @@
       <CourseScrolly />
     </div>
     <LabScrolly />
-    <NewsPreviewSection />
-    <ProjectPreviewSection />
     <CtaSection />
   </div>
 </template>

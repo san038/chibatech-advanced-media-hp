@@ -2,8 +2,8 @@
   <header
     class="header"
     :class="{
-      'header--scrolled': isScrolled,
-      'header--transparent': !isScrolled,
+      'header--scrolled': isScrolled && !isTopPage,
+      'header--transparent': !isScrolled || isTopPage,
       'header--menu-open': menuOpen,
     }"
   >
