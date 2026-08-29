@@ -22,11 +22,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 
 // ── 領域定義 ─────────────────────────────────────────────────────────────────
 type DomainKey = "media" | "knowledge" | "design";
 type Vec3 = { x: number; y: number; z: number };
+
+// スクロール連動フォーカス（CourseScrolly から更新される共有状態）
+const focusDomain = useState<DomainKey | null>("heroFocusDomain", () => null);
 
 const DOMAIN_RGB: Record<DomainKey, string> = {
   media: "232, 88, 154",
@@ -145,9 +148,11 @@ let cssH = 0;
 let minDim = 0;
 let cluster = 0;
 let camDist = 0;
+let camDistEff = 0; // フォーカス時のズームを反映した実効カメラ距離
 let focal = 0;
 let seg = SEG_FINE;
 let lowFx = false;
+let reduceMotion = false;
 let rafId = 0;
 let startTimer: ReturnType<typeof setTimeout> | null = null;
 let resizeObserver: ResizeObserver | null = null;
@@ -158,6 +163,17 @@ const cam = { yaw: 0.5, pitch: IDLE_PITCH, yawVel: 0, pitchVel: 0 };
 let lastInteract = -1e9;
 const drag = { x: 0, y: 0, t: 0 };
 const pointer = { x: 0, y: 0, active: false };
+
+// 領域ごとの表示強度（1 = 通常、フォーカス時は非対象を大きく減光）
+const NONFOCUS_DIM = 0.03;
+const domainFocus: Record<DomainKey, number> = {
+  media: 1,
+  knowledge: 1,
+  design: 1,
+};
+let focusZoom = 1;
+// 投影の水平中心（0.5 = 中央、フォーカス時はダイアグラムを左へ寄せる）
+let viewCenterX = 0.5;
 
 // ── ベクトル ─────────────────────────────────────────────────────────────────
 function v3(x: number, y: number, z: number): Vec3 {
@@ -223,10 +239,45 @@ interface Proj {
   zc: number;
 }
 function projectCam(c: Vec3): Proj | null {
-  const zc = c.z + camDist;
+  const zc = c.z + camDistEff;
   if (zc <= NEAR) return null;
   const scale = focal / zc;
-  return { sx: cssW / 2 + c.x * scale, sy: cssH / 2 - c.y * scale, scale, zc };
+  return {
+    sx: cssW * viewCenterX + c.x * scale,
+    sy: cssH / 2 - c.y * scale,
+    scale,
+    zc,
+  };
+}
+
+// フォーカス対象の核が画面中央・正面に来るカメラ角
+function faceTarget(key: DomainKey): { yaw: number; pitch: number } {
+  const c = CORE_POS3[key];
+  const cx = c.x * cluster;
+  const cy = c.y * cluster;
+  const cz = c.z * cluster;
+  const mag = Math.hypot(cx, cz) || 1;
+  return {
+    yaw: Math.atan2(-cx, cz),
+    pitch: clamp(Math.atan2(cy, mag), -PITCH_LIMIT, PITCH_LIMIT),
+  };
+}
+function angDiff(a: number, b: number): number {
+  return (((b - a + Math.PI) % TAU) + TAU) % TAU - Math.PI;
+}
+function updateFocus(dt: number) {
+  const fd = focusDomain.value;
+  const rate = Math.min(1, dt * 3.5);
+  (["media", "knowledge", "design"] as DomainKey[]).forEach((k) => {
+    const tgt = fd == null ? 1 : k === fd ? 1 : NONFOCUS_DIM;
+    domainFocus[k] += (tgt - domainFocus[k]) * rate;
+  });
+  focusZoom += ((fd == null ? 1 : 0.9) - focusZoom) * rate;
+  camDistEff = camDist * focusZoom;
+  // 横長画面ではフォーカス時にダイアグラムを左 30% 付近へ寄せ、右半分をテキスト用に空ける
+  const wide = cssW > cssH * 1.1;
+  const cxTarget = fd == null ? 0.5 : wide ? 0.3 : 0.5;
+  viewCenterX += (cxTarget - viewCenterX) * rate;
 }
 
 // ── 初期化 ───────────────────────────────────────────────────────────────────
@@ -478,22 +529,31 @@ function drawBody(c: CanvasRenderingContext2D, b: Body) {
   b.zc = p.zc;
 
   const fade = clamp((p.scale - 0.6) / 0.9, 0, 1);
+  // スクロール連動フォーカス: 所属領域の強度の最大値（境界語は片側が明るければ残る）
+  const ff = Math.max(...b.domains.map((d) => domainFocus[d]));
+  const fm = 0.03 + 0.97 * ff;
   const main = ringPts(b.pos, b.u, b.v, b.r, seg);
 
   // 領域グロー
   for (let i = 0; i < b.domains.length; i++) {
     const rgb = DOMAIN_RGB[b.domains[i]];
     c.shadowColor = `rgb(${rgb})`;
-    c.shadowBlur = b.sr * (0.26 + 0.2 * fade);
-    strokePoly(c, main, 0, 0, rgb, 0.14 + 0.2 * fade, 1.1);
+    c.shadowBlur = b.sr * (0.26 + 0.2 * fade) * (0.1 + 0.9 * ff);
+    strokePoly(c, main, 0, 0, rgb, (0.14 + 0.2 * fade) * fm, 1.1);
   }
   c.shadowBlur = 0;
 
   // 色収差リング（本体）
   const off = (0.5 + CA_MAX * fade) * (b.kind === "core" ? 0.7 : 1);
-  caPoly(c, main, off, 0.13 + 0.5 * fade, 0.8 + 1.4 * fade);
+  caPoly(
+    c,
+    main,
+    off,
+    (0.13 + 0.5 * fade) * fm,
+    (0.8 + 1.4 * fade) * (0.25 + 0.75 * ff),
+  );
 
-  if (b.kind === "core") drawInstrument(c, b, fade, off);
+  if (b.kind === "core") drawInstrument(c, b, fade, off, fm);
 }
 
 function drawInstrument(
@@ -501,10 +561,17 @@ function drawInstrument(
   b: Body,
   fade: number,
   off: number,
+  dim: number,
 ) {
-  const a = 0.08 + 0.14 * fade;
+  const a = (0.08 + 0.14 * fade) * dim;
   // 内側の同心円
-  caPoly(c, ringPts(b.pos, b.u, b.v, b.r * 0.6, seg), off * 0.6, a + 0.05, 0.8);
+  caPoly(
+    c,
+    ringPts(b.pos, b.u, b.v, b.r * 0.6, seg),
+    off * 0.6,
+    a + 0.05 * dim,
+    0.8,
+  );
   strokePoly(
     c,
     ringPts(b.pos, b.u, b.v, b.r * 0.78, seg, 0.2 * TAU, 0.95 * TAU),
@@ -551,10 +618,10 @@ function drawInstrument(
     0,
     0,
     "255, 255, 255",
-    a + 0.08,
+    a + 0.08 * dim,
     1,
   );
-  c.strokeStyle = `rgba(255, 255, 255, ${a + 0.08})`;
+  c.strokeStyle = `rgba(255, 255, 255, ${a + 0.08 * dim})`;
   c.lineWidth = 1;
   c.beginPath();
   for (const [d1, d2] of [
@@ -630,6 +697,20 @@ function drawHud(c: CanvasRenderingContext2D) {
 // ── フレーム ─────────────────────────────────────────────────────────────────
 function updateCamera(now: number, dt: number) {
   if (dragging.value) return;
+
+  // スクロール連動フォーカス中は対象領域が正面に来るようイージング
+  if (focusDomain.value) {
+    const tgt = faceTarget(focusDomain.value);
+    const rate = Math.min(1, dt * 2.4);
+    cam.yaw += angDiff(cam.yaw, tgt.yaw) * rate;
+    cam.pitch += (tgt.pitch - cam.pitch) * rate;
+    cam.yawVel = 0;
+    cam.pitchVel = 0;
+    if (cam.yaw > TAU) cam.yaw -= TAU;
+    if (cam.yaw < 0) cam.yaw += TAU;
+    return;
+  }
+
   cam.yaw += cam.yawVel * dt;
   cam.pitch = clamp(cam.pitch + cam.pitchVel * dt, -PITCH_LIMIT, PITCH_LIMIT);
   const decay = Math.pow(INERTIA_DECAY, dt * 60);
@@ -669,13 +750,14 @@ function positionLabels() {
       el.style.opacity = "0";
       continue;
     }
-    const near = clamp((camDist - (b.zc - camDist)) / camDist, 0.4, 1.4);
+    const near = clamp((camDistEff - (b.zc - camDistEff)) / camDistEff, 0.4, 1.4);
     const s = clamp(0.7 + (near - 1) * 0.5, 0.6, 1.3);
     el.style.transform = `translate(-50%, -50%) translate(${b.sx}px, ${
       b.sy
     }px) scale(${s.toFixed(3)})`;
+    const ff = Math.max(...b.domains.map((d) => domainFocus[d]));
     const base = b.kind === "core" ? 0.5 : 0.24;
-    el.style.opacity = clamp(base * near, 0.05, 1).toFixed(3);
+    el.style.opacity = clamp(base * near * ff * ff, 0, 1).toFixed(3);
     el.style.zIndex = String(Math.round(20000 - b.zc));
   }
 }
@@ -685,6 +767,7 @@ function frame(now: number) {
   const dt = Math.min(0.05, (now - lastFrameT) / 1000);
   lastFrameT = now;
   step(true);
+  updateFocus(dt);
   updateCamera(now, dt);
   renderScene();
   rafId = requestAnimationFrame(frame);
@@ -768,6 +851,7 @@ function resize() {
   minDim = Math.min(cssW, cssH);
   cluster = CLUSTER_F * minDim;
   camDist = CAM_DIST_F * minDim;
+  camDistEff = camDist * focusZoom;
   focal = FOCAL_F * minDim;
   dpr = Math.min(window.devicePixelRatio || 1, 2);
   canvas.width = Math.round(cssW * dpr);
@@ -783,7 +867,7 @@ onMounted(() => {
   resize();
   placeInitial();
 
-  const reduceMotion =
+  reduceMotion =
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   const finePointer = window.matchMedia?.("(pointer: fine)").matches ?? true;
   lowFx = !finePointer;
@@ -794,6 +878,26 @@ onMounted(() => {
     if (reduceMotion) renderScene();
   });
   resizeObserver.observe(rootEl.value as HTMLElement);
+
+  // reduced-motion 時はアニメせず、フォーカス変化のたびに静止画を描き直す
+  watch(focusDomain, (fd) => {
+    if (!reduceMotion) return;
+    (["media", "knowledge", "design"] as DomainKey[]).forEach((k) => {
+      domainFocus[k] = fd == null ? 1 : k === fd ? 1 : NONFOCUS_DIM;
+    });
+    focusZoom = fd == null ? 1 : 0.9;
+    camDistEff = camDist * focusZoom;
+    viewCenterX = fd == null ? 0.5 : cssW > cssH * 1.1 ? 0.3 : 0.5;
+    if (fd) {
+      const t = faceTarget(fd);
+      cam.yaw = t.yaw;
+      cam.pitch = t.pitch;
+    } else {
+      cam.yaw = 0.5;
+      cam.pitch = IDLE_PITCH;
+    }
+    renderScene();
+  });
 
   if (reduceMotion) {
     for (let i = 0; i < SETTLE_STEPS; i++) step(false);
@@ -815,6 +919,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  focusDomain.value = null;
   stopLoop();
   if (startTimer) clearTimeout(startTimer);
   resizeObserver?.disconnect();

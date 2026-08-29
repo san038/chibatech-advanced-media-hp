@@ -124,7 +124,10 @@ body {
   background-color: var(--color-bg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* clip は scroll container を作らないため position: sticky を壊さない
+     （非対応ブラウザは hidden にフォールバック） */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 img,

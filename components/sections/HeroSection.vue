@@ -6,6 +6,7 @@
       'hero--intro-slide': introPhase === 'slide',
       'hero--intro-reveal': introPhase === 'reveal',
       'hero--intro-done': introPhase === 'done',
+      'hero--course-mode': courseFocus !== null,
     }"
   >
     <!-- Background visual element -->
@@ -70,6 +71,12 @@ type IntroPhase = "center" | "slide" | "reveal" | "done";
 
 const SITE_TITLE = "千葉工業大学メディア工学科";
 const HEADLINE = "新時代のコミュニケーションをつくる";
+
+// CourseScrolly がアクティブな間はヒーローのコピーをフェードアウト
+const courseFocus = useState<"media" | "knowledge" | "design" | null>(
+  "heroFocusDomain",
+  () => null,
+);
 
 const INTRO_CHAR_MS = 52;
 const INTRO_AFTER_TYPE_MS = 700;
@@ -251,6 +258,16 @@ onUnmounted(() => {
   width: 100%;
   padding-left: var(--space-md);
   padding-bottom: max(var(--space-md), env(safe-area-inset-bottom, 0px));
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s ease;
+}
+
+/* CourseScrolly 進行中はヒーローのコピーを退避 */
+.hero--course-mode .hero__bottom {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  pointer-events: none;
 }
 
 .hero__text-area {
@@ -450,6 +467,14 @@ onUnmounted(() => {
   .hero__title-block {
     transform: none;
     transition: none;
+  }
+
+  .hero__bottom {
+    transition: opacity 0.2s linear;
+  }
+
+  .hero--course-mode .hero__bottom {
+    transform: none;
   }
 
   .hero__type-char {
