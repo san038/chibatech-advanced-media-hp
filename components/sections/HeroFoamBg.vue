@@ -766,26 +766,71 @@ function drawInstrument(
   c.stroke();
 }
 
+// ── 3D グリッド（カメラと一緒に回転する空間の箱）──────────────────────────
+function gridLine(c: CanvasRenderingContext2D, a: Vec3, b: Vec3, alpha: number) {
+  const pa = projectCam(worldToCam(a));
+  const pb = projectCam(worldToCam(b));
+  if (!pa || !pb) return;
+  const zc = (pa.zc + pb.zc) / 2;
+  const f = clamp((camDistEff * 1.9 - zc) / (camDistEff * 1.4), 0.15, 1);
+  c.strokeStyle = `rgba(255, 255, 255, ${alpha * f})`;
+  c.beginPath();
+  c.moveTo(pa.sx, pa.sy);
+  c.lineTo(pb.sx, pb.sy);
+  c.stroke();
+}
+
+function drawGrid3D(c: CanvasRenderingContext2D) {
+  const G = 0.62 * minDim;
+  const DIV = 5;
+  const stepW = (2 * G) / DIV;
+  const dim = 1 - 0.55 * convergence;
+  const gA = 0.05 * dim; // 面内グリッド
+  const eA = 0.13 * dim; // 箱のエッジ
+  c.lineWidth = 1;
+
+  for (let axis = 0; axis < 3; axis++) {
+    // その軸の ±G 2面のうち、カメラから遠い面だけを描く（部屋の奥3面）
+    const cp = [0, 0, 0];
+    cp[axis] = G;
+    const cm = [0, 0, 0];
+    cm[axis] = -G;
+    const sign =
+      worldToCam(v3(cp[0], cp[1], cp[2])).z > worldToCam(v3(cm[0], cm[1], cm[2])).z
+        ? G
+        : -G;
+    const a1 = (axis + 1) % 3;
+    const a2 = (axis + 2) % 3;
+    for (let i = 0; i <= DIV; i++) {
+      const t = -G + i * stepW;
+      const edge = i === 0 || i === DIV;
+      const alpha = edge ? eA : gA;
+      const q1 = [0, 0, 0];
+      const q2 = [0, 0, 0];
+      q1[axis] = sign;
+      q2[axis] = sign;
+      q1[a1] = t;
+      q2[a1] = t;
+      q1[a2] = -G;
+      q2[a2] = G;
+      gridLine(c, v3(q1[0], q1[1], q1[2]), v3(q2[0], q2[1], q2[2]), alpha);
+      const r1 = [0, 0, 0];
+      const r2 = [0, 0, 0];
+      r1[axis] = sign;
+      r2[axis] = sign;
+      r1[a2] = t;
+      r2[a2] = t;
+      r1[a1] = -G;
+      r2[a1] = G;
+      gridLine(c, v3(r1[0], r1[1], r1[2]), v3(r2[0], r2[1], r2[2]), alpha);
+    }
+  }
+}
+
 // ── HUD（スクリーン空間）────────────────────────────────────────────────────
 function drawHud(c: CanvasRenderingContext2D) {
   c.globalCompositeOperation = "source-over";
-  const stepPx = 74;
-  const ox = ((Math.sin(cam.yaw) * 60) % stepPx + stepPx) % stepPx;
-  const oy = ((cam.pitch * 120) % stepPx + stepPx) % stepPx;
-  c.strokeStyle = "rgba(255, 255, 255, 0.03)";
-  c.lineWidth = 1;
-  for (let x = ox; x < cssW; x += stepPx) {
-    c.beginPath();
-    c.moveTo(x, 0);
-    c.lineTo(x, cssH);
-    c.stroke();
-  }
-  for (let y = oy; y < cssH; y += stepPx) {
-    c.beginPath();
-    c.moveTo(0, y);
-    c.lineTo(cssW, y);
-    c.stroke();
-  }
+  drawGrid3D(c);
 
   c.strokeStyle = "rgba(255, 255, 255, 0.13)";
   c.lineWidth = 1.5;
