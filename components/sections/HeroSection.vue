@@ -11,7 +11,7 @@
     <!-- Background visual element -->
     <div class="hero__bg" aria-hidden="true">
       <div class="hero__diagram">
-        <DomainDiagram3D :defer-highlight="introPhase !== 'done'" />
+        <HeroFoamBg />
       </div>
       <div class="hero__bg-overlay" />
     </div>
@@ -69,7 +69,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 type IntroPhase = "center" | "slide" | "reveal" | "done";
 
 const SITE_TITLE = "千葉工業大学メディア工学科";
-const HEADLINE = "新時代の想像力、3領域のその先へ";
+const HEADLINE = "新時代のコミュニケーションをつくる";
 
 const INTRO_CHAR_MS = 52;
 const INTRO_AFTER_TYPE_MS = 700;
@@ -209,7 +209,7 @@ onUnmounted(() => {
 .hero__bg-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 3;
   pointer-events: none;
   background: linear-gradient(
     to top,
