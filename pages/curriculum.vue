@@ -17,10 +17,7 @@
         <div class="curriculum-overview__grid">
           <div class="curriculum-overview__text">
             <p class="section-label">Overview</p>
-            <h2
-              class="curriculum-overview__title text-display-md"
-              style="margin-top: var(--space-md)"
-            >
+            <h2 class="curriculum-overview__title text-display-md">
               4年間の学びのステップ
             </h2>
             <p class="curriculum-overview__body">
@@ -42,8 +39,9 @@
                 <span
                   class="curriculum-legend__mark curriculum-legend__mark--el"
                   aria-hidden="true"
-                />
-                選択科目（■なし）
+                  >○</span
+                >
+                選択科目
               </div>
             </div>
           </div>
@@ -56,7 +54,7 @@
       <div class="container">
         <div class="timeline">
           <div
-            v-for="(year, yearIndex) in curriculumData"
+            v-for="year in curriculumData"
             :key="year.year"
             class="timeline__year"
           >
@@ -89,7 +87,7 @@
                       :class="{ 'timeline__course--required': course.required }"
                     >
                       <span class="timeline__course-marker" aria-hidden="true">
-                        {{ course.required ? "■" : "" }}
+                        {{ course.required ? "■" : "○" }}
                       </span>
                       <span class="timeline__course-name">{{
                         course.name
@@ -102,11 +100,6 @@
                 {{ year.footnote }}
               </p>
             </div>
-
-            <div
-              v-if="yearIndex < curriculumData.length - 1"
-              class="timeline__connector"
-            />
           </div>
         </div>
       </div>
@@ -116,21 +109,16 @@
     <section class="curriculum-features section-padding bg-surface">
       <div class="container">
         <p class="section-label">Highlights</p>
-        <h2
-          class="text-display-md"
-          style="margin-top: var(--space-md); margin-bottom: var(--space-xl)"
-        >
-          学びの特色
-        </h2>
+        <h2 class="curriculum-heading text-display-md">学びの特色</h2>
         <div class="curriculum-features__grid">
           <div
-            v-for="feature in features"
+            v-for="(feature, i) in features"
             :key="feature.title"
             class="curriculum-feature"
           >
-            <span class="curriculum-feature__icon" aria-hidden="true">{{
-              feature.icon
-            }}</span>
+            <span class="curriculum-feature__num" aria-hidden="true">
+              {{ String(i + 1).padStart(2, "0") }}
+            </span>
             <h3 class="curriculum-feature__title">{{ feature.title }}</h3>
             <p class="curriculum-feature__desc">{{ feature.desc }}</p>
           </div>
@@ -143,10 +131,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  curriculumData,
-  curriculumResearchHighlights,
-} from "~/data/curriculum";
+import { curriculumData } from "~/data/curriculum";
 
 useSeoMeta({
   title: "カリキュラム | 知能メディア工学科 | 千葉工業大学",
@@ -156,22 +141,18 @@ useSeoMeta({
 
 const features = [
   {
-    icon: "◼",
     title: "知能メディアプロジェクト",
     desc: "2年次の「知能メディアプロジェクト1・2」で、3領域にまたがる課題にチームで取り組み、設計から実装までの一連の経験を積みます。",
   },
   {
-    icon: "◼",
     title: "3領域からなる専門教育",
     desc: "メディア工学・知識工学・情報デザインの基礎から発展までを段階的に学び、高年次で興味に応じた科目を選択できます。",
   },
   {
-    icon: "◼",
     title: "実験・演習とゼミナール",
     desc: "メディア工学実験やネットワーク・データ工学実験などの実践科目に加え、ゼミナールで研究室の研究に触れます。",
   },
   {
-    icon: "◼",
     title: "卒業研究への統合",
     desc: "4年次はゼミナールと卒業研究で、これまでの知識・技術を一つの課題解決へまとめ上げます。",
   },
@@ -179,11 +160,25 @@ const features = [
 </script>
 
 <style scoped>
+.curriculum-page {
+  --curriculum-hairline: color-mix(
+    in srgb,
+    var(--color-on-surface) 13%,
+    transparent
+  );
+}
+
+.curriculum-heading.text-display-md {
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  color: var(--color-on-surface);
+}
+
 /* Overview */
 .curriculum-overview__grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
 @media (min-width: 1024px) {
@@ -237,22 +232,18 @@ const features = [
   flex-shrink: 0;
   width: 1.25rem;
   display: inline-flex;
+  align-items: center;
   justify-content: center;
-  font-size: var(--text-xs);
-}
-
-.curriculum-legend__mark--req {
-  color: var(--color-department);
   font-size: var(--text-sm);
   line-height: 1;
 }
 
+.curriculum-legend__mark--req {
+  color: var(--color-department);
+}
+
 .curriculum-legend__mark--el {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  border: 1px solid var(--color-on-surface-faint);
-  background: transparent;
+  color: var(--color-on-surface-faint);
 }
 
 /* Timeline */
@@ -266,8 +257,14 @@ const features = [
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-md);
-  padding-bottom: var(--space-xl);
-  position: relative;
+  padding-top: var(--space-lg);
+  padding-bottom: var(--space-lg);
+  border-top: 2px solid var(--color-on-surface);
+}
+
+.timeline__year:first-child {
+  padding-top: 0;
+  border-top: none;
 }
 
 @media (min-width: 768px) {
@@ -339,11 +336,6 @@ const features = [
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  padding: var(--space-md);
-  background-color: var(--color-surface);
-  border: 1px solid
-    color-mix(in srgb, var(--color-on-surface-faint) 25%, transparent);
-  min-height: 4rem;
 }
 
 .timeline__track-title {
@@ -353,9 +345,8 @@ const features = [
   letter-spacing: 0.04em;
   color: var(--color-on-surface);
   margin: 0;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid
-    color-mix(in srgb, var(--color-on-surface-faint) 35%, transparent);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--curriculum-hairline);
 }
 
 .timeline__track-empty {
@@ -393,16 +384,15 @@ const features = [
 
 .timeline__course-marker {
   flex-shrink: 0;
-  width: 0.85rem;
+  width: 0.9rem;
   text-align: center;
-  font-size: 0.55rem;
+  font-size: var(--text-xs);
   line-height: 1.6;
-  color: transparent;
+  color: var(--color-on-surface-faint);
 }
 
 .timeline__course--required .timeline__course-marker {
   color: var(--color-department);
-  font-size: var(--text-xs);
 }
 
 .timeline__course-name {
@@ -417,80 +407,41 @@ const features = [
   color: var(--color-on-surface-muted);
 }
 
-.timeline__research-callout {
-  margin-top: var(--space-sm);
-  padding: var(--space-md);
-  background: var(--color-department-bg);
-  border-left: 3px solid var(--color-department);
-}
-
-.timeline__research-title {
-  margin: 0 0 var(--space-sm);
-  font-family: var(--font-display);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-on-surface);
-}
-
-.timeline__research-list {
-  margin: 0;
-  padding-left: 1.1rem;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  line-height: 1.65;
-  color: var(--color-on-surface-muted);
-}
-
-@media (min-width: 1100px) {
-  .timeline__research-list {
-    font-size: var(--text-sm);
-  }
-}
-
-.timeline__connector {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 1px;
-  height: var(--space-xl);
-  background: linear-gradient(
-    to bottom,
-    var(--color-on-surface-faint),
-    transparent
-  );
-  opacity: 0.3;
-}
-
 /* Features */
 .curriculum-features__grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-lg);
+  gap: 0;
+  border-top: 1px solid var(--curriculum-hairline);
 }
 
-@media (min-width: 640px) {
+@media (min-width: 700px) {
   .curriculum-features__grid {
     grid-template-columns: repeat(2, 1fr);
+    column-gap: clamp(var(--space-lg), 6vw, 5rem);
   }
 }
 
 .curriculum-feature {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-lg);
-  background-color: var(--color-surface-low);
+  gap: 0.5rem;
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid var(--curriculum-hairline);
 }
 
-.curriculum-feature__icon {
-  font-size: var(--text-xs);
-  color: var(--color-on-surface-faint);
+.curriculum-feature__num {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-primary);
 }
 
 .curriculum-feature__title {
   font-family: var(--font-display);
   font-size: var(--text-lg);
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-on-surface);
   letter-spacing: -0.01em;
 }
