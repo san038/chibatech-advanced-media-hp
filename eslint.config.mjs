@@ -18,6 +18,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist",
+      "theme/**",
       "node_modules",
       ".nuxt",
       ".output",

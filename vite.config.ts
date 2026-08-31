@@ -39,5 +39,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    // functions.php がハッシュ付きファイル名を解決するために必要
+    manifest: true,
   },
 });

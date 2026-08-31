@@ -1,0 +1,17 @@
+/*
+Theme Name: 千葉工業大学 知能メディア工学科
+Theme URI:
+Author: openheart
+Author URI:
+Description: Vue 3 + Vite で構築した SPA を配信する専用テーマ。テーマ内の dist/ にビルド成果物を配置する（npm run build:theme）。表示スタイルは SPA 側（dist の CSS）が持つ。
+Version: 1.0.0
+Requires at least: 6.4
+Tested up to: 6.7
+Requires PHP: 8.1
+License: GPL-2.0-or-later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: chibatech-imd
+*/
+
+/* このファイルは WordPress のテーマ要件のために存在する。
+   実際の見た目は dist/ の CSS（SPA バンドル）で定義される。 */

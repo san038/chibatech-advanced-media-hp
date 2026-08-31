@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "node scripts/build-note-data.mjs && vite build",
     "build:app": "vite build",
+    "build:theme": "node scripts/build-note-data.mjs && vite build --base=/wp-content/themes/chibatech-imd/dist/ --outDir=theme/chibatech-imd/dist --emptyOutDir",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint ."

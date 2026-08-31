@@ -45,3 +45,6 @@ coverage
 
 # unplugin-auto-import eslint globals
 .eslintrc-auto-import.json
+
+# WP テーマのビルド成果物（ローカルで build:theme して配置）
+theme/*/dist/
