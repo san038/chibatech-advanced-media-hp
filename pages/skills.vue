@@ -6,8 +6,7 @@
         <p class="page-hero__label">Skills</p>
         <h1 class="page-hero__title">身につく力</h1>
         <p class="page-hero__subtitle">
-          卒業時に、あなたは何者になっているか。<br />
-          6つの力の視点から考える。
+          卒業時に、あなたは何者になっているか。6つの力の視点から考える。
         </p>
       </div>
     </section>

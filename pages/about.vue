@@ -6,8 +6,7 @@
         <p class="page-hero__label">About</p>
         <h1 class="page-hero__title">学びの特徴</h1>
         <p class="page-hero__subtitle">
-          3つの専門領域を横断し、<br />
-          テクノロジーとデザインの交差点を探索する。
+          3つの専門領域を横断し、テクノロジーとデザインの交差点を探索する。
         </p>
       </div>
     </section>

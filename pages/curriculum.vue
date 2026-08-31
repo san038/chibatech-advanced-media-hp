@@ -6,8 +6,7 @@
         <p class="page-hero__label">Curriculum</p>
         <h1 class="page-hero__title">カリキュラム</h1>
         <p class="page-hero__subtitle">
-          4年間の学びのステップ。<br />
-          専門基礎・専門基幹・専門展開の3つの科目群が、年次とともに織りなす学びの地図。
+          4年間の学びのステップ。専門基礎・専門基幹・専門展開の3つの科目群が、年次とともに織りなす学びの地図。
         </p>
       </div>
     </section>

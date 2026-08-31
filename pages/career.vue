@@ -6,8 +6,7 @@
         <p class="page-hero__label">Career</p>
         <h1 class="page-hero__title">キャリア・就職</h1>
         <p class="page-hero__subtitle">
-          知能メディア工学科の学びは、<br />
-          多様なキャリアへの道を開く。
+          知能メディア工学科の学びは、多様なキャリアへの道を開く。
         </p>
       </div>
     </section>
@@ -16,13 +15,13 @@
     <section class="career-stats section-padding bg-surface">
       <div class="container">
         <p class="section-label">Numbers</p>
-        <div class="career-stats__grid" style="margin-top: var(--space-xl)">
+        <div class="career-stats__grid">
           <div v-for="stat in keyStats" :key="stat.label" class="career-stat">
             <span class="career-stat__value">{{ stat.value }}</span>
             <span class="career-stat__label">{{ stat.label }}</span>
           </div>
         </div>
-        <p class="career-stats__note text-body-sm text-muted" style="margin-top: var(--space-lg)">
+        <p class="career-stats__note text-body-sm text-muted">
           ※ 数値は過去3年間の平均値です（ダミーデータ）
         </p>
       </div>
@@ -34,9 +33,7 @@
         <div class="career-industry__inner">
           <div class="career-industry__text">
             <p class="section-label">Industries</p>
-            <h2 class="text-display-md" style="margin-top: var(--space-md); margin-bottom: var(--space-md)">
-              就職先の<br />業界分布
-            </h2>
+            <h2 class="text-display-md">就職先の業界分布</h2>
             <p class="career-industry__body">
               卒業生の約40%がIT・通信業界へ、約22%がメディア・クリエイティブ業界へ進みます。多様な業界で知能メディア工学科の学びが活かされています。
             </p>
@@ -67,9 +64,7 @@
     <section class="career-paths section-padding bg-surface">
       <div class="container">
         <p class="section-label">Career Paths</p>
-        <h2 class="text-display-md" style="margin-top: var(--space-md); margin-bottom: var(--space-xl)">
-          卒業後のキャリアパス
-        </h2>
+        <h2 class="career-heading text-display-md">卒業後のキャリアパス</h2>
 
         <div class="career-paths__grid">
           <div
@@ -98,9 +93,7 @@
         <div class="career-grad__inner">
           <div class="career-grad__text">
             <p class="section-label">Graduate School</p>
-            <h2 class="text-display-md" style="margin-top: var(--space-md)">
-              大学院という選択肢
-            </h2>
+            <h2 class="text-display-md">大学院という選択肢</h2>
             <p class="career-grad__body">
               約18%の学生が大学院に進学します。本学の情報科学研究科への進学はもちろん、東京大学・東京工業大学・早稲田大学などへの外部進学実績も多数あります。研究者・高度専門職への道を目指す学生を全面的にサポートします。
             </p>
@@ -144,11 +137,23 @@ const gradSchools = [
 </script>
 
 <style scoped>
+.career-page {
+  --career-hairline: color-mix(in srgb, var(--color-on-surface) 14%, transparent);
+}
+
+/* 各セクション見出し（旧インラインstyleの置き換え） */
+.career-heading.text-display-md {
+  margin-top: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  color: var(--color-on-surface);
+}
+
 /* Stats */
 .career-stats__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-lg);
+  gap: var(--space-md) var(--space-lg);
+  margin-top: var(--space-md);
 }
 
 @media (min-width: 768px) {
@@ -160,14 +165,14 @@ const gradSchools = [
 .career-stat {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: var(--space-lg);
-  background-color: var(--color-surface-low);
+  gap: 0.45rem;
+  padding-top: 0.85rem;
+  border-top: 2px solid var(--color-on-surface);
 }
 
 .career-stat__value {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-size: clamp(2.25rem, 4.5vw, 3.25rem);
   font-weight: 700;
   color: var(--color-on-surface);
   letter-spacing: -0.03em;
@@ -182,11 +187,15 @@ const gradSchools = [
   letter-spacing: 0.03em;
 }
 
+.career-stats__note {
+  margin-top: var(--space-md);
+}
+
 /* Industry */
 .career-industry__inner {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
 @media (min-width: 1024px) {
@@ -262,15 +271,15 @@ const gradSchools = [
 }
 
 .career-path {
-  padding: var(--space-lg) 0;
-  border-top: 1px solid var(--color-surface-low);
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--career-hairline);
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .career-path:last-child {
-  border-bottom: 1px solid var(--color-surface-low);
+  border-bottom: 1px solid var(--career-hairline);
 }
 
 @media (min-width: 768px) {
@@ -306,7 +315,7 @@ const gradSchools = [
 .career-grad__inner {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
 @media (min-width: 1024px) {

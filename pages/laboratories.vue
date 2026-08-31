@@ -6,13 +6,13 @@
         <p class="page-hero__label">Laboratories</p>
         <h1 class="page-hero__title">研究室</h1>
         <p class="page-hero__subtitle">
-          11の研究室が、それぞれの最前線を開拓する。
+          9つの研究室が、それぞれの最前線を開拓する。
         </p>
       </div>
     </section>
 
     <!-- Filter -->
-    <section class="labs-filter bg-surface section-padding-sm">
+    <section class="labs-filter bg-surface-low section-padding-sm">
       <div class="container">
         <div class="labs-filter__inner">
           <p class="text-label" style="color: var(--color-on-surface-muted)">
@@ -28,28 +28,16 @@
               :class="{ active: activeFilter === null }"
               @click="activeFilter = null"
             >
-              すべて
+              すべて（{{ laboratories.length }}）
             </button>
             <button
-              class="labs-filter__btn labs-filter__btn--media"
-              :class="{ active: activeFilter === 'media' }"
-              @click="activeFilter = 'media'"
+              v-for="d in DOMAIN_INFO"
+              :key="d.key"
+              class="labs-filter__btn"
+              :class="[`labs-filter__btn--${d.key}`, { active: activeFilter === d.key }]"
+              @click="activeFilter = d.key"
             >
-              メディア工学
-            </button>
-            <button
-              class="labs-filter__btn labs-filter__btn--knowledge"
-              :class="{ active: activeFilter === 'knowledge' }"
-              @click="activeFilter = 'knowledge'"
-            >
-              知識工学
-            </button>
-            <button
-              class="labs-filter__btn labs-filter__btn--design"
-              :class="{ active: activeFilter === 'design' }"
-              @click="activeFilter = 'design'"
-            >
-              情報デザイン
+              {{ d.short }}
             </button>
           </div>
         </div>
@@ -59,69 +47,77 @@
     <!-- Laboratory list -->
     <section class="labs-list section-padding bg-surface-low">
       <div class="container">
-        <div class="labs-list__header">
-          <p
-            class="labs-list__count text-label"
-            style="color: var(--color-on-surface-muted)"
-          >
-            {{ filteredLabs.length }} 研究室
-          </p>
-        </div>
+        <p
+          class="labs-list__count text-label"
+          style="color: var(--color-on-surface-muted)"
+        >
+          {{ filteredLabs.length }} 研究室
+        </p>
 
         <TransitionGroup name="lab-list" tag="div" class="labs-list__items">
-          <div
+          <article
             v-for="lab in filteredLabs"
             :id="lab.id"
             :key="lab.id"
-            class="lab-item"
+            class="lab"
+            :class="`is-${lab.pillar}`"
           >
-            <div class="lab-item__media">
-              <img
-                v-if="lab.imageSrc"
-                :src="lab.imageSrc"
-                class="lab-item__img"
-                :alt="`${lab.name}の写真`"
-                loading="lazy"
-                decoding="async"
-              />
-              <div
-                v-else
-                class="img-placeholder lab-item__media-placeholder"
-                :class="`img-placeholder--${lab.pillar}`"
-                aria-hidden="true"
-              >
-                <span class="img-placeholder__label">Laboratory</span>
-              </div>
+            <div
+              class="lab__media img-placeholder"
+              :class="`img-placeholder--${lab.pillar}`"
+              aria-hidden="true"
+            >
+              <span class="img-placeholder__label">Laboratory</span>
             </div>
 
-            <div class="lab-item__body">
-              <div class="lab-item__header">
-                <span class="lab-item__professor">{{ lab.professor }}</span>
-                <span class="tag" :class="pillarTagClass(lab.pillar)">
-                  {{ pillarLabel(lab.pillar) }}
-                </span>
+            <div class="lab__main">
+              <div class="lab__head">
+                <span class="lab__pillar">{{ pillarLabel(lab.pillar) }}</span>
+                <h2 class="lab__name">{{ lab.name }}</h2>
+                <p class="lab__prof">{{ lab.professor }}</p>
               </div>
 
-              <h2 class="lab-item__name">{{ lab.name }}</h2>
+              <p class="lab__theme">{{ lab.theme }}</p>
 
-              <p class="lab-item__theme">{{ lab.theme }}</p>
+              <ul class="lab__keywords">
+                <li v-for="kw in lab.keywords" :key="kw">{{ kw }}</li>
+              </ul>
 
-              <div class="lab-item__keywords">
-                <ul class="lab-item__keywords-list">
+              <div
+                v-if="lab.topics && lab.topics.length"
+                class="lab__topics"
+              >
+                <p class="lab__topics-label text-label">研究紹介</p>
+                <ul class="lab__topics-grid">
                   <li
-                    v-for="kw in lab.keywords"
-                    :key="kw"
-                    class="tag tag-neutral"
+                    v-for="(topic, i) in lab.topics"
+                    :key="i"
+                    class="lab-topic"
                   >
-                    #{{ kw }}
+                    <div
+                      class="lab-topic__thumb img-placeholder"
+                      :class="`img-placeholder--${lab.pillar}`"
+                      aria-hidden="true"
+                    />
+                    <p class="lab-topic__title">{{ topic.title }}</p>
+                    <p class="lab-topic__desc">{{ topic.desc }}</p>
+                    <a
+                      v-if="topic.url"
+                      :href="topic.url"
+                      class="lab-topic__link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      詳しく →
+                    </a>
                   </li>
                 </ul>
               </div>
 
-              <p class="lab-item__site">
+              <p class="lab__site">
                 <a
                   :href="lab.seminarUrl"
-                  class="btn btn-primary"
+                  class="link-arrow"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -129,12 +125,11 @@
                 </a>
               </p>
             </div>
-          </div>
+          </article>
         </TransitionGroup>
 
-        <!-- Empty state -->
         <div v-if="filteredLabs.length === 0" class="labs-empty">
-          <p class="labs-empty__text">該当する研究室がありません。</p>
+          <p>該当する研究室がありません。</p>
         </div>
       </div>
     </section>
@@ -150,44 +145,47 @@ import { laboratories } from "~/data/laboratories";
 useSeoMeta({
   title: "研究室 | 知能メディア工学科 | 千葉工業大学",
   description:
-    "知能メディア工学科の11の研究室を紹介します。メディア工学・知識工学・情報デザインの最先端研究。",
+    "知能メディア工学科の9つの研究室を紹介します。メディア工学・知識工学・情報デザインの最先端研究。",
 });
 
-const activeFilter = ref<"media" | "knowledge" | "design" | null>(null);
+type Pillar = Laboratory["pillar"];
+
+const DOMAIN_INFO = [
+  { key: "media" as const, short: "メディア工学" },
+  { key: "knowledge" as const, short: "知識工学" },
+  { key: "design" as const, short: "情報デザイン" },
+];
+
+const activeFilter = ref<Pillar | null>(null);
 
 const filteredLabs = computed<Laboratory[]>(() => {
   if (activeFilter.value === null) return laboratories;
   return laboratories.filter((lab) => lab.pillar === activeFilter.value);
 });
 
-const pillarTagClass = (pillar: Laboratory["pillar"]): string => {
-  return {
-    media: "tag-media",
-    knowledge: "tag-knowledge",
-    design: "tag-design",
-  }[pillar];
-};
-
-const pillarLabel = (pillar: Laboratory["pillar"]): string => {
-  return {
+const pillarLabel = (pillar: Pillar): string =>
+  ({
     media: "メディア工学領域",
     knowledge: "知識工学領域",
     design: "情報デザイン領域",
-  }[pillar];
-};
+  })[pillar];
 </script>
 
 <style scoped>
 .section-padding-sm {
-  padding-top: var(--space-lg);
-  padding-bottom: var(--space-lg);
+  padding-top: 1.5rem;
+  padding-bottom: var(--space-sm);
+}
+
+.labs-page {
+  --labs-hairline: color-mix(in srgb, var(--color-on-surface) 12%, transparent);
 }
 
 /* Filter */
 .labs-filter__inner {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
   flex-wrap: wrap;
 }
 
@@ -201,189 +199,243 @@ const pillarLabel = (pillar: Laboratory["pillar"]): string => {
   padding: 0.5rem 1rem;
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  font-weight: 400;
   color: var(--color-on-surface-muted);
-  background-color: var(--color-surface-low);
-  border: none;
+  background-color: var(--color-surface);
+  border: 1px solid var(--labs-hairline);
+  border-radius: 999px;
   cursor: pointer;
   transition:
-    background-color 200ms ease,
-    color 200ms ease;
-  border-radius: 0;
+    background-color 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
 }
 
 .labs-filter__btn:hover {
-  background-color: var(--color-surface);
   color: var(--color-on-surface);
+  border-color: var(--color-on-surface-faint);
 }
 
 .labs-filter__btn.active {
-  background-color: var(--color-department);
-  color: var(--color-on-primary);
+  background-color: var(--color-on-surface);
+  color: var(--color-surface);
+  border-color: var(--color-on-surface);
 }
 
 .labs-filter__btn--media.active {
   background-color: var(--color-media);
+  border-color: var(--color-media);
   color: #fff;
 }
-
 .labs-filter__btn--knowledge.active {
   background-color: var(--color-knowledge);
+  border-color: var(--color-knowledge);
   color: #fff;
 }
-
 .labs-filter__btn--design.active {
   background-color: var(--color-design);
+  border-color: var(--color-design);
   color: #fff;
 }
 
 /* List */
-.labs-list__header {
-  margin-bottom: var(--space-lg);
+.labs-list.section-padding {
+  padding-top: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .labs-list.section-padding {
+    padding-top: clamp(var(--space-md), 4vw, 2.75rem);
+  }
+}
+
+.labs-list__count {
+  margin-bottom: var(--space-md);
 }
 
 .labs-list__items {
-  display: flex;
-  flex-direction: column;
+  border-top: 1px solid var(--labs-hairline);
 }
 
-.lab-item {
-  scroll-margin-top: var(--space-xl);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+.lab {
+  scroll-margin-top: 90px;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: var(--space-md);
-  padding: var(--space-xl) 0;
-  border-top: 1px solid var(--color-surface);
+  padding: var(--space-lg) 0;
+  border-bottom: 1px solid var(--labs-hairline);
 }
 
 @media (min-width: 768px) {
-  .lab-item {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: var(--space-md);
+  .lab {
+    grid-template-columns: clamp(200px, 26vw, 300px) 1fr;
+    gap: clamp(var(--space-md), 4vw, var(--space-lg));
+    align-items: start;
   }
 }
 
-.lab-item__media {
-  flex-shrink: 0;
-  width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  background-color: var(--color-surface);
+.lab__media.img-placeholder {
+  aspect-ratio: 4 / 3;
+  border-radius: 3px;
 }
 
-@media (min-width: 768px) {
-  .lab-item__media {
-    width: clamp(160px, 22vw, 220px);
-    max-width: 220px;
-  }
-}
-
-.lab-item__img {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 4 / 5;
-  object-fit: cover;
-}
-
-/* main.css の 16:9 を上書きし、左カラム用の縦長比率に */
-.lab-item__media-placeholder.img-placeholder {
-  aspect-ratio: 4 / 5;
-  min-height: 140px;
-}
-
-@media (min-width: 768px) {
-  .lab-item__media-placeholder.img-placeholder {
-    min-height: 0;
-  }
-}
-
-.lab-item__body {
-  flex: 1;
+.lab__main {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+  max-width: 68ch;
 }
 
-.lab-item:last-child {
-  border-bottom: 1px solid var(--color-surface);
-}
-
-.lab-item__header {
+.lab__head {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-md);
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
-.lab-item__header .tag {
-  margin-left: auto;
-}
-
-.lab-item__professor {
+.lab__pillar {
   font-family: var(--font-body);
-  font-size: var(--text-xl);
+  font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+}
+
+.lab.is-media .lab__pillar {
+  color: var(--color-media);
+}
+.lab.is-knowledge .lab__pillar {
+  color: var(--color-knowledge);
+}
+.lab.is-design .lab__pillar {
+  color: var(--color-design);
+}
+
+.lab__name {
+  margin-top: 0.15rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 2.6vw, 1.9rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: var(--color-on-surface);
-  line-height: 1.35;
+}
+
+.lab__prof {
+  margin-top: 0.35rem;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.lab__theme {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.85;
+  color: var(--color-on-surface-muted);
+}
+
+.lab__keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.5rem;
+  list-style: none;
+  margin: 0.25rem 0 0;
+  padding: 0;
+}
+
+.lab__keywords li {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  padding: 0.28rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--labs-hairline);
+  color: var(--color-on-surface-muted);
+}
+
+/* 研究紹介 */
+.lab__topics {
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--labs-hairline);
+}
+
+.lab__topics-label {
+  color: var(--color-on-surface-muted);
   margin-bottom: var(--space-sm);
 }
 
-.lab-item__name {
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: 600;
-  color: var(--color-on-surface);
-  letter-spacing: -0.02em;
-}
-
-.lab-item__theme {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  line-height: 1.8;
-  color: var(--color-on-surface-muted);
-  max-width: 70ch;
-}
-
-.lab-item__keywords {
-  margin-top: var(--space-xs);
-}
-
-.lab-item__keywords-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.lab-item__site {
+.lab__topics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  list-style: none;
   margin: 0;
-  margin-top: var(--space-md);
+  padding: 0;
 }
 
-.lab-item__site .btn {
-  background-color: transparent;
+@media (min-width: 640px) {
+  .lab__topics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .lab__topics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.lab-topic {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.lab-topic__thumb.img-placeholder {
+  aspect-ratio: 4 / 3;
+  border-radius: 2px;
+}
+
+.lab-topic__title {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.4;
   color: var(--color-on-surface);
-  border: 1.5px solid var(--color-on-surface);
-  transition: background-color 200ms ease, color 200ms ease;
 }
 
-.lab-item__site .btn:hover {
-  background-color: var(--color-on-surface);
-  color: var(--color-surface);
+.lab-topic__title::before {
+  content: "◆ ";
+  color: var(--color-on-surface-faint);
+}
+
+.lab-topic__desc {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: 1.7;
+  color: var(--color-on-surface-muted);
+}
+
+.lab-topic__link {
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-link);
+}
+
+.lab__site {
+  margin: var(--space-xs) 0 0;
 }
 
 /* Empty state */
 .labs-empty {
-  padding: var(--space-xl) 0;
+  padding: var(--space-lg) 0;
 }
 
-.labs-empty__text {
+.labs-empty p {
   font-family: var(--font-body);
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   color: var(--color-on-surface-muted);
 }
 

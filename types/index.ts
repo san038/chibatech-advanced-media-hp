@@ -17,11 +17,21 @@ export type Course = {
   bgClass: string
 }
 
+/** 研究室ページ下部「研究紹介」に並べるトピック（1件＝小カード） */
+export type LabTopic = {
+  title: string
+  desc: string
+  /** 詳細・外部リンク（任意） */
+  url?: string
+  /** サムネイル画像URL（未設定時は領域色プレースホルダー） */
+  imageSrc?: string | null
+}
+
 export type Laboratory = {
   id: string
   name: string
   professor: string
-  /** 一覧プレビュー等で教授名の下に表示する専門・テーマの一行 */
+  /** 研究室名の下に添える専門・テーマの一行 */
   focus: string
   theme: string
   pillar: 'media' | 'knowledge' | 'design'
@@ -30,6 +40,8 @@ export type Laboratory = {
   seminarUrl: string
   /** 一覧カード左の画像URL（未設定時は領域色のプレースホルダー） */
   imageSrc?: string | null
+  /** 「研究紹介」トピック（後から追加。未設定時はセクション非表示） */
+  topics?: LabTopic[]
 }
 
 export type CareerItem = {
