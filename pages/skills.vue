@@ -304,6 +304,12 @@ const skills = [
 /* Integration */
 .skills-integration__inner {
   max-width: 720px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.skills-integration__inner .section-label {
+  justify-content: center;
 }
 
 .skills-integration__body {
