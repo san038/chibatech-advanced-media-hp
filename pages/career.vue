@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { careerData, industryStats, keyStats } from '~/data/career'
+const { careerPaths: careerData, industryStats, keyStats } = useContent()
 
 useSeoMeta({
   title: 'キャリア・就職 | 知能メディア工学科 | 千葉工業大学',

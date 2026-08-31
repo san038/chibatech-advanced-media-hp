@@ -140,7 +140,8 @@
 
 <script setup lang="ts">
 import type { Laboratory } from "~/types";
-import { laboratories } from "~/data/laboratories";
+
+const laboratories = useContent().labs;
 
 useSeoMeta({
   title: "研究室 | 知能メディア工学科 | 千葉工業大学",

@@ -6,7 +6,6 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from "vue";
-import { laboratories } from "~/data/laboratories";
 
 // 研究室データからフィールドに流す語彙を生成
 const PHRASES: string[] = (() => {
@@ -15,7 +14,7 @@ const PHRASES: string[] = (() => {
   s.add("メディア工学");
   s.add("知識工学");
   s.add("情報デザイン");
-  for (const lab of laboratories) {
+  for (const lab of useContent().labs) {
     s.add(lab.focus);
     s.add(lab.professor.replace(/\s*(教授|准教授)\s*$/, ""));
     for (const k of lab.keywords) s.add(k);

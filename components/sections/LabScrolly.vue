@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { laboratories } from "~/data/laboratories";
+const laboratories = useContent().labs;
 </script>
 
 <style scoped>

@@ -17,6 +17,18 @@ define('CIMD_THEME_DIR', get_template_directory());
 define('CIMD_THEME_URI', get_template_directory_uri());
 
 /* -------------------------------------------------------------------------
+ * 分割ファイルの読み込み
+ *   - inc/cpt.php     … カスタム投稿タイプ（研究室）
+ *   - inc/acf.php     … ACF フィールド定義
+ *   - inc/content.php … SPA へ渡す content ペイロードの組み立て
+ *   - inc/rest.php    … REST エンドポイント（cimd/v1/news）
+ * ---------------------------------------------------------------------- */
+require_once CIMD_THEME_DIR . '/inc/cpt.php';
+require_once CIMD_THEME_DIR . '/inc/acf.php';
+require_once CIMD_THEME_DIR . '/inc/content.php';
+require_once CIMD_THEME_DIR . '/inc/rest.php';
+
+/* -------------------------------------------------------------------------
  * SPA アセットの読み込み（Vite manifest からハッシュ名を解決）
  * ---------------------------------------------------------------------- */
 function cimd_read_manifest(): ?array
@@ -64,10 +76,11 @@ function cimd_enqueue_assets(): void
     $site_data = [
         'assetsBase'   => $dist_uri,
         'routerBase'   => cimd_router_base(),
-        // Phase 3 で REST（cimd/v1/news）へ差し替え予定。現状はバンドル JSON。
-        'newsEndpoint' => $dist_uri . 'data/note-articles.json',
+        'newsEndpoint' => esc_url_raw(rest_url('cimd/v1/news')),
         'restBase'     => esc_url_raw(rest_url('cimd/v1/')),
         'restNonce'    => wp_create_nonce('wp_rest'),
+        // 未設定/空のキーは SPA 同梱デフォルトにフォールバックする（useContent.ts）
+        'content'      => cimd_site_content(),
     ];
     wp_add_inline_script(
         'cimd-app',

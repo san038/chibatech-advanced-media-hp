@@ -131,7 +131,7 @@
 </template>
 
 <script setup lang="ts">
-import { curriculumData } from "~/data/curriculum";
+const curriculumData = useContent().curriculum;
 
 useSeoMeta({
   title: "カリキュラム | 知能メディア工学科 | 千葉工業大学",
