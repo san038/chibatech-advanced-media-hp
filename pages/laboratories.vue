@@ -173,7 +173,7 @@ const pillarLabel = (pillar: Pillar): string =>
 
 <style scoped>
 .section-padding-sm {
-  padding-top: 1.5rem;
+  padding-top: clamp(2.5rem, 6vw, 4.5rem);
   padding-bottom: var(--space-sm);
 }
 
