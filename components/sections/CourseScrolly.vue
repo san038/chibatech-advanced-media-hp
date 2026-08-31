@@ -3,7 +3,7 @@
     <article
       v-for="(course, i) in COURSES"
       :key="course.key"
-      :ref="(el) => setPanel(el, i)"
+      :ref="(el: unknown) => setPanel(el, i)"
       class="course-scrolly__panel"
       :class="[`is-${course.key}`, { 'is-active': activeIndex === i }]"
     >
@@ -32,7 +32,7 @@
 
     <!-- 3領域が重なる学科 ＝ ビジョン -->
     <article
-      :ref="(el) => setPanel(el, 3)"
+      :ref="(el: unknown) => setPanel(el, 3)"
       class="course-scrolly__panel is-vision"
       :class="{ 'is-active': activeIndex === 3 }"
     >

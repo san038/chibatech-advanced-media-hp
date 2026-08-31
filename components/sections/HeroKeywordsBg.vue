@@ -3,7 +3,7 @@
     <span
       v-for="(kw, i) in kwStates"
       :key="i"
-      :ref="(el) => setEl(el, i)"
+      :ref="(el: unknown) => setEl(el, i)"
       class="hero-kw-item"
       :style="{
         '--tx': kw.tx + 'px',
@@ -22,31 +22,40 @@
 import { ref, onMounted, onUnmounted } from "vue";
 
 // ── キーワード定義 ───────────────────────────────────────────────────────────
-const M = "rgba(15, 14, 26, 1)";
-const K = "rgba(15, 14, 26, 1)";
-const D = "rgba(15, 14, 26, 1)";
-const G = "rgba(15, 14, 26, 0.35)";
+// DomainDiagram3D.client.vue の keywords（3領域＋重複領域）の単体キーワードから抜粋。
+// 合成語（COMPOSITE_WORDS）は品質担保できないため使用しない。
+// 極端に長い（英語併記・複合語）ラベルは flow 表示だと巨大化して見切れるため除外し、
+// 各領域からバランス良く採用して過密にならない件数に絞っている。
+const KEYWORDS: string[] = [
+  // MEDIA
+  "３D音響",
+  "歌声合成",
+  "バーチャルリアリティ",
+  // KNOWLEDGE
+  "ビッグデータ",
+  "人工知能",
+  "機械学習",
+  "ディープラーニング",
+  // DESIGN
+  "テクノロジーアート",
+  "ビジュアライゼーション",
+  "コミュニケーションデザイン",
+  // MEDIA × KNOWLEDGE
+  "AR（拡張現実）",
+  "画像認識",
+  // MEDIA × DESIGN
+  "サウンドデザイン",
+  // ALL
+  "データ可視化",
+];
+
+// 白系単色・明度違いのみで奥行き感を出す
+const WHITE_ALPHAS = [1, 0.85, 0.7, 0.55, 0.4];
 
 interface Kw {
   text: string;
   color: string;
 }
-
-const KW_LIST: Kw[] = [
-  { text: "バーチャルリアリティ", color: M },
-  { text: "歌声合成", color: M },
-  { text: "画像/映像処理", color: M },
-  { text: "３D音響", color: M },
-  { text: "ディープラーニング", color: K },
-  { text: "機械学習", color: K },
-  { text: "人工知能", color: K },
-  { text: "ビッグデータ", color: K },
-  { text: "コミュニケーションデザイン", color: D },
-  { text: "ビジュアライゼーション", color: D },
-  { text: "テクノロジーアート", color: D },
-  { text: "AR（拡張現実）", color: G },
-  { text: "データ可視化", color: G },
-];
 
 const SIZES = [
   "2.2rem",
@@ -152,14 +161,16 @@ onMounted(() => {
 
   // ヒーロー入場アニメーションが終わってからキーワードを開始
   setTimeout(() => {
-    kwStates.value = KW_LIST.map((kw, i) => {
+    kwStates.value = KEYWORDS.map((text, i) => {
       const angle = Math.random() * Math.PI * 2;
       const dist = maxDist * (1.0 + Math.random() * 0.6);
       const dur = 7 + Math.random() * 5;
       // 正の delay: 0〜3s の範囲でスタッガーさせる（全キーワードが同時に登場しない）
       const dly = Math.random() * 3;
+      const alpha = WHITE_ALPHAS[Math.floor(Math.random() * WHITE_ALPHAS.length)];
       return {
-        ...kw,
+        text,
+        color: `rgba(255, 255, 255, ${alpha})`,
         tx: Math.cos(angle) * dist,
         ty: Math.sin(angle) * dist,
         dur,

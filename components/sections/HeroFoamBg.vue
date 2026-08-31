@@ -11,7 +11,7 @@
       <span
         v-for="(b, i) in bodies"
         :key="i"
-        :ref="(el) => setLabelEl(el, i)"
+        :ref="(el: unknown) => setLabelEl(el, i)"
         class="hero-foam__label"
         :class="`hero-foam__label--${b.kind}`"
         :style="{ color: b.labelColor }"

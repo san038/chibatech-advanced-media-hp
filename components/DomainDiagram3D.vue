@@ -4,6 +4,12 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
+import type {
+  OrthographicCamera,
+  Mesh,
+  MeshBasicMaterial,
+  Vector3,
+} from "three";
 
 const props = withDefaults(
   defineProps<{
@@ -1058,12 +1064,6 @@ const COMPOSITE_WORDS: CompositeWordDef[] = [
 
 const keywordById = new Map(keywords.map((k) => [k.id, k]));
 
-interface Vec3 {
-  x: number;
-  y: number;
-  z: number;
-}
-
 interface KeywordLayout {
   anchorX: number;
   anchorY: number;
@@ -1103,7 +1103,7 @@ function buildKeywordLayouts(): Map<string, KeywordLayout> {
   return layouts;
 }
 
-function anchorPosition(layout: KeywordLayout, target: Vec3): Vec3 {
+function anchorPosition(layout: KeywordLayout, target: Vector3): Vector3 {
   return target.set(layout.anchorX, layout.anchorY, layout.anchorZ);
 }
 
@@ -1162,7 +1162,7 @@ onMounted(async () => {
   const w = container.clientWidth || 800;
   const h = container.clientHeight || 500;
 
-  function fitOrthoCamera(cam: THREE.OrthographicCamera, cw: number, ch: number) {
+  function fitOrthoCamera(cam: OrthographicCamera, cw: number, ch: number) {
     const aspect = cw / Math.max(1, ch);
     const halfH = ORTHO_VIEW_HEIGHT / 2;
     const halfW = halfH * aspect;
@@ -1224,7 +1224,7 @@ onMounted(async () => {
 
   const mergePoint = new THREE.Vector3(0, MERGE_POINT_Y, 0);
 
-  const labelMeshMap = new Map<string, THREE.Mesh>();
+  const labelMeshMap = new Map<string, Mesh>();
   const restLabelScale = new Map<string, number>();
   const anchorScratch = new THREE.Vector3();
   const baseScratch = new THREE.Vector3();
@@ -1245,7 +1245,7 @@ onMounted(async () => {
   function applyKeywordFloat(
     layout: KeywordLayout,
     timeSec: number,
-    label: THREE.Mesh,
+    label: Mesh,
   ) {
     const ph = layout.floatPhase;
     const t = timeSec * FLOAT_SPEED;
@@ -1263,7 +1263,7 @@ onMounted(async () => {
       layout.anchorZ + wobbleZ * FLOAT_AMP,
     );
     label.scale.setScalar(layout.baseScale);
-    const mat = label.material as THREE.MeshBasicMaterial;
+    const mat = label.material as MeshBasicMaterial;
     mat.opacity = layout.baseOpacity;
     label.visible = true;
     label.renderOrder = 2;
@@ -1277,7 +1277,7 @@ onMounted(async () => {
     planeH: number,
     opacity: number,
     fontWeight = 500,
-  ): THREE.Mesh {
+  ): Mesh {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const font = `${fontWeight} ${fontPx}px var(--font-body, system-ui, sans-serif)`;
     const probe = document.createElement("canvas").getContext("2d")!;
@@ -1376,7 +1376,7 @@ onMounted(async () => {
   function createKeywordLabelMesh(
     text: string,
     layout: KeywordLayout,
-  ): THREE.Mesh {
+  ): Mesh {
     const mesh = createFlatLabel(
       text,
       DIAGRAM_WHITE_CSS,
@@ -1395,7 +1395,7 @@ onMounted(async () => {
     for (const kw of keywords) {
       const selected = pickedIds.has(kw.id);
       const labelMat = labelMeshMap.get(kw.id)!
-        .material as THREE.MeshBasicMaterial;
+        .material as MeshBasicMaterial;
       if (selected) {
         labelMat.opacity = LABEL_OPACITY_ACTIVE;
       } else {
@@ -1411,7 +1411,7 @@ onMounted(async () => {
       const label = labelMeshMap.get(kw.id)!;
       applyKeywordFloat(layout, timeSec, label);
       label.renderOrder = 2;
-      (label.material as THREE.MeshBasicMaterial).opacity = 0;
+      (label.material as MeshBasicMaterial).opacity = 0;
       label.visible = true;
     }
   }
@@ -1441,7 +1441,7 @@ onMounted(async () => {
         const scale =
           baseScale + (LABEL_SCALE_HIGHLIGHT - baseScale) * toCenterT;
         label.scale.setScalar(scale);
-        const mat = label.material as THREE.MeshBasicMaterial;
+        const mat = label.material as MeshBasicMaterial;
         mat.opacity = LABEL_OPACITY_ACTIVE * (1 - Math.max(0, (toCenterT - 0.88) / 0.12));
         label.visible = toCenterT < 0.98;
         label.renderOrder = 20;
@@ -1452,14 +1452,14 @@ onMounted(async () => {
         const fadeT = easeOut(
           Math.min(1, (now - hlStartTime) / HIGHLIGHT_KEYWORD_FADE_IN_MS),
         );
-        (label.material as THREE.MeshBasicMaterial).opacity =
+        (label.material as MeshBasicMaterial).opacity =
           LABEL_OPACITY_ACTIVE * fadeT;
         label.visible = true;
         label.renderOrder = 2;
       } else {
         applyKeywordFloat(layout, timeSec, label);
         if (dimmed) {
-          const mat = label.material as THREE.MeshBasicMaterial;
+          const mat = label.material as MeshBasicMaterial;
           mat.opacity *= 0.22;
         }
       }
@@ -1630,7 +1630,7 @@ onMounted(async () => {
         const label = labelMeshMap.get(kw.id)!;
         anchorPosition(layout, label.position);
         label.scale.setScalar(layout.baseScale);
-        (label.material as THREE.MeshBasicMaterial).opacity = layout.baseOpacity;
+        (label.material as MeshBasicMaterial).opacity = layout.baseOpacity;
         label.visible = true;
       }
     } else {

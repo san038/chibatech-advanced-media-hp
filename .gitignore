@@ -4,13 +4,14 @@ node_modules
 # ビルド時に scripts/build-note-data.mjs が生成（RSS 取得）
 public/data/note-articles.json
 
-# Nuxt / Nitro
+# Build output
 .nuxt
 .output
-.nitro
-.data
-.cache
 dist
+
+# unplugin generated dts
+auto-imports.d.ts
+components.d.ts
 
 # Logs
 logs
@@ -41,3 +42,6 @@ coverage
 # Optional local tooling
 .vercel
 .netlify
+
+# unplugin-auto-import eslint globals
+.eslintrc-auto-import.json

@@ -1,23 +1,49 @@
-import { joinURL } from 'ufo'
-import type { NoteArticle } from '~/types'
+import { computed, onMounted, ref } from "vue";
+import type { NoteArticle } from "~/types";
+
+/**
+ * ニュース記事の取得。
+ * - 既定: `<base>data/note-articles.json`（ビルド前に scripts/build-note-data.mjs が生成）
+ * - WP テーマ時: window.__SITE_DATA__.newsEndpoint（WP REST）を優先
+ */
+function resolveEndpoint(): string {
+  const injected =
+    typeof window !== "undefined"
+      ? (window as unknown as { __SITE_DATA__?: { newsEndpoint?: string } })
+          .__SITE_DATA__?.newsEndpoint
+      : undefined;
+  if (injected) return injected;
+  const base = import.meta.env.BASE_URL || "/";
+  return `${base.endsWith("/") ? base : `${base}/`}data/note-articles.json`;
+}
 
 export const useNoteArticles = () => {
-  const config = useRuntimeConfig()
-  // 開発: Nitro の /api/note。本番静的: ビルド前に生成した JSON（GitHub Pages では API ルートが無い）
-  const url = import.meta.dev
-    ? joinURL(config.app.baseURL, 'api/note')
-    : joinURL(config.app.baseURL, 'data/note-articles.json')
+  const articles = ref<NoteArticle[]>([]);
+  const pending = ref(true);
+  const error = ref<unknown>(null);
 
-  const { data, pending, error, refresh } = useFetch<NoteArticle[]>(url, {
-    default: () => [] as NoteArticle[],
-  })
+  const refresh = async () => {
+    pending.value = true;
+    error.value = null;
+    try {
+      const res = await fetch(resolveEndpoint());
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = (await res.json()) as NoteArticle[];
+      articles.value = Array.isArray(data) ? data : [];
+    } catch (e) {
+      error.value = e;
+      articles.value = [];
+    } finally {
+      pending.value = false;
+    }
+  };
 
-  const articles = computed<NoteArticle[]>(() => data.value ?? [])
+  onMounted(refresh);
 
   return {
-    articles,
+    articles: computed<NoteArticle[]>(() => articles.value),
     pending,
     error,
     refresh,
-  }
-}
+  };
+};
