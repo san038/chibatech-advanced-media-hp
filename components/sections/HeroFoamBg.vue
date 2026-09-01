@@ -2,7 +2,10 @@
   <div
     ref="rootEl"
     class="hero-foam"
-    :class="{ 'hero-foam--interactive': interactive, 'is-dragging': dragging }"
+    :class="{
+      'hero-foam--interactive': interactive && focusDomain !== 'all',
+      'is-dragging': dragging,
+    }"
     aria-hidden="true"
     @pointerdown="onPointerDown"
   >
@@ -951,13 +954,12 @@ function drawHud(c: CanvasRenderingContext2D) {
 function updateCamera(now: number, dt: number) {
   if (dragging.value) return;
 
-  // スクロール連動フォーカス中は対象領域が正面に来るようイージング
-  const fd = focusDomain.value;
-  if (fd) {
-    const tgt = fd === "all" ? { yaw: 0, pitch: 0.04 } : faceTarget(fd);
+  // VISION（3領域収束）時のみカメラを正面に固定。単一領域のコースフォーカス時は
+  // 通常どおり慣性＋放置回転＋ドラッグで自由に回せる。
+  if (focusDomain.value === "all") {
     const rate = Math.min(1, dt * 2.4);
-    cam.yaw += angDiff(cam.yaw, tgt.yaw) * rate;
-    cam.pitch += (tgt.pitch - cam.pitch) * rate;
+    cam.yaw += angDiff(cam.yaw, 0) * rate;
+    cam.pitch += (0.04 - cam.pitch) * rate;
     cam.yawVel = 0;
     cam.pitchVel = 0;
     if (cam.yaw > TAU) cam.yaw -= TAU;
@@ -1060,7 +1062,8 @@ function stopLoop() {
 
 // ── 入力（ドラッグでカメラ周回）─────────────────────────────────────────────
 function onPointerDown(e: PointerEvent) {
-  if (!interactive.value) return;
+  // VISION（収束）時は回転操作を無効化
+  if (!interactive.value || focusDomain.value === "all") return;
   dragging.value = true;
   drag.x = e.clientX;
   drag.y = e.clientY;
@@ -1286,12 +1289,6 @@ onUnmounted(() => {
 .hero-foam__label--core {
   font-weight: 600;
   font-size: clamp(0.8rem, 1.9vw, 1.2rem);
-}
-
-.hero-foam__label--core::after {
-  content: " · LOCK";
-  opacity: 0.45;
-  font-weight: 400;
 }
 
 .hero-foam__label--kw {
