@@ -103,13 +103,22 @@ function cimd_enqueue_assets(): void
 }
 add_action('wp_enqueue_scripts', 'cimd_enqueue_assets');
 
-/* エントリスクリプトを ES module として出力 + preload */
-function cimd_script_tag(string $tag, string $handle, string $src): string
+/* エントリスクリプトを ES module として出力 + preload。
+ * 注意: WP が渡す $tag には wp_add_inline_script('cimd-app', …, 'before') の
+ *       インラインスクリプト（window.__SITE_DATA__）も含まれる。タグを作り直すと
+ *       それを落とすため、type="module" の注入だけに留める。 */
+function cimd_script_tag($tag, $handle, $src)
 {
     if ($handle !== 'cimd-app') {
         return $tag;
     }
-    $preload = '';
+
+    if (strpos($tag, 'type="module"') === false && strpos($tag, "type='module'") === false) {
+        $tag = str_replace(' src=', ' type="module" src=', $tag);
+    }
+
+    // 静的 import チャンクを modulepreload（追加のみ・既存タグは保持）
+    $preload  = '';
     $manifest = cimd_read_manifest();
     if ($manifest && !empty($manifest['index.html']['imports'])) {
         foreach ($manifest['index.html']['imports'] as $chunk_key) {
@@ -120,7 +129,8 @@ function cimd_script_tag(string $tag, string $handle, string $src): string
             }
         }
     }
-    return $preload . '<script type="module" src="' . esc_url($src) . '"></script>' . "\n";
+
+    return $preload . $tag;
 }
 add_filter('script_loader_tag', 'cimd_script_tag', 10, 3);
 
