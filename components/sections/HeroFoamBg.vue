@@ -134,6 +134,17 @@ const COLLISION_PASSES = 2;
 const SETTLE_STEPS = 320;
 const START_DELAY_MS = 1600;
 
+const CORE_RBASE = 0.18; // 核サークルの半径係数(minDim比)
+
+// 浮遊ラベルの不透明度の基準（大きいほど読みやすい）
+const LABEL_BASE_CORE = 0.62;
+const LABEL_BASE_KW = 0.58;
+
+// コースフォーカス時、対象領域のキーワードを核サークルの周囲へ点在させる
+// 半径係数（核サークル半径に対する倍率）
+const RING_SCATTER_MIN = 1.14;
+const RING_SCATTER_SPAN = 0.6;
+
 const CLUSTER_F = 0.34; // 星団の広がり(minDim比)
 const CAM_DIST_F = 1.7; // カメラ距離(minDim比)
 const FOCAL_F = 1.7; // 焦点距離(minDim比)
@@ -163,6 +174,8 @@ interface Body {
   r: number; // 半径(px)
   rBase: number; // 半径係数(minDim比)
   spread: number; // オフセット距離(minDim比)
+  ringAngle: number; // コースフォーカス時: 核サークル周囲の配置角
+  ringRad: number; // コースフォーカス時: 核サークル半径に対する配置半径倍率
   // 投影キャッシュ
   sx: number;
   sy: number;
@@ -219,6 +232,9 @@ let focusZoom = 1;
 let viewCenterX = 0.5;
 // 収束度（0 = 通常配置、1 = 3領域を前面で重ねた状態）
 let convergence = 0;
+// コースフォーカスの度合い（0 = 通常、1 = 対象領域のキーワードを核サークル周囲へ点在）
+let ringFocus = 0;
+let ringFocusKey: DomainKey | null = null;
 
 // ── ベクトル ─────────────────────────────────────────────────────────────────
 function v3(x: number, y: number, z: number): Vec3 {
@@ -328,6 +344,10 @@ function updateFocus(dt: number) {
   });
   focusZoom += ((fd == null ? 1 : all ? 0.98 : 0.9) - focusZoom) * rate;
   camDistEff = camDist * focusZoom;
+  // 単一領域フォーカス時のみ、キーワードを核サークルの周囲へ点在させる
+  const single = fd != null && !all;
+  if (single) ringFocusKey = fd as DomainKey;
+  ringFocus += ((single ? 1 : 0) - ringFocus) * rate;
   // 横長画面ではフォーカス時にダイアグラムを左 30% 付近へ寄せ、右半分をテキスト用に空ける
   const wide = cssW > cssH * 1.1;
   const cxTarget = fd == null ? 0.5 : wide ? 0.3 : 0.5;
@@ -374,8 +394,10 @@ function buildBodies(): Body[] {
       u,
       v,
       r: 0,
-      rBase: 0.18,
+      rBase: CORE_RBASE,
       spread: 0,
+      ringAngle: 0,
+      ringRad: 0,
       sx: 0,
       sy: 0,
       sr: 0,
@@ -402,6 +424,9 @@ function buildBodies(): Body[] {
       r: 0,
       rBase: multi ? 0.05 : 0.042 + rand(i + 5) * 0.028,
       spread: multi ? 0.05 : 0.12 + rand(i + 9) * 0.09,
+      // 黄金角ベース + ジッタで 360° を偏りなく点在させる
+      ringAngle: (i * 2.399963 + rand(i + 4.2) * 0.9) % TAU,
+      ringRad: RING_SCATTER_MIN + rand(i + 31.7) * RING_SCATTER_SPAN,
       sx: 0,
       sy: 0,
       sr: 0,
@@ -428,11 +453,39 @@ function targetOf(b: Body): Vec3 {
   const posK = cluster * (1 - cv); // 収束時は核を完全に重ねる（間隔 0）
   const zK = posK * (1 - cv); // z を平面化して正面へ
   const sK = s * (1 - cv * 0.45);
-  return v3(
+  const base = v3(
     (tx / n) * posK + b.dir.x * sK,
     (ty / n) * posK + b.dir.y * sK,
     (tz / n) * zK + b.dir.z * sK * (1 - cv * 0.7),
   );
+
+  // コースフォーカス: 対象領域のキーワードを核サークルの周囲 360° へ点在
+  if (
+    ringFocus > 0.001 &&
+    cv < 0.5 &&
+    b.kind === "kw" &&
+    ringFocusKey &&
+    b.domains.includes(ringFocusKey)
+  ) {
+    const core = CORE_POS3[ringFocusKey];
+    const cn = basisOf(norm(CORE_NRM[ringFocusKey]));
+    const rr = CORE_RBASE * minDim * b.ringRad;
+    const ca = Math.cos(b.ringAngle);
+    const sa = Math.sin(b.ringAngle);
+    const ring = v3(
+      core.x * cluster + rr * (ca * cn.u.x + sa * cn.v.x),
+      core.y * cluster + rr * (ca * cn.u.y + sa * cn.v.y),
+      core.z * cluster + rr * (ca * cn.u.z + sa * cn.v.z),
+    );
+    const t = ringFocus;
+    return v3(
+      base.x + (ring.x - base.x) * t,
+      base.y + (ring.y - base.y) * t,
+      base.z + (ring.z - base.z) * t,
+    );
+  }
+
+  return base;
 }
 
 function placeInitial() {
@@ -971,7 +1024,7 @@ function positionLabels() {
       b.sy
     }px) scale(${s.toFixed(3)})`;
     const ff = Math.max(...b.domains.map((d) => domainFocus[d]));
-    const base = b.kind === "core" ? 0.5 : 0.24;
+    const base = b.kind === "core" ? LABEL_BASE_CORE : LABEL_BASE_KW;
     // 収束時はコース／キーワードのラベルをすべて消し、中央の学科ラベルだけ残す
     el.style.opacity = clamp(
       base * near * ff * ff * (1 - convergence),
@@ -1111,6 +1164,9 @@ onMounted(() => {
     camDistEff = camDist * focusZoom;
     viewCenterX = fd == null ? 0.5 : cssW > cssH * 1.1 ? 0.3 : 0.5;
     convergence = all ? 1 : 0;
+    const single = fd != null && !all;
+    if (single) ringFocusKey = fd as DomainKey;
+    ringFocus = single ? 1 : 0;
     if (all) {
       cam.yaw = 0;
       cam.pitch = 0.04;
@@ -1221,7 +1277,9 @@ onUnmounted(() => {
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   line-height: 1;
   letter-spacing: 0.12em;
-  text-shadow: 0 0 10px rgba(10, 10, 12, 0.7);
+  text-shadow:
+    0 0 6px rgba(10, 10, 12, 0.9),
+    0 0 14px rgba(10, 10, 12, 0.6);
   will-change: transform, opacity;
 }
 
