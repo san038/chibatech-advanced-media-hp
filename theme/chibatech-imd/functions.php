@@ -18,13 +18,15 @@ define('CIMD_THEME_URI', get_template_directory_uri());
 
 /* -------------------------------------------------------------------------
  * 分割ファイルの読み込み
- *   - inc/cpt.php     … カスタム投稿タイプ（研究室）
- *   - inc/acf.php     … ACF フィールド定義
- *   - inc/content.php … SPA へ渡す content ペイロードの組み立て
- *   - inc/rest.php    … REST エンドポイント（cimd/v1/news）
+ *   - inc/cpt.php                … カスタム投稿タイプ（研究室）
+ *   - inc/acf.php                … ACF フィールド定義（研究室のみ）
+ *   - inc/site-content-admin.php … 管理画面「サイトコンテンツ」（JSON 編集・ACF 非依存）
+ *   - inc/content.php            … SPA へ渡す content ペイロードの組み立て
+ *   - inc/rest.php               … REST エンドポイント（cimd/v1/news）
  * ---------------------------------------------------------------------- */
 require_once CIMD_THEME_DIR . '/inc/cpt.php';
 require_once CIMD_THEME_DIR . '/inc/acf.php';
+require_once CIMD_THEME_DIR . '/inc/site-content-admin.php';
 require_once CIMD_THEME_DIR . '/inc/content.php';
 require_once CIMD_THEME_DIR . '/inc/rest.php';
 

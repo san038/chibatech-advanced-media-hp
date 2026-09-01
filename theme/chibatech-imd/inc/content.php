@@ -7,10 +7,13 @@
  * フォールバックする。したがってここでは「値があるものだけ」を詰めればよい。
  *
  * - labs         : 研究室 CPT（lab）→ types.ts の Laboratory[]
- * - curriculum   : オプションページの JSON textarea（CurriculumYear[]）
+ * - curriculum   : 管理画面「サイトコンテンツ」の JSON textarea（CurriculumYear[]）
  * - careerPaths  : 同上（CareerItem[]）
  * - industryStats: 同上（{ label, percentage }[]）
  * - keyStats     : 同上（{ value, label }[]）
+ *
+ * JSON textarea は inc/site-content-admin.php が wp_options に保存する
+ * （ACF 非依存）。研究室 CPT のフィールドのみ ACF（inc/acf.php）を使う。
  */
 if (!defined('ABSPATH')) {
     exit;
@@ -32,15 +35,12 @@ function cimd_lines_to_array($raw): array
 }
 
 /**
- * ACF option の JSON textarea をデコード。
+ * wp_options に保存された JSON textarea をデコード。
  * 妥当な「非空の配列」のときだけ返す。それ以外は null（＝デフォルトへフォールバック）。
  */
-function cimd_decode_json_option(string $field_name): ?array
+function cimd_decode_json_option(string $option_name): ?array
 {
-    if (!function_exists('get_field')) {
-        return null;
-    }
-    $raw = get_field($field_name, 'option');
+    $raw = get_option($option_name, '');
     if (!is_string($raw) || trim($raw) === '') {
         return null;
     }
@@ -129,13 +129,13 @@ function cimd_site_content(): array
     }
 
     $map = [
-        'curriculum'    => 'curriculum_json',
-        'careerPaths'   => 'career_paths_json',
-        'industryStats' => 'industry_json',
-        'keyStats'      => 'key_stats_json',
+        'curriculum'    => 'cimd_curriculum_json',
+        'careerPaths'   => 'cimd_career_paths_json',
+        'industryStats' => 'cimd_industry_json',
+        'keyStats'      => 'cimd_key_stats_json',
     ];
-    foreach ($map as $key => $field) {
-        $decoded = cimd_decode_json_option($field);
+    foreach ($map as $key => $option_name) {
+        $decoded = cimd_decode_json_option($option_name);
         if ($decoded !== null) {
             $content[$key] = $decoded;
         }
