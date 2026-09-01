@@ -273,7 +273,9 @@ onUnmounted(() => {
   text-align: center;
   color: rgba(252, 249, 248, 0.72);
   opacity: 0;
-  transform: translateY(1.4em);
+  /* 中心からふわっと（scale を拡大しながらフォーカスイン） */
+  transform: scale(0.94);
+  transform-origin: center;
   filter: blur(5px);
   will-change: opacity, transform, filter;
   transition:
@@ -284,7 +286,7 @@ onUnmounted(() => {
 
 .hero__site-title.is-in {
   opacity: 1;
-  transform: none;
+  transform: scale(1);
   filter: blur(0);
 }
 
@@ -301,7 +303,9 @@ onUnmounted(() => {
   line-height: 1.15;
   text-align: center;
   opacity: 0;
-  transform: translateY(1.7em);
+  /* 中心からふわっと */
+  transform: scale(0.9);
+  transform-origin: center;
   filter: blur(7px);
   will-change: opacity, transform, filter;
   transition:
@@ -312,7 +316,7 @@ onUnmounted(() => {
 
 .hero__headline.is-in {
   opacity: 1;
-  transform: none;
+  transform: scale(1);
   filter: blur(0);
 }
 
