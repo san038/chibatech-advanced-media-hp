@@ -48,3 +48,6 @@ coverage
 
 # WP テーマのビルド成果物（ローカルで build:theme して配置）
 theme/*/dist/
+
+# Claude Code のローカル設定（SSH 許可ルール等・環境依存）
+.claude/settings.json
