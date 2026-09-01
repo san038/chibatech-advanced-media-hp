@@ -135,7 +135,7 @@ const POINTER_RADIUS_F = 0.24;
 const POINTER_FORCE = 1.4;
 const COLLISION_PASSES = 2;
 const SETTLE_STEPS = 320;
-const START_DELAY_MS = 1600;
+const START_DELAY_MS = 550;
 
 const CORE_RBASE = 0.18; // 核サークルの半径係数(minDim比)
 

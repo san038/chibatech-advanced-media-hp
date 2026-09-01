@@ -25,7 +25,7 @@
       aria-hidden="true"
     />
 
-    <!-- 見出し: 画面中央左・左寄せ -->
+    <!-- 見出し: 画面中央 -->
     <div class="hero__copy">
       <div class="hero__title-block">
         <p class="hero__site-title" :aria-label="SITE_TITLE">
@@ -111,10 +111,10 @@ function formatDate(value: string): string {
   return `${y}.${m}.${day}`;
 }
 
-const INTRO_CHAR_MS = 52;
-const INTRO_AFTER_TYPE_MS = 700;
-const INTRO_TITLE_SLIDE_MS = 900;
-const INTRO_DIAGRAM_REVEAL_MS = 1400;
+const INTRO_CHAR_MS = 30;
+const INTRO_AFTER_TYPE_MS = 300;
+const INTRO_TITLE_SLIDE_MS = 440;
+const INTRO_DIAGRAM_REVEAL_MS = 800;
 
 const introPhase = ref<IntroPhase>("center");
 const introTimeouts: ReturnType<typeof setTimeout>[] = [];
@@ -236,7 +236,7 @@ onUnmounted(() => {
   justify-content: center;
   box-sizing: border-box;
   opacity: 0;
-  transition: opacity 1.1s ease;
+  transition: opacity 0.7s ease;
 }
 
 .hero--intro-reveal .hero__diagram,
@@ -256,7 +256,7 @@ onUnmounted(() => {
     transparent 72%
   );
   opacity: 0;
-  transition: opacity 1s ease 0.35s;
+  transition: opacity 0.6s ease 0.2s;
 }
 
 .hero--intro-reveal .hero__bg-overlay,
@@ -271,21 +271,25 @@ onUnmounted(() => {
   z-index: 8;
   background: #000000;
   pointer-events: none;
-  transition: opacity 0.9s ease;
+  transition: opacity 0.5s ease;
 }
 
 .hero--intro-reveal .hero__intro-curtain {
   opacity: 0;
 }
 
-/* 見出しブロック: 画面中央・左寄せ */
+/* 見出しブロック: 画面中央 */
 .hero__copy {
   position: absolute;
   left: 0;
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   z-index: 9;
   padding: 0 var(--space-md);
+  text-align: center;
+  /* ドラッグ操作を背面の 3D（HeroFoamBg）へ透過させる */
+  pointer-events: none;
   transition:
     opacity 0.5s ease,
     transform 0.5s ease;
@@ -306,7 +310,7 @@ onUnmounted(() => {
 .hero__title-block {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.65em;
 }
 
@@ -324,14 +328,14 @@ onUnmounted(() => {
   font-size: clamp(0.8125rem, 1.6vw, 1rem);
   font-weight: 500;
   letter-spacing: 0.12em;
-  text-align: left;
+  text-align: center;
   color: rgba(252, 249, 248, 0.72);
 }
 
 .hero__headline {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.35em;
   margin: 0;
   font-family: var(--font-display);
@@ -339,14 +343,14 @@ onUnmounted(() => {
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.15;
-  text-align: left;
+  text-align: center;
 }
 
 .hero__headline-line {
   position: relative;
   display: inline-block;
-  /* 左は隙間なし。1行固定（背景に重なってよい） */
-  padding: 0.08em 0.28em 0.08em 0;
+  /* 1行固定（背景に重なってよい） */
+  padding: 0.08em 0.28em;
   white-space: nowrap;
 }
 
@@ -499,7 +503,7 @@ onUnmounted(() => {
 }
 
 .hero--intro-done .hero__scroll-indicator {
-  animation: hero-fade-in 0.6s ease 1.6s forwards;
+  animation: hero-fade-in 0.6s ease 0.9s forwards;
 }
 
 .hero__scroll-text {
@@ -550,6 +554,11 @@ onUnmounted(() => {
 @media (max-width: 767px) {
   .hero__copy {
     top: 42%;
+  }
+
+  /* 中央寄せで両端が切れないよう、狭い画面では折り返す */
+  .hero__headline-line {
+    white-space: normal;
   }
 
   .hero__news {
