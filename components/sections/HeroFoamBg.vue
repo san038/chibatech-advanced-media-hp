@@ -26,6 +26,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
+import type { HeroKeyword } from "~/types";
 
 // ── 領域定義 ─────────────────────────────────────────────────────────────────
 type DomainKey = "media" | "knowledge" | "design";
@@ -67,11 +68,9 @@ const CORE_NRM: Record<DomainKey, Vec3> = {
   design: { x: 0.0, y: -0.3, z: 0.95 },
 };
 
-interface KeywordDef {
-  text: string;
-  domains: DomainKey[];
-}
-const KEYWORDS: KeywordDef[] = [
+// 既定のキーワード群。WP「サイトコンテンツ」で上書き可
+// （inc/site-content-admin.php の cimd_hero_keywords と対応。変更時は両方要調整）。
+const DEFAULT_KEYWORDS: HeroKeyword[] = [
   { text: "３D音響", domains: ["media"] },
   { text: "歌声合成", domains: ["media"] },
   { text: "バーチャルリアリティ", domains: ["media"] },
@@ -87,6 +86,7 @@ const KEYWORDS: KeywordDef[] = [
   { text: "サウンドデザイン", domains: ["media", "design"] },
   { text: "データ可視化", domains: ["media", "knowledge", "design"] },
 ];
+const KEYWORDS: HeroKeyword[] = useContent().heroKeywords ?? DEFAULT_KEYWORDS;
 
 // ── パラメータ ───────────────────────────────────────────────────────────────
 const KW_ATTRACT = 0.0018;

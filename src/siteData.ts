@@ -1,4 +1,10 @@
-import type { CareerItem, CurriculumYear, Laboratory } from "~/types";
+import type {
+  CareerItem,
+  CourseKeywords,
+  CurriculumYear,
+  HeroKeyword,
+  Laboratory,
+} from "~/types";
 
 /** WP テーマが編集したコンテンツ（未設定のキーは SPA 側のデフォルトにフォールバック） */
 export interface SiteContent {
@@ -7,6 +13,10 @@ export interface SiteContent {
   careerPaths?: CareerItem[];
   industryStats?: { label: string; percentage: number }[];
   keyStats?: { value: string; label: string }[];
+  /** ヒーロー背景の浮遊キーワード */
+  heroKeywords?: HeroKeyword[];
+  /** コース紹介の領域別キーワード */
+  courseKeywords?: CourseKeywords;
 }
 
 /** functions.php が window.__SITE_DATA__ に流し込むデータ */

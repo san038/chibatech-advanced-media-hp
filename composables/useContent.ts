@@ -14,6 +14,9 @@ function build() {
     careerPaths: has(wp.careerPaths) ? wp.careerPaths : careerData,
     industryStats: has(wp.industryStats) ? wp.industryStats : industryStats,
     keyStats: has(wp.keyStats) ? wp.keyStats : keyStats,
+    // 既定値はコンポーネント側が持つ。null = 各コンポーネントのデフォルトを使う。
+    heroKeywords: has(wp.heroKeywords) ? wp.heroKeywords : null,
+    courseKeywords: wp.courseKeywords ?? null,
   };
 }
 

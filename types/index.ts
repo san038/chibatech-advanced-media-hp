@@ -1,3 +1,15 @@
+/** ヒーロー背景（HeroFoamBg）の浮遊キーワード 1 語 */
+export type HeroKeyword = {
+  text: string
+  /** どの領域の核に集まるか（1つ以上） */
+  domains: ('media' | 'knowledge' | 'design')[]
+}
+
+/** コース紹介スクロリー（CourseScrolly）の領域別キーワード */
+export type CourseKeywords = Partial<
+  Record<'media' | 'knowledge' | 'design', string[]>
+>
+
 /** ニュース一覧の 1 件（WP 投稿）。REST: GET /wp-json/cimd/v1/news */
 export type NewsItem = {
   slug: string

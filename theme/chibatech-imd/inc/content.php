@@ -6,13 +6,15 @@
  * SPA 側 composables/useContent.ts が「キー未設定 or 空配列なら同梱デフォルト」で
  * フォールバックする。したがってここでは「値があるものだけ」を詰めればよい。
  *
- * - labs         : 研究室 CPT（lab）→ types.ts の Laboratory[]
- * - curriculum   : 管理画面「サイトコンテンツ」の JSON textarea（CurriculumYear[]）
- * - careerPaths  : 同上（CareerItem[]）
- * - industryStats: 同上（{ label, percentage }[]）
- * - keyStats     : 同上（{ value, label }[]）
+ * - labs          : 研究室 CPT（lab）→ types.ts の Laboratory[]
+ * - curriculum    : 管理画面「サイトコンテンツ」の JSON textarea（CurriculumYear[]）
+ * - careerPaths   : 同上（CareerItem[]）
+ * - industryStats : 同上（{ label, percentage }[]）
+ * - keyStats      : 同上（{ value, label }[]）
+ * - heroKeywords  : 同ページのテキスト（1 行 = "語 : media, knowledge"）
+ * - courseKeywords: 同ページの領域別テキスト（1 行 1 語）
  *
- * JSON textarea は inc/site-content-admin.php が wp_options に保存する
+ * JSON/テキストは inc/site-content-admin.php が wp_options に保存する
  * （ACF 非依存）。研究室 CPT のフィールドのみ ACF（inc/acf.php）を使う。
  */
 if (!defined('ABSPATH')) {
@@ -32,6 +34,44 @@ function cimd_lines_to_array($raw): array
     $lines = preg_split('/\r\n|\r|\n/', $raw) ?: [];
     $lines = array_map('trim', $lines);
     return array_values(array_filter($lines, static fn ($l) => $l !== ''));
+}
+
+/**
+ * ヒーローキーワードのテキスト（1 行 = "語 : media, knowledge"）を配列へ。
+ * 領域指定が無い行は 3 領域すべてに割り当てる。
+ *
+ * @return array<int, array{text: string, domains: string[]}>
+ */
+function cimd_parse_hero_keywords($raw): array
+{
+    if (!is_string($raw) || trim($raw) === '') {
+        return [];
+    }
+    $valid = ['media', 'knowledge', 'design'];
+    $out = [];
+    foreach (preg_split('/\r\n|\r|\n/', $raw) ?: [] as $line) {
+        $line = trim($line);
+        if ($line === '') {
+            continue;
+        }
+        $parts = explode(':', $line, 2);
+        $text  = trim($parts[0]);
+        if ($text === '') {
+            continue;
+        }
+        $domains = [];
+        if (isset($parts[1])) {
+            foreach (explode(',', $parts[1]) as $d) {
+                $d = trim($d);
+                if (in_array($d, $valid, true) && !in_array($d, $domains, true)) {
+                    $domains[] = $d;
+                }
+            }
+        }
+        $out[] = ['text' => $text, 'domains' => $domains === [] ? $valid : $domains];
+    }
+
+    return $out;
 }
 
 /**
@@ -139,6 +179,22 @@ function cimd_site_content(): array
         if ($decoded !== null) {
             $content[$key] = $decoded;
         }
+    }
+
+    $hero = cimd_parse_hero_keywords((string) get_option('cimd_hero_keywords', ''));
+    if ($hero !== []) {
+        $content['heroKeywords'] = $hero;
+    }
+
+    $courses = [];
+    foreach (['media', 'knowledge', 'design'] as $domain) {
+        $kw = cimd_lines_to_array(get_option('cimd_course_keywords_' . $domain, ''));
+        if ($kw !== []) {
+            $courses[$domain] = $kw;
+        }
+    }
+    if ($courses !== []) {
+        $content['courseKeywords'] = $courses;
     }
 
     return $content;

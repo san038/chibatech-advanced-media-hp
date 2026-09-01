@@ -66,6 +66,8 @@ interface Course {
   to: string;
 }
 
+// WP「サイトコンテンツ」で領域別に上書き可（未設定ならここのデフォルト）。
+const cc = useContent().courseKeywords;
 const COURSES: Course[] = [
   {
     key: "media",
@@ -73,7 +75,12 @@ const COURSES: Course[] = [
     name: "メディア工学",
     tagline: ["音・映像・インタラクションの", "最前線"],
     desc: "人間の知覚と感情に直接作用するメディアの技術を探究します。音響処理からXR体験まで、感動を設計する力を身につける。",
-    keywords: ["音響信号処理", "映像メディア", "XR・仮想現実", "センサーシステム"],
+    keywords: cc?.media ?? [
+      "音響信号処理",
+      "映像メディア",
+      "XR・仮想現実",
+      "センサーシステム",
+    ],
     to: "/about#media",
   },
   {
@@ -82,7 +89,12 @@ const COURSES: Course[] = [
     name: "知識工学",
     tagline: ["AIと知識で世界を", "解析する"],
     desc: "機械学習・深層学習・自然言語処理を駆使し、データの海から知識を抽出する力を培います。AIが社会を変える現場の最前線へ。",
-    keywords: ["機械学習・深層学習", "自然言語処理", "知識グラフ", "推薦システム"],
+    keywords: cc?.knowledge ?? [
+      "機械学習・深層学習",
+      "自然言語処理",
+      "知識グラフ",
+      "推薦システム",
+    ],
     to: "/about#knowledge",
   },
   {
@@ -91,7 +103,7 @@ const COURSES: Course[] = [
     name: "情報デザイン",
     tagline: ["伝わる形を", "設計する"],
     desc: "情報をどう見せ、どう伝えるか。UXデザイン・データ可視化・コミュニケーション設計を通じ、人と情報の橋渡しをする力を磨く。",
-    keywords: [
+    keywords: cc?.design ?? [
       "UX/UIデザイン",
       "データ可視化",
       "タイポグラフィ",
