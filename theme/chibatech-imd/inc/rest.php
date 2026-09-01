@@ -1,155 +1,114 @@
 <?php
 /**
- * REST エンドポイント。
+ * REST エンドポイント（ニュース = WordPress 標準投稿）。
  *
- *   GET /wp-json/cimd/v1/news
- *     note RSS を取得・整形して NoteArticle[] を返す。
- *     - scripts/build-note-data.mjs / utils/mapNoteRssItem.ts と同じ形に揃える。
- *     - 1 時間 transient キャッシュ。取得失敗時は直近の成功結果へフォールバック。
+ *   GET /wp-json/cimd/v1/news         … 公開投稿の一覧（NewsItem[]）
+ *   GET /wp-json/cimd/v1/news/{slug}  … 単一投稿（NewsArticle: 本文 HTML 込み）
+ *
+ * SPA 側 composables/useNews.ts が消費する。詳細は SPA 内 /news/:slug で表示。
  */
 if (!defined('ABSPATH')) {
     exit;
 }
 
-const CIMD_NOTE_RSS_URL   = 'https://note.com/sannnomiya/rss';
-const CIMD_NEWS_TRANSIENT = 'cimd_news_articles';
-const CIMD_NEWS_LASTGOOD  = 'cimd_news_articles_lastgood';
-const CIMD_NEWS_TTL       = HOUR_IN_SECONDS;
-const CIMD_NEWS_LIMIT     = 20;
+const CIMD_NEWS_LIST_LIMIT = 30;
 
 add_action('rest_api_init', function (): void {
     register_rest_route('cimd/v1', '/news', [
         'methods'             => 'GET',
         'permission_callback' => '__return_true',
-        'callback'            => 'cimd_rest_news',
+        'callback'            => 'cimd_rest_news_list',
+    ]);
+    register_rest_route('cimd/v1', '/news/(?P<slug>[^/]+)', [
+        'methods'             => 'GET',
+        'permission_callback' => '__return_true',
+        'callback'            => 'cimd_rest_news_single',
+        'args'                => [
+            'slug' => ['sanitize_callback' => 'sanitize_title'],
+        ],
     ]);
 });
 
 /**
  * @return WP_REST_Response
  */
-function cimd_rest_news()
+function cimd_rest_news_list()
 {
-    $cached = get_transient(CIMD_NEWS_TRANSIENT);
-    if (is_array($cached)) {
-        return new WP_REST_Response($cached, 200);
-    }
-
-    $articles = cimd_fetch_note_articles();
-    if ($articles === null) {
-        // 取得・整形に失敗。直近の成功結果があればそれを返す。
-        $lastgood = get_option(CIMD_NEWS_LASTGOOD);
-        return new WP_REST_Response(is_array($lastgood) ? $lastgood : [], 200);
-    }
-
-    set_transient(CIMD_NEWS_TRANSIENT, $articles, CIMD_NEWS_TTL);
-    update_option(CIMD_NEWS_LASTGOOD, $articles, false);
-    return new WP_REST_Response($articles, 200);
-}
-
-/**
- * note RSS を取得して NoteArticle[] へ整形。失敗時は null。
- *
- * @return array<int, array<string, mixed>>|null
- */
-function cimd_fetch_note_articles(): ?array
-{
-    $res = wp_remote_get(CIMD_NOTE_RSS_URL, [
-        'timeout' => 8,
-        'headers' => [
-            'User-Agent' => 'Mozilla/5.0 (compatible; ChitechIME/1.0)',
-            'Accept'     => 'application/rss+xml, application/xml, text/xml',
-        ],
+    $posts = get_posts([
+        'post_type'   => 'post',
+        'post_status' => 'publish',
+        'numberposts' => CIMD_NEWS_LIST_LIMIT,
+        'orderby'     => 'date',
+        'order'       => 'DESC',
     ]);
-    if (is_wp_error($res) || wp_remote_retrieve_response_code($res) !== 200) {
-        return null;
-    }
 
-    $body = wp_remote_retrieve_body($res);
-    if ($body === '') {
-        return null;
-    }
-
-    $prev = libxml_use_internal_errors(true);
-    $xml  = simplexml_load_string($body);
-    libxml_use_internal_errors($prev);
-    if ($xml === false || !isset($xml->channel->item)) {
-        return null;
-    }
-
-    $articles = [];
-    foreach ($xml->channel->item as $item) {
-        $articles[] = cimd_map_rss_item($item);
-        if (count($articles) >= CIMD_NEWS_LIMIT) {
-            break;
-        }
-    }
-    return $articles;
+    return new WP_REST_Response(array_map('cimd_news_item', $posts), 200);
 }
 
 /**
- * RSS item 1 件 → NoteArticle。
+ * @param WP_REST_Request $req
+ * @return WP_REST_Response
+ */
+function cimd_rest_news_single($req)
+{
+    $slug = (string) $req['slug'];
+
+    $query = new WP_Query([
+        'name'                => $slug,
+        'post_type'           => 'post',
+        'post_status'         => 'publish',
+        'posts_per_page'      => 1,
+        'ignore_sticky_posts' => true,
+        'no_found_rows'       => true,
+    ]);
+
+    if (!$query->have_posts()) {
+        return new WP_REST_Response(['message' => 'not found'], 404);
+    }
+
+    global $post;
+    $post = $query->posts[0];
+    setup_postdata($post);
+    $content = apply_filters('the_content', $post->post_content);
+    $item = cimd_news_item($post);
+    wp_reset_postdata();
+
+    $item['content']  = $content;
+    $item['imageUrl'] = get_the_post_thumbnail_url($post->ID, 'full')
+        ?: $item['imageUrl'];
+
+    return new WP_REST_Response($item, 200);
+}
+
+/**
+ * 投稿 1 件 → NewsItem。
  *
- * @param SimpleXMLElement $item
+ * @param WP_Post $post
  * @return array<string, mixed>
  */
-function cimd_map_rss_item(SimpleXMLElement $item): array
+function cimd_news_item(WP_Post $post): array
 {
-    $description = trim((string) $item->description);
+    $thumb = get_the_post_thumbnail_url($post->ID, 'large');
 
-    $article = [
-        'title'   => trim((string) $item->title),
-        'link'    => trim((string) $item->link),
-        'pubDate' => trim((string) $item->pubDate),
+    return [
+        'slug'     => $post->post_name,
+        'title'    => get_the_title($post),
+        'date'     => get_the_date('c', $post),
+        'excerpt'  => cimd_news_excerpt($post),
+        'imageUrl' => $thumb ?: null,
     ];
-
-    if ($description !== '') {
-        $plain = trim(wp_strip_all_tags($description));
-        if ($plain !== '') {
-            $article['description'] = mb_substr($plain, 0, 160);
-        }
-    }
-
-    $image = cimd_pick_note_image($item, $description);
-    if ($image !== null) {
-        $article['imageUrl'] = $image;
-    }
-
-    return $article;
 }
 
 /**
- * 表示用画像 URL の推定。
- * 優先: media:thumbnail → description 内の最初の <img src> → note:creatorImage
+ * 抜粋。手動抜粋があればそれを、無ければ本文を整形して先頭 120 文字。
  */
-function cimd_pick_note_image(SimpleXMLElement $item, string $description): ?string
+function cimd_news_excerpt(WP_Post $post): string
 {
-    $media = $item->children('media', true);
-    if (isset($media->thumbnail)) {
-        $thumb = trim((string) $media->thumbnail);
-        if ($thumb === '') {
-            $attr  = $media->thumbnail->attributes();
-            $thumb = isset($attr['url']) ? trim((string) $attr['url']) : '';
-        }
-        if ($thumb !== '') {
-            return $thumb;
-        }
+    if (trim($post->post_excerpt) !== '') {
+        return trim($post->post_excerpt);
     }
+    $text = wp_strip_all_tags(strip_shortcodes($post->post_content));
+    $text = trim((string) preg_replace('/\s+/u', ' ', $text));
 
-    if ($description !== '' && preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $description, $m)) {
-        $src = trim($m[1]);
-        if ($src !== '') {
-            return $src;
-        }
-    }
-
-    $note = $item->children('note', true);
-    if (isset($note->creatorImage)) {
-        $creator = trim((string) $note->creatorImage);
-        if ($creator !== '') {
-            return $creator;
-        }
-    }
-
-    return null;
+    return mb_substr($text, 0, 120);
 }

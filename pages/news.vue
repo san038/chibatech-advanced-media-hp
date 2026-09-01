@@ -35,16 +35,7 @@
         <div v-else-if="error" class="news-error">
           <p class="news-error__title">記事を取得できませんでした</p>
           <p class="news-error__body">
-            しばらく時間をおいてから再度お試しください。また、
-            <a
-              href="https://note.com/chitechime"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="news-error__link"
-            >
-              note.com のページ
-            </a>
-            から直接記事をご覧いただけます。
+            しばらく時間をおいてから再度お試しください。
           </p>
           <button
             class="btn btn-primary"
@@ -57,16 +48,7 @@
 
         <!-- Empty state -->
         <div v-else-if="articles.length === 0 && !pending" class="news-empty">
-          <p class="news-empty__text">記事がありません。</p>
-          <a
-            href="https://note.com/chitechime"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="link-arrow"
-            style="margin-top: var(--space-md)"
-          >
-            note.com で見る
-          </a>
+          <p class="news-empty__text">現在、掲載中の記事はありません。</p>
         </div>
 
         <!-- Articles list -->
@@ -77,12 +59,10 @@
             </p>
           </div>
           <div class="news-articles__list">
-            <a
+            <NuxtLink
               v-for="article in articles"
-              :key="article.link"
-              :href="article.link"
-              target="_blank"
-              rel="noopener noreferrer"
+              :key="article.slug"
+              :to="`/news/${article.slug}`"
               class="news-article"
             >
               <div class="news-article__inner">
@@ -104,41 +84,23 @@
                 <div class="news-article__body">
                   <time
                     class="news-article__date"
-                    :datetime="formatDateIso(article.pubDate)"
+                    :datetime="formatDateIso(article.date)"
                   >
-                    {{ formatDate(article.pubDate) }}
+                    {{ formatDate(article.date) }}
                   </time>
                   <h2 class="news-article__title">{{ article.title }}</h2>
-                  <p v-if="article.description" class="news-article__desc">
-                    {{ article.description }}
+                  <p v-if="article.excerpt" class="news-article__desc">
+                    {{ article.excerpt }}
                   </p>
                   <div class="news-article__footer">
-                    <span class="news-article__source">note.com</span>
+                    <span class="news-article__source">記事を読む</span>
                     <span class="news-article__arrow" aria-hidden="true">→</span>
                   </div>
                 </div>
               </div>
-            </a>
+            </NuxtLink>
           </div>
         </div>
-      </div>
-    </section>
-
-    <!-- note.com attribution -->
-    <section class="news-attribution section-padding bg-surface-low">
-      <div class="container">
-        <p class="news-attribution__text">
-          記事は
-          <a
-            href="https://note.com/chitechime"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="news-attribution__link"
-          >
-            note.com/chitechime
-          </a>
-          にて掲載されています。
-        </p>
       </div>
     </section>
   </div>
@@ -151,7 +113,7 @@ useSeoMeta({
     "知能メディア工学科の最新情報・活動報告・イベント情報をお届けします。",
 });
 
-const { articles, pending, error, refresh } = useNoteArticles();
+const { articles, pending, error, refresh } = useNews();
 
 const formatDate = (dateStr: string): string => {
   try {
@@ -409,24 +371,6 @@ const formatDateIso = (dateStr: string): string => {
 
 .news-article:hover .news-article__arrow {
   transform: translateX(4px);
-  color: var(--color-link);
-}
-
-/* Attribution */
-.news-attribution__text {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-on-surface-faint);
-}
-
-.news-attribution__link {
-  color: var(--color-on-surface);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  transition: color var(--transition-base);
-}
-
-.news-attribution__link:hover {
   color: var(--color-link);
 }
 </style>

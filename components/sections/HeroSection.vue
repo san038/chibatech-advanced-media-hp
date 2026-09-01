@@ -62,18 +62,13 @@
       <ul class="hero__news-list">
         <li
           v-for="item in latestNews"
-          :key="item.link"
+          :key="item.slug"
           class="hero__news-item"
         >
-          <a
-            :href="item.link"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hero__news-link"
-          >
-            <time class="hero__news-date">{{ formatDate(item.pubDate) }}</time>
+          <NuxtLink :to="`/news/${item.slug}`" class="hero__news-link">
+            <time class="hero__news-date">{{ formatDate(item.date) }}</time>
             <span class="hero__news-title">{{ item.title }}</span>
-          </a>
+          </NuxtLink>
         </li>
       </ul>
     </div>
@@ -99,7 +94,7 @@ const courseFocus = useState<
 >("heroFocusDomain", () => null);
 
 // 画面左端下に出す最新ニュース3件（スクロールすると隠す）
-const { articles } = useNoteArticles();
+const { articles } = useNews();
 const latestNews = computed(() => articles.value.slice(0, 3));
 const scrolled = ref(false);
 

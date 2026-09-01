@@ -46,6 +46,22 @@ if ($cimd_base !== '') {
 }
 $cimd_path = '/' . trim((string) $cimd_path, '/');
 $cimd_meta = $cimd_routes[$cimd_path] ?? $cimd_routes['/'];
+
+// /news/{slug} は投稿から動的にメタを組み立てる（クローラ・SNS シェア向け）
+if (preg_match('#^/news/([^/]+)$#', $cimd_path, $cimd_m)) {
+    $cimd_post = get_page_by_path(sanitize_title(rawurldecode($cimd_m[1])), OBJECT, 'post');
+    if ($cimd_post instanceof WP_Post && $cimd_post->post_status === 'publish') {
+        $cimd_excerpt = has_excerpt($cimd_post)
+            ? $cimd_post->post_excerpt
+            : wp_trim_words(wp_strip_all_tags(strip_shortcodes($cimd_post->post_content)), 60, '…');
+        $cimd_meta = [
+            'title' => get_the_title($cimd_post) . ' | ニュース | 知能メディア工学科 | 千葉工業大学',
+            'desc'  => $cimd_excerpt,
+        ];
+    } else {
+        $cimd_meta = $cimd_routes['/news'];
+    }
+}
 ?>
 <!doctype html>
 <html <?php language_attributes(); ?>>

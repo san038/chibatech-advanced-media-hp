@@ -1,10 +1,18 @@
-export type NoteArticle = {
+/** ニュース一覧の 1 件（WP 投稿）。REST: GET /wp-json/cimd/v1/news */
+export type NewsItem = {
+  slug: string
   title: string
-  link: string
-  pubDate: string
-  description?: string
-  /** note RSS の media:thumbnail 等（無い記事は undefined） */
-  imageUrl?: string
+  /** ISO 8601（公開日） */
+  date: string
+  excerpt?: string
+  /** アイキャッチ画像 URL（未設定なら undefined/null） */
+  imageUrl?: string | null
+}
+
+/** ニュース詳細（本文 HTML 込み）。REST: GET /wp-json/cimd/v1/news/{slug} */
+export type NewsArticle = NewsItem & {
+  /** the_content フィルタ適用済みの HTML */
+  content: string
 }
 
 export type Course = {

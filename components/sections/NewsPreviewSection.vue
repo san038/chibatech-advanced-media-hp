@@ -28,26 +28,16 @@
         class="news-preview__fallback"
       >
         <p class="news-preview__fallback-text">
-          現在、記事を取得できません。<br />
-          <a
-            href="https://note.com/chitechime"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="link-arrow"
-          >
-            note.com で記事を読む
-          </a>
+          現在、掲載中の記事はありません。
         </p>
       </div>
 
       <!-- Articles list -->
       <div v-else class="news-preview__list">
-        <a
+        <NuxtLink
           v-for="article in articles.slice(0, 3)"
-          :key="article.link"
-          :href="article.link"
-          target="_blank"
-          rel="noopener noreferrer"
+          :key="article.slug"
+          :to="`/news/${article.slug}`"
           class="news-preview__item"
         >
           <div
@@ -67,16 +57,16 @@
           </div>
           <time
             class="news-preview__date"
-            :datetime="formatDateIso(article.pubDate)"
+            :datetime="formatDateIso(article.date)"
           >
-            {{ formatDate(article.pubDate) }}
+            {{ formatDate(article.date) }}
           </time>
           <h3 class="news-preview__article-title">{{ article.title }}</h3>
-          <p v-if="article.description" class="news-preview__desc">
-            {{ article.description }}
+          <p v-if="article.excerpt" class="news-preview__desc">
+            {{ article.excerpt }}
           </p>
           <span class="news-preview__arrow" aria-hidden="true">→</span>
-        </a>
+        </NuxtLink>
       </div>
 
       <div class="news-preview__footer">
@@ -87,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-const { articles, pending, error } = useNoteArticles();
+const { articles, pending, error } = useNews();
 
 const formatDate = (dateStr: string): string => {
   try {

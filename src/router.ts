@@ -42,6 +42,11 @@ export const router = createRouter({
       component: () => import("~/pages/career.vue"),
     },
     { path: "/news", name: "news", component: () => import("~/pages/news.vue") },
+    {
+      path: "/news/:slug",
+      name: "news-detail",
+      component: () => import("~/pages/news-detail.vue"),
+    },
     { path: "/:pathMatch(.*)*", redirect: "/" },
   ],
   scrollBehavior(to, _from, savedPosition) {

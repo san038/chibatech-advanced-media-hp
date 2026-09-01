@@ -139,7 +139,7 @@ add_filter('script_loader_tag', 'cimd_script_tag', 10, 3);
  * ---------------------------------------------------------------------- */
 function cimd_spa_fallback(): void
 {
-    if (is_404()) {
+    if (is_404() || cimd_is_news_detail_path()) {
         status_header(200);
         nocache_headers();
         require CIMD_THEME_DIR . '/index.php';
@@ -147,6 +147,24 @@ function cimd_spa_fallback(): void
     }
 }
 add_action('template_redirect', 'cimd_spa_fallback');
+
+/** リクエストパス（home のサブディレクトリを除去）が /news/{slug} か */
+function cimd_is_news_detail_path(): bool
+{
+    $path = (string) wp_parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+    $base = trim((string) wp_parse_url(home_url('/'), PHP_URL_PATH), '/');
+    if ($base !== '') {
+        $path = (string) preg_replace('#^/' . preg_quote($base, '#') . '#', '', $path);
+    }
+    return (bool) preg_match('#^/news/[^/]+/?$#', '/' . trim($path, '/'));
+}
+
+/* /news/{slug} は SPA が描画するため、投稿の正規 URL（日付パーマリンク）へ
+ * リダイレクトさせない。 */
+add_filter('redirect_canonical', function ($redirect_url, $requested_url) {
+    $path = (string) wp_parse_url((string) $requested_url, PHP_URL_PATH);
+    return preg_match('#/news/[^/]+/?$#', $path) ? false : $redirect_url;
+}, 10, 2);
 
 /* -------------------------------------------------------------------------
  * 出力を軽く（ブロックエディタCSS・絵文字など不要物を外す）

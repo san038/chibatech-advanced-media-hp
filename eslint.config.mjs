@@ -25,7 +25,6 @@ export default tseslint.config(
       "auto-imports.d.ts",
       "components.d.ts",
       ".eslintrc-auto-import.json",
-      "public/data/note-articles.json",
     ],
   },
   js.configs.recommended,
