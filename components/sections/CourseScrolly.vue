@@ -166,6 +166,9 @@ onUnmounted(() => {
 .course-scrolly {
   position: relative;
   z-index: 1;
+  /* 背面の固定ヒーロー（HeroFoamBg canvas）をドラッグ操作できるよう、
+     テキスト列以外はポインタイベントを透過させる */
+  pointer-events: none;
 }
 
 .course-scrolly__panel {
@@ -214,6 +217,8 @@ onUnmounted(() => {
   transition:
     opacity 0.6s ease,
     transform 0.6s ease;
+  /* .course-scrolly の pointer-events:none を打ち消し、リンク・テキスト選択を有効化 */
+  pointer-events: auto;
 }
 
 @media (min-width: 768px) {
