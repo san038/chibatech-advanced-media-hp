@@ -28,29 +28,13 @@
     <!-- 見出し: 画面中央 -->
     <div class="hero__copy">
       <div class="hero__title-block">
-        <p class="hero__site-title" :aria-label="SITE_TITLE">
-          <span
-            v-for="(ch, i) in siteTitleChars"
-            :key="`st-${i}`"
-            class="hero__type-char"
-            :class="{ 'hero__type-char--shown': i < visibleSiteCount }"
-            aria-hidden="true"
-            >{{ ch }}</span
-          >
+        <p class="hero__site-title" :class="{ 'is-in': siteIn }">
+          {{ SITE_TITLE }}
         </p>
-        <h1 class="hero__headline">
+        <h1 class="hero__headline" :class="{ 'is-in': headlineIn }">
           <span class="hero__headline-line">
             <span class="hero__headline-line__bar" aria-hidden="true" />
-            <span class="hero__headline-line__text" :aria-label="HEADLINE">
-              <span
-                v-for="(ch, i) in headlineChars"
-                :key="`hl-${i}`"
-                class="hero__type-char"
-                :class="{ 'hero__type-char--shown': i < visibleHeadlineCount }"
-                aria-hidden="true"
-                >{{ ch }}</span
-              >
-            </span>
+            <span class="hero__headline-line__text">{{ HEADLINE }}</span>
           </span>
         </h1>
       </div>
@@ -111,25 +95,17 @@ function formatDate(value: string): string {
   return `${y}.${m}.${day}`;
 }
 
-const INTRO_CHAR_MS = 30;
-const INTRO_AFTER_TYPE_MS = 300;
-const INTRO_TITLE_SLIDE_MS = 440;
+// イントロ演出のタイミング
+const INTRO_LEAD_MS = 120; // マウント後、サイト名がスライドインし始めるまで
+const INTRO_STAGGER_MS = 170; // サイト名 → ヘッドラインのずれ
+const INTRO_AFTER_IN_MS = 260; // 見出しが出揃ってから次フェーズへ
+const INTRO_TITLE_SLIDE_MS = 380;
 const INTRO_DIAGRAM_REVEAL_MS = 800;
 
 const introPhase = ref<IntroPhase>("center");
 const introTimeouts: ReturnType<typeof setTimeout>[] = [];
-const siteTitleChars = splitChars(SITE_TITLE);
-const headlineChars = splitChars(HEADLINE);
-const visibleSiteCount = ref(0);
-const visibleHeadlineCount = ref(0);
-
-function splitChars(text: string): string[] {
-  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
-    const seg = new Intl.Segmenter("ja", { granularity: "grapheme" });
-    return [...seg.segment(text)].map((s) => s.segment);
-  }
-  return [...text];
-}
+const siteIn = ref(false);
+const headlineIn = ref(false);
 
 function afterIntro(ms: number, fn: () => void) {
   introTimeouts.push(setTimeout(fn, ms));
@@ -138,24 +114,6 @@ function afterIntro(ms: number, fn: () => void) {
 function clearIntroTimeouts() {
   for (const t of introTimeouts) clearTimeout(t);
   introTimeouts.length = 0;
-}
-
-function typeChars(
-  total: number,
-  setVisible: (n: number) => void,
-  onComplete: () => void,
-) {
-  let i = 0;
-  const step = () => {
-    i += 1;
-    setVisible(i);
-    if (i >= total) {
-      onComplete();
-      return;
-    }
-    afterIntro(INTRO_CHAR_MS, step);
-  };
-  step();
 }
 
 function scheduleRevealPhases() {
@@ -172,20 +130,21 @@ function startSlidePhase() {
   scheduleRevealPhases();
 }
 
-function startTypewriterIntro() {
+function startIntro() {
   introPhase.value = "center";
-  visibleSiteCount.value = 0;
-  visibleHeadlineCount.value = 0;
+  siteIn.value = false;
+  headlineIn.value = false;
 
-  typeChars(siteTitleChars.length, (n) => {
-    visibleSiteCount.value = n;
-  }, () => {
-    typeChars(headlineChars.length, (n) => {
-      visibleHeadlineCount.value = n;
-    }, () => {
-      afterIntro(INTRO_AFTER_TYPE_MS, startSlidePhase);
-    });
+  afterIntro(INTRO_LEAD_MS, () => {
+    siteIn.value = true;
   });
+  afterIntro(INTRO_LEAD_MS + INTRO_STAGGER_MS, () => {
+    headlineIn.value = true;
+  });
+  afterIntro(
+    INTRO_LEAD_MS + INTRO_STAGGER_MS + INTRO_AFTER_IN_MS,
+    startSlidePhase,
+  );
 }
 
 onMounted(() => {
@@ -196,13 +155,13 @@ onMounted(() => {
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
   if (reduceMotion) {
-    visibleSiteCount.value = siteTitleChars.length;
-    visibleHeadlineCount.value = headlineChars.length;
+    siteIn.value = true;
+    headlineIn.value = true;
     introPhase.value = "done";
     return;
   }
 
-  startTypewriterIntro();
+  startIntro();
 });
 
 onUnmounted(() => {
@@ -314,14 +273,6 @@ onUnmounted(() => {
   gap: 0.65em;
 }
 
-.hero__type-char {
-  opacity: 0;
-}
-
-.hero__type-char--shown {
-  opacity: 1;
-}
-
 .hero__site-title {
   margin: 0;
   font-family: var(--font-body);
@@ -330,6 +281,16 @@ onUnmounted(() => {
   letter-spacing: 0.12em;
   text-align: center;
   color: rgba(252, 249, 248, 0.72);
+  opacity: 0;
+  transform: translateY(0.9em);
+  transition:
+    opacity 0.5s ease,
+    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero__site-title.is-in {
+  opacity: 1;
+  transform: none;
 }
 
 .hero__headline {
@@ -344,6 +305,16 @@ onUnmounted(() => {
   letter-spacing: -0.03em;
   line-height: 1.15;
   text-align: center;
+  opacity: 0;
+  transform: translateY(1em);
+  transition:
+    opacity 0.55s ease,
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero__headline.is-in {
+  opacity: 1;
+  transform: none;
 }
 
 .hero__headline-line {
@@ -602,8 +573,11 @@ onUnmounted(() => {
     transform: translateY(-50%);
   }
 
-  .hero__type-char {
+  .hero__site-title,
+  .hero__headline {
     opacity: 1;
+    transform: none;
+    transition: none;
   }
 
   .hero__headline-line__bar {
