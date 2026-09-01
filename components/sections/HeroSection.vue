@@ -96,11 +96,11 @@ function formatDate(value: string): string {
 }
 
 // イントロ演出のタイミング
-const INTRO_LEAD_MS = 120; // マウント後、サイト名がスライドインし始めるまで
-const INTRO_STAGGER_MS = 170; // サイト名 → ヘッドラインのずれ
-const INTRO_AFTER_IN_MS = 260; // 見出しが出揃ってから次フェーズへ
-const INTRO_TITLE_SLIDE_MS = 380;
-const INTRO_DIAGRAM_REVEAL_MS = 800;
+const INTRO_LEAD_MS = 140; // マウント後、サイト名がふわっと入り始めるまで
+const INTRO_STAGGER_MS = 340; // サイト名 → ヘッドライン（ゆったり重ねる）
+// 3D はテキストの完了を待たず、早めに出す
+const INTRO_REVEAL_MS = 240; // カーテンが引き、3D が現れ始めるまで
+const INTRO_DIAGRAM_REVEAL_MS = 900; // reveal → done
 
 const introPhase = ref<IntroPhase>("center");
 const introTimeouts: ReturnType<typeof setTimeout>[] = [];
@@ -116,35 +116,26 @@ function clearIntroTimeouts() {
   introTimeouts.length = 0;
 }
 
-function scheduleRevealPhases() {
-  afterIntro(INTRO_TITLE_SLIDE_MS, () => {
-    introPhase.value = "reveal";
-  });
-  afterIntro(INTRO_TITLE_SLIDE_MS + INTRO_DIAGRAM_REVEAL_MS, () => {
-    introPhase.value = "done";
-  });
-}
-
-function startSlidePhase() {
-  introPhase.value = "slide";
-  scheduleRevealPhases();
-}
-
 function startIntro() {
   introPhase.value = "center";
   siteIn.value = false;
   headlineIn.value = false;
 
+  // テキスト: ゆったり・ふわっと、少し重なりながら入る
   afterIntro(INTRO_LEAD_MS, () => {
     siteIn.value = true;
   });
   afterIntro(INTRO_LEAD_MS + INTRO_STAGGER_MS, () => {
     headlineIn.value = true;
   });
-  afterIntro(
-    INTRO_LEAD_MS + INTRO_STAGGER_MS + INTRO_AFTER_IN_MS,
-    startSlidePhase,
-  );
+
+  // 3D: テキストと並行して早く現れる
+  afterIntro(INTRO_REVEAL_MS, () => {
+    introPhase.value = "reveal";
+  });
+  afterIntro(INTRO_REVEAL_MS + INTRO_DIAGRAM_REVEAL_MS, () => {
+    introPhase.value = "done";
+  });
 }
 
 onMounted(() => {
@@ -282,15 +273,19 @@ onUnmounted(() => {
   text-align: center;
   color: rgba(252, 249, 248, 0.72);
   opacity: 0;
-  transform: translateY(0.9em);
+  transform: translateY(1.4em);
+  filter: blur(5px);
+  will-change: opacity, transform, filter;
   transition:
-    opacity 0.5s ease,
-    transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 1.1s ease,
+    transform 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1.1s ease;
 }
 
 .hero__site-title.is-in {
   opacity: 1;
   transform: none;
+  filter: blur(0);
 }
 
 .hero__headline {
@@ -306,15 +301,19 @@ onUnmounted(() => {
   line-height: 1.15;
   text-align: center;
   opacity: 0;
-  transform: translateY(1em);
+  transform: translateY(1.7em);
+  filter: blur(7px);
+  will-change: opacity, transform, filter;
   transition:
-    opacity 0.55s ease,
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    opacity 1.2s ease,
+    transform 1.35s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1.2s ease;
 }
 
 .hero__headline.is-in {
   opacity: 1;
   transform: none;
+  filter: blur(0);
 }
 
 .hero__headline-line {
@@ -577,6 +576,7 @@ onUnmounted(() => {
   .hero__headline {
     opacity: 1;
     transform: none;
+    filter: none;
     transition: none;
   }
 
