@@ -4,6 +4,7 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
+import { createFrameLimiter } from "~/composables/useFrameLimiter";
 import type {
   OrthographicCamera,
   Mesh,
@@ -1621,8 +1622,13 @@ onMounted(async () => {
 
   // ── メインアニメーションループ ────────────────────────────────────────────
   let rafId = 0;
+  // ブラウザの負荷に合わせて 60 → 30 → 20fps に間引く（動きは時刻基準なので速さは変わらない）
+  const limiter = createFrameLimiter();
+  let looping = false;
   const animate = (now: number) => {
     rafId = requestAnimationFrame(animate);
+    if (limiter.shouldRender(now) === null) return;
+    const t0 = performance.now();
     const timeSec = now / 1000;
     if (reduceMotion) {
       for (const kw of keywords) {
@@ -1639,8 +1645,25 @@ onMounted(async () => {
     }
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
+    limiter.reportWork(performance.now() - t0);
   };
-  rafId = requestAnimationFrame(animate);
+  const startLoop = () => {
+    if (looping) return;
+    looping = true;
+    limiter.resetClock();
+    rafId = requestAnimationFrame(animate);
+  };
+  const stopLoop = () => {
+    looping = false;
+    cancelAnimationFrame(rafId);
+  };
+  // 画面外では描画を止める
+  const viewObs = new IntersectionObserver((entries) => {
+    if (entries.some((e) => e.isIntersecting)) startLoop();
+    else stopLoop();
+  });
+  viewObs.observe(container);
+  startLoop();
 
   let highlightStarted = false;
   function tryStartHighlight() {
@@ -1667,7 +1690,8 @@ onMounted(async () => {
   resizeObs.observe(container);
 
   disposeFn = () => {
-    cancelAnimationFrame(rafId);
+    stopLoop();
+    viewObs.disconnect();
     clearHL();
     resizeObs.disconnect();
     renderer.dispose();

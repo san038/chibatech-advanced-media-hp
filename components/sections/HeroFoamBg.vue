@@ -30,6 +30,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import type { HeroKeyword } from "~/types";
+import { createFrameLimiter } from "~/composables/useFrameLimiter";
 
 // ── 領域定義 ─────────────────────────────────────────────────────────────────
 type DomainKey = "media" | "knowledge" | "design";
@@ -216,7 +217,15 @@ let rafId = 0;
 let startTimer: ReturnType<typeof setTimeout> | null = null;
 let resizeObserver: ResizeObserver | null = null;
 let running = false;
-let lastFrameT = 0;
+// ブラウザの負荷に合わせて 60 → 30 → 20fps に間引く
+const limiter = createFrameLimiter();
+// 物理シミュレーション（step）は 60Hz 相当で進める。間引いたフレーム分はまとめて回す
+const PHYS_STEP_MS = 1000 / 60;
+const MAX_PHYS_STEPS = 3;
+// ループ開始の可否（開始遅延が済んだか／画面内にあるか）
+let loopEnabled = false;
+let inView = true;
+let viewObserver: IntersectionObserver | null = null;
 
 const cam = { yaw: 0.5, pitch: IDLE_PITCH, yawVel: 0, pitchVel: 0 };
 let lastInteract = -1e9;
@@ -1052,21 +1061,24 @@ function positionLabels() {
 }
 
 function frame(now: number) {
-  if (!lastFrameT) lastFrameT = now;
-  const dt = Math.min(0.05, (now - lastFrameT) / 1000);
-  lastFrameT = now;
-  step(true);
+  rafId = requestAnimationFrame(frame);
+  const elapsed = limiter.shouldRender(now);
+  if (elapsed === null) return;
+  const t0 = performance.now();
+  const dt = Math.min(0.05, elapsed / 1000);
+  const steps = clamp(Math.round(elapsed / PHYS_STEP_MS), 1, MAX_PHYS_STEPS);
+  for (let i = 0; i < steps; i++) step(true);
   updateFocus(dt);
   updateCamera(now, dt);
   alignRings();
   renderScene();
-  rafId = requestAnimationFrame(frame);
+  limiter.reportWork(performance.now() - t0);
 }
 
 function startLoop() {
-  if (running) return;
+  if (running || !loopEnabled || !inView || document.hidden) return;
   running = true;
-  lastFrameT = 0;
+  limiter.resetClock();
   rafId = requestAnimationFrame(frame);
 }
 function stopLoop() {
@@ -1128,7 +1140,7 @@ function onPointerLeave() {
 
 function onVisibility() {
   if (document.hidden) stopLoop();
-  else if (interactive.value || running || lastFrameT === 0) startLoop();
+  else startLoop();
 }
 
 // ── リサイズ ─────────────────────────────────────────────────────────────────
@@ -1226,7 +1238,18 @@ onMounted(() => {
   window.addEventListener("pointerleave", onPointerLeave, { passive: true });
   document.addEventListener("visibilitychange", onVisibility);
 
-  startTimer = setTimeout(startLoop, START_DELAY_MS);
+  // 画面外（スクロールで固定ステージが抜けた後）は描画を止める
+  viewObserver = new IntersectionObserver((entries) => {
+    inView = entries.some((e) => e.isIntersecting);
+    if (inView) startLoop();
+    else stopLoop();
+  });
+  viewObserver.observe(rootEl.value as HTMLElement);
+
+  startTimer = setTimeout(() => {
+    loopEnabled = true;
+    startLoop();
+  }, START_DELAY_MS);
 });
 
 onUnmounted(() => {
@@ -1234,6 +1257,7 @@ onUnmounted(() => {
   stopLoop();
   if (startTimer) clearTimeout(startTimer);
   resizeObserver?.disconnect();
+  viewObserver?.disconnect();
   window.removeEventListener("pointermove", onPointerMove);
   window.removeEventListener("pointerup", onPointerUp);
   window.removeEventListener("pointercancel", onPointerUp);
