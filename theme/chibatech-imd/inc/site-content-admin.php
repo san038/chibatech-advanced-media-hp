@@ -4,6 +4,7 @@
  *
  * 1) 構造データ（JSON）: カリキュラム／キャリアパス／業界分布／主要数値
  * 2) キーワード（テキスト）: トップの図（ヒーロー背景）／コース紹介
+ * 3) 記事（note マガジン URL）: inc/rest.php の cimd/v1/articles が RSS を取り込む
  *
  * いずれも wp_options に保存し、inc/content.php が get_option() で読む。
  * 空欄にすると SPA 同梱のデフォルト表示に戻る。
@@ -177,7 +178,34 @@ add_action('admin_init', static function (): void {
             'show_in_rest'      => false,
         ]);
     }
+    register_setting(CIMD_CONTENT_OPTION_GROUP, 'cimd_note_magazine_url', [
+        'type'              => 'string',
+        'sanitize_callback' => 'cimd_content_sanitize_note_magazine',
+        'default'           => '',
+        'show_in_rest'      => false,
+    ]);
 });
+
+/**
+ * note マガジン URL のサニタイズ。空文字は許可（記事一覧が空になる）。
+ * 形式が違えば前回値を維持する。
+ *
+ * @param mixed $value
+ */
+function cimd_content_sanitize_note_magazine($value): string
+{
+    $raw = is_string($value) ? trim($value) : '';
+    if ($raw === '' || preg_match('#^https://note\.com/[A-Za-z0-9_]+/m/[A-Za-z0-9]+/?$#', $raw)) {
+        return $raw;
+    }
+    add_settings_error(
+        CIMD_CONTENT_OPTION_GROUP,
+        'cimd_invalid_note_magazine',
+        'note マガジン URL は https://note.com/ユーザー名/m/マガジンID の形式で入力してください。'
+    );
+    $previous = get_option('cimd_note_magazine_url', '');
+    return is_string($previous) ? $previous : '';
+}
 
 /**
  * JSON textarea のサニタイズ。空文字は許可。非空なら妥当性を検証し、
@@ -276,6 +304,31 @@ function cimd_content_render_page(): void
                         </td>
                     </tr>
                 <?php endforeach; ?>
+                </tbody>
+            </table>
+
+            <h2>記事（note）</h2>
+            <table class="form-table" role="presentation">
+                <tbody>
+                    <tr>
+                        <th scope="row">
+                            <label for="cimd_note_magazine_url">note マガジン URL</label>
+                        </th>
+                        <td>
+                            <input
+                                type="url"
+                                id="cimd_note_magazine_url"
+                                name="cimd_note_magazine_url"
+                                class="regular-text code"
+                                placeholder="https://note.com/ユーザー名/m/マガジンID"
+                                value="<?php echo esc_attr((string) get_option('cimd_note_magazine_url', '')); ?>"
+                            >
+                            <p class="description">
+                                このマガジンの RSS を「記事」としてトップページ・記事一覧に表示します。
+                                反映は最大 30 分遅れます。空欄にすると記事は表示されません。
+                            </p>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 

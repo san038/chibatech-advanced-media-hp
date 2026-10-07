@@ -145,14 +145,13 @@ const formatDateIso = (dateStr: string): string => {
 .news-loading {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
 }
 
 .news-skeleton {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: var(--space-lg) 0;
+  padding: 1.25rem 0;
   border-top: 1px solid var(--color-surface-low);
 }
 
@@ -241,7 +240,7 @@ const formatDateIso = (dateStr: string): string => {
 
 /* Articles */
 .news-articles__meta {
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
 }
 
 .news-articles__list {
@@ -267,7 +266,7 @@ const formatDateIso = (dateStr: string): string => {
 }
 
 .news-article__inner {
-  padding: var(--space-lg) 0;
+  padding: 1.25rem 0;
   display: grid;
   grid-template-columns: minmax(0, 160px) 1fr;
   gap: var(--space-md);
@@ -309,7 +308,7 @@ const formatDateIso = (dateStr: string): string => {
 .news-article__body {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.4rem;
   min-width: 0;
 }
 

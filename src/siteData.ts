@@ -26,6 +26,8 @@ export interface SiteData {
   newsEndpoint?: string;
   restBase?: string;
   restNonce?: string;
+  /** 記事として取り込む note マガジンの URL（未設定なら null） */
+  noteMagazineUrl?: string | null;
   content?: SiteContent;
 }
 

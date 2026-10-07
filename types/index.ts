@@ -27,6 +27,20 @@ export type NewsArticle = NewsItem & {
   content: string
 }
 
+/** 記事（note マガジンの RSS）。REST: GET /wp-json/cimd/v1/articles */
+export type ArticleItem = {
+  /** note の記事 URL（外部リンク） */
+  url: string
+  title: string
+  /** ISO 8601（公開日） */
+  date: string
+  excerpt: string
+  /** 見出し画像 URL（未設定なら null） */
+  imageUrl: string | null
+  /** note のクリエイター名 */
+  author: string
+}
+
 export type Course = {
   id: 'media' | 'knowledge' | 'design'
   name: string

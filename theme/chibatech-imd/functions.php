@@ -22,7 +22,7 @@ define('CIMD_THEME_URI', get_template_directory_uri());
  *   - inc/acf.php                … ACF フィールド定義（研究室のみ）
  *   - inc/site-content-admin.php … 管理画面「サイトコンテンツ」（JSON 編集・ACF 非依存）
  *   - inc/content.php            … SPA へ渡す content ペイロードの組み立て
- *   - inc/rest.php               … REST エンドポイント（cimd/v1/news）
+ *   - inc/rest.php               … REST エンドポイント（cimd/v1/news, cimd/v1/articles）
  * ---------------------------------------------------------------------- */
 require_once CIMD_THEME_DIR . '/inc/cpt.php';
 require_once CIMD_THEME_DIR . '/inc/acf.php';
@@ -81,6 +81,7 @@ function cimd_enqueue_assets(): void
         'newsEndpoint' => esc_url_raw(rest_url('cimd/v1/news')),
         'restBase'     => esc_url_raw(rest_url('cimd/v1/')),
         'restNonce'    => wp_create_nonce('wp_rest'),
+        'noteMagazineUrl' => cimd_note_magazine_url(),
         // 未設定/空のキーは SPA 同梱デフォルトにフォールバックする（useContent.ts）
         'content'      => cimd_site_content(),
     ];
