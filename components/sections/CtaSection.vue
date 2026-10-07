@@ -1,15 +1,10 @@
 <template>
-  <section class="cta bg-dark">
+  <section class="cta">
     <div class="cta__marquee" aria-hidden="true">
       <div class="cta__marquee-inner">
-        <div class="cta__marquee-segment">
-          <span v-for="i in 12" :key="`a-${i}`" class="cta__marquee-text">
-            ADVANCED MEDIA
-          </span>
-        </div>
-        <div class="cta__marquee-segment">
-          <span v-for="i in 12" :key="`b-${i}`" class="cta__marquee-text">
-            ADVANCED MEDIA
+        <div v-for="seg in 2" :key="seg" class="cta__marquee-segment">
+          <span v-for="i in 8" :key="`${seg}-${i}`" class="cta__marquee-text">
+            Advanced Media —
           </span>
         </div>
       </div>
@@ -17,12 +12,10 @@
 
     <div class="cta__inner container">
       <div class="cta__content">
-        <p
-          class="cta__label text-label"
-          style="color: rgba(252, 249, 248, 0.3)"
-        >
-          Next Step
+        <p class="section-label">
+          <span class="section-label__index">[ 04 ]</span>Next Step
         </p>
+        <h2 class="cta__headline">体験して、確かめる。</h2>
         <p class="cta__body">
           知能メディア工学科の学びを、体験型イベントで確かめてください。<br
             class="br-desktop"
@@ -31,50 +24,70 @@
         </p>
         <div class="cta__actions">
           <a
-            href="https://www.it-chiba.ac.jp/admissions/opencampus/"
+            :href="OPEN_CAMPUS_URL"
             target="_blank"
             rel="noopener noreferrer"
-            class="btn btn-light cta__btn"
+            class="btn btn-primary"
           >
             オープンキャンパスへ
           </a>
-          <NuxtLink
-            to="/about"
-            class="btn btn-ghost-light cta__btn cta__btn--outline"
-          >
-            学科を理解する
-          </NuxtLink>
+          <NuxtLink to="/about" class="btn btn-ghost">学科を理解する</NuxtLink>
         </div>
+      </div>
+
+      <div class="cta__card">
+        <span class="cta__corner cta__corner--tl" aria-hidden="true" />
+        <span class="cta__corner cta__corner--tr" aria-hidden="true" />
+        <span class="cta__corner cta__corner--bl" aria-hidden="true" />
+        <span class="cta__corner cta__corner--br" aria-hidden="true" />
+        <p class="cta__card-eyebrow">Open Campus</p>
+        <p class="cta__card-title">Visit the Lab.</p>
+        <p class="cta__card-meta">Tsudanuma Campus — Chiba</p>
+        <ol class="cta__card-list">
+          <li><span>01</span>研究室公開</li>
+          <li><span>02</span>在学生との対話</li>
+        </ol>
+        <a
+          :href="OPEN_CAMPUS_URL"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="cta__card-link"
+          >開催日程を見る <span aria-hidden="true">↗</span></a
+        >
       </div>
     </div>
   </section>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const OPEN_CAMPUS_URL = "https://www.it-chiba.ac.jp/admissions/opencampus/";
+</script>
 
 <style scoped>
 .cta {
-  padding-top: var(--space-2xl);
-  padding-bottom: var(--space-2xl);
   position: relative;
+  z-index: 1;
   overflow: hidden;
+  padding: clamp(5rem, 11vw, 10rem) 0 clamp(9rem, 16vw, 14rem);
+  background-color: var(--color-bg-base);
+  border-top: 1px solid var(--color-line-subtle);
 }
 
-/* Background marquee — right to left, seamless loop */
+/* Background marquee — right to left, seamless loop（輪郭文字） */
 .cta__marquee {
   position: absolute;
-  inset: 0;
+  left: 0;
+  right: 0;
+  bottom: -0.12em;
   z-index: 0;
-  display: flex;
-  align-items: center;
   overflow: hidden;
   pointer-events: none;
+  font-size: clamp(4rem, 14vw, 12.5rem);
 }
 
 .cta__marquee-inner {
   display: flex;
   width: max-content;
-  flex-shrink: 0;
   animation: cta-marquee-scroll 120s linear infinite;
   will-change: transform;
 }
@@ -82,20 +95,19 @@
 .cta__marquee-segment {
   display: flex;
   flex-shrink: 0;
-  align-items: center;
-  gap: clamp(2rem, 6vw, 5rem);
-  padding-right: clamp(2rem, 6vw, 5rem);
+  gap: 0.25em;
+  padding-right: 0.25em;
 }
 
 .cta__marquee-text {
-  font-family: var(--font-display);
-  font-size: clamp(3.5rem, 14vw, 11rem);
+  font-family: var(--font-en);
   font-weight: 700;
   line-height: 1;
-  letter-spacing: 0.04em;
+  letter-spacing: -0.04em;
   text-transform: uppercase;
-  color: rgba(252, 249, 248, 0.07);
   white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-line);
 }
 
 @keyframes cta-marquee-scroll {
@@ -117,59 +129,150 @@
   position: relative;
   z-index: 1;
   display: flex;
-  justify-content: center;
-  text-align: center;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-lg);
 }
 
 .cta__content {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-lg);
-  width: 100%;
-}
-
-.cta__label {
-  letter-spacing: 0.1em;
+  align-items: flex-start;
+  gap: 2rem;
+  max-width: 40rem;
 }
 
 .cta__headline {
-  font-family: var(--font-display);
-  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-family: var(--font-jp);
+  font-size: clamp(2.25rem, 4.6vw, 4rem);
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.2;
   letter-spacing: -0.03em;
-  color: #fcf9f8;
 }
 
 .cta__body {
   font-family: var(--font-body);
   font-size: var(--text-md);
-  color: rgba(252, 249, 248, 0.6);
-  line-height: 1.8;
+  color: var(--color-text-secondary);
+  line-height: 1.9;
 }
 
 .cta__actions {
-  width: 100%;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-top: var(--space-xs);
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.cta__btn {
-  min-width: min(100%, 200px);
-  justify-content: center;
-  text-align: center;
+/* イベント案内カード（四隅に角マーク） */
+.cta__card {
+  position: relative;
+  width: min(100%, 30rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2.5rem;
+  background-color: var(--color-bg-raised);
 }
 
-.cta__btn--outline {
-  outline: 1px solid rgba(252, 249, 248, 0.35);
+.cta__corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-color: var(--color-line-accent);
+  border-style: solid;
+  border-width: 0;
 }
 
-.cta__btn--outline:hover {
-  outline-color: rgba(252, 249, 248, 0.55);
+.cta__corner--tl {
+  top: 0;
+  left: 0;
+  border-top-width: 1px;
+  border-left-width: 1px;
+}
+.cta__corner--tr {
+  top: 0;
+  right: 0;
+  border-top-width: 1px;
+  border-right-width: 1px;
+}
+.cta__corner--bl {
+  bottom: 0;
+  left: 0;
+  border-bottom-width: 1px;
+  border-left-width: 1px;
+}
+.cta__corner--br {
+  bottom: 0;
+  right: 0;
+  border-bottom-width: 1px;
+  border-right-width: 1px;
+}
+
+.cta__card-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.cta__card-title {
+  font-family: var(--font-en);
+  font-size: clamp(2.25rem, 4vw, 3.5rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.cta__card-meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.cta__card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-line);
+}
+
+.cta__card-list li {
+  display: flex;
+  gap: 1rem;
+  font-family: var(--font-jp);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.cta__card-list span {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+
+.cta__card-link {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  font-family: var(--font-jp);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.cta__card-link span {
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+}
+
+.cta__card-link:hover {
+  color: var(--color-accent-bright);
 }
 
 @media (max-width: 767px) {
@@ -182,9 +285,12 @@
     width: 100%;
   }
 
-  .cta__btn {
+  .cta__actions .btn {
     width: 100%;
-    max-width: 320px;
+  }
+
+  .cta__card {
+    padding: 1.75rem;
   }
 }
 </style>

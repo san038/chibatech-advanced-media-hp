@@ -231,8 +231,10 @@ const domainFocus: Record<DomainKey, number> = {
   design: 1,
 };
 let focusZoom = 1;
-// 投影の水平中心（0.5 = 中央、フォーカス時はダイアグラムを左へ寄せる）
+// 投影の中心（画面比）。横長画面ではテキストを左に置くため、ダイアグラムを右へ寄せる
 let viewCenterX = 0.5;
+let viewCenterY = 0.5;
+let viewCenterReady = false;
 // 収束度（0 = 通常配置、1 = 3領域を前面で重ねた状態）
 let convergence = 0;
 // コースフォーカスの度合い（0 = 通常、1 = 対象領域のキーワードを核サークル周囲へ点在）
@@ -316,10 +318,21 @@ function projectCam(c: Vec3): Proj | null {
   const scale = focal / zc;
   return {
     sx: cssW * viewCenterX + c.x * scale,
-    sy: cssH / 2 - c.y * scale,
+    sy: cssH * viewCenterY - c.y * scale,
     scale,
     zc,
   };
+}
+
+// ダイアグラムの投影中心の目標値。
+// 横長: 通常・フォーカスとも右寄せ（見出し／コース紹介は左）。
+// 縦長: 見出し・コース紹介を下に置くため、上寄せ。
+function viewTarget(fd: FocusKey | null): { x: number; y: number } {
+  const wide = cssW > cssH * 1.1;
+  if (wide) return fd == null ? { x: 0.66, y: 0.46 } : { x: 0.68, y: 0.5 };
+  if (fd == null) return { x: 0.5, y: 0.34 };
+  // VISION は本文が長いので、リングをさらに上へ
+  return fd === "all" ? { x: 0.5, y: 0.22 } : { x: 0.5, y: 0.3 };
 }
 
 // フォーカス対象の核が画面中央・正面に来るカメラ角
@@ -351,10 +364,9 @@ function updateFocus(dt: number) {
   const single = fd != null && !all;
   if (single) ringFocusKey = fd as DomainKey;
   ringFocus += ((single ? 1 : 0) - ringFocus) * rate;
-  // 横長画面ではフォーカス時にダイアグラムを左 30% 付近へ寄せ、右半分をテキスト用に空ける
-  const wide = cssW > cssH * 1.1;
-  const cxTarget = fd == null ? 0.5 : wide ? 0.3 : 0.5;
-  viewCenterX += (cxTarget - viewCenterX) * rate;
+  const vt = viewTarget(fd);
+  viewCenterX += (vt.x - viewCenterX) * rate;
+  viewCenterY += (vt.y - viewCenterY) * rate;
   // "all": 3領域を前面で重ねる収束状態へ
   convergence += ((all ? 1 : 0) - convergence) * rate;
 }
@@ -926,9 +938,11 @@ function drawHud(c: CanvasRenderingContext2D) {
   c.lineWidth = 1.5;
   const m = 26;
   const arm = 24;
+  // 上側はヘッダー（72px）の下に置く
+  const mt = 72 + m;
   for (const [cx, cy, sx, sy] of [
-    [m, m, 1, 1],
-    [cssW - m, m, -1, 1],
+    [m, mt, 1, 1],
+    [cssW - m, mt, -1, 1],
     [m, cssH - m, 1, -1],
     [cssW - m, cssH - m, -1, -1],
   ] as [number, number, number, number][]) {
@@ -1136,6 +1150,13 @@ function resize() {
   ctx = canvas.getContext("2d");
   if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   for (const b of bodies.value) b.r = b.rBase * minDim;
+  // 初回は目標位置から始める（中央から横滑りして見えないように）
+  if (!viewCenterReady) {
+    const vt = viewTarget(focusDomain.value);
+    viewCenterX = vt.x;
+    viewCenterY = vt.y;
+    viewCenterReady = true;
+  }
 }
 
 // ── ライフサイクル ───────────────────────────────────────────────────────────
@@ -1165,7 +1186,9 @@ onMounted(() => {
     });
     focusZoom = fd == null ? 1 : all ? 0.98 : 0.9;
     camDistEff = camDist * focusZoom;
-    viewCenterX = fd == null ? 0.5 : cssW > cssH * 1.1 ? 0.3 : 0.5;
+    const vt = viewTarget(fd);
+    viewCenterX = vt.x;
+    viewCenterY = vt.y;
     convergence = all ? 1 : 0;
     const single = fd != null && !all;
     if (single) ringFocusKey = fd as DomainKey;
@@ -1259,9 +1282,9 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    ellipse at 50% 45%,
+    ellipse at 64% 45%,
     transparent 40%,
-    rgba(10, 10, 12, 0.55) 100%
+    rgba(11, 13, 14, 0.6) 100%
   );
   pointer-events: none;
 }
@@ -1277,7 +1300,7 @@ onUnmounted(() => {
   left: 0;
   top: 0;
   white-space: nowrap;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   line-height: 1;
   letter-spacing: 0.12em;
   text-shadow:
@@ -1302,7 +1325,7 @@ onUnmounted(() => {
   left: 0;
   top: 0;
   white-space: nowrap;
-  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   font-size: clamp(0.72rem, 1.6vw, 1.05rem);
   letter-spacing: 0.24em;

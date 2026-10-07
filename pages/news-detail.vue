@@ -140,7 +140,7 @@ const formatDateIso = (dateStr: string): string => {
 
 .skeleton-line {
   height: 1rem;
-  border-radius: 2px;
+  border-radius: 0;
   background: linear-gradient(
     90deg,
     var(--color-surface-low) 0%,

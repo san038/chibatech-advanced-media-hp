@@ -197,13 +197,14 @@ const pillarLabel = (pillar: Pillar): string =>
 }
 
 .labs-filter__btn {
-  padding: 0.5rem 1rem;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
+  padding: 0.55rem 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
   color: var(--color-on-surface-muted);
   background-color: var(--color-surface);
   border: 1px solid var(--labs-hairline);
-  border-radius: 999px;
+  border-radius: 0;
   cursor: pointer;
   transition:
     background-color 180ms ease,
@@ -217,25 +218,22 @@ const pillarLabel = (pillar: Pillar): string =>
 }
 
 .labs-filter__btn.active {
-  background-color: var(--color-on-surface);
-  color: var(--color-surface);
-  border-color: var(--color-on-surface);
+  background-color: var(--color-accent-dim);
+  color: var(--color-on-surface);
+  border-color: var(--color-accent);
 }
 
 .labs-filter__btn--media.active {
-  background-color: var(--color-media);
+  background-color: var(--color-media-bg);
   border-color: var(--color-media);
-  color: #fff;
 }
 .labs-filter__btn--knowledge.active {
-  background-color: var(--color-knowledge);
+  background-color: var(--color-knowledge-bg);
   border-color: var(--color-knowledge);
-  color: #fff;
 }
 .labs-filter__btn--design.active {
-  background-color: var(--color-design);
+  background-color: var(--color-design-bg);
   border-color: var(--color-design);
-  color: #fff;
 }
 
 /* List */
@@ -276,7 +274,7 @@ const pillarLabel = (pillar: Pillar): string =>
 
 .lab__media.img-placeholder {
   aspect-ratio: 4 / 3;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .lab__main {
@@ -349,7 +347,7 @@ const pillarLabel = (pillar: Pillar): string =>
   font-size: var(--text-xs);
   font-weight: 500;
   padding: 0.28rem 0.7rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid var(--labs-hairline);
   color: var(--color-on-surface-muted);
 }
@@ -395,7 +393,7 @@ const pillarLabel = (pillar: Pillar): string =>
 
 .lab-topic__thumb.img-placeholder {
   aspect-ratio: 4 / 3;
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 .lab-topic__title {

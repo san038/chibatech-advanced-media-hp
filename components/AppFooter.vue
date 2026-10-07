@@ -1,28 +1,49 @@
 <template>
-  <footer class="footer bg-dark">
+  <footer class="footer">
     <div class="footer__inner container">
       <!-- Top row -->
       <div class="footer__top">
         <div class="footer__brand">
           <div class="footer__logo-ja">知能メディア工学科</div>
-          <div class="footer__logo-en">Department of Intelligent Media Engineering</div>
-          <p class="footer__univ">千葉工業大学 情報科学部</p>
+          <div class="footer__logo-en">
+            Dept. of Intelligent Media Engineering — Chiba Institute of
+            Technology
+          </div>
         </div>
 
         <nav class="footer__nav" aria-label="フッターナビゲーション">
           <div class="footer__nav-group">
-            <p class="footer__nav-title">学科について</p>
+            <p class="footer__nav-title">About</p>
             <ul class="footer__nav-list">
               <li v-for="link in learnLinks" :key="link.href">
-                <NuxtLink :to="link.href" class="footer__nav-link">{{ link.label }}</NuxtLink>
+                <NuxtLink :to="link.href" class="footer__nav-link">{{
+                  link.label
+                }}</NuxtLink>
               </li>
             </ul>
           </div>
           <div class="footer__nav-group">
-            <p class="footer__nav-title">情報</p>
+            <p class="footer__nav-title">Info</p>
             <ul class="footer__nav-list">
               <li v-for="link in infoLinks" :key="link.href">
-                <NuxtLink :to="link.href" class="footer__nav-link">{{ link.label }}</NuxtLink>
+                <NuxtLink :to="link.href" class="footer__nav-link">{{
+                  link.label
+                }}</NuxtLink>
+              </li>
+            </ul>
+          </div>
+          <div class="footer__nav-group">
+            <p class="footer__nav-title">Links</p>
+            <ul class="footer__nav-list">
+              <li v-for="link in externalLinks" :key="link.href">
+                <a
+                  :href="link.href"
+                  class="footer__nav-link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >{{ link.label
+                  }}<span class="footer__ext" aria-hidden="true">↗</span></a
+                >
               </li>
             </ul>
           </div>
@@ -39,11 +60,12 @@
       <!-- Bottom row -->
       <div class="footer__bottom">
         <p class="footer__copyright">
-          &copy; {{ currentYear }} 千葉工業大学 知能メディア工学科. All rights reserved.
+          &copy; {{ currentYear }} Chiba Institute of Technology — IME
         </p>
-        <p class="footer__address">
-          〒275-0016 千葉県習志野市津田沼2丁目17-1
-        </p>
+        <p class="footer__address">〒275-0016 千葉県習志野市津田沼2丁目17-1</p>
+        <button type="button" class="footer__top-btn" @click="scrollToTop">
+          Back to top <span aria-hidden="true">↑</span>
+        </button>
       </div>
     </div>
   </footer>
@@ -56,19 +78,36 @@ const learnLinks = [
   { href: '/about', label: '学びの特徴' },
   { href: '/curriculum', label: 'カリキュラム' },
   { href: '/skills', label: '身につく力' },
-  { href: '/laboratories', label: '研究室一覧' },
+  { href: '/laboratories', label: '研究室' },
 ]
 
 const infoLinks = [
   { href: '/career', label: 'キャリア・就職' },
   { href: '/news', label: 'ニュース' },
+  { href: '/articles', label: '記事' },
 ]
+
+const externalLinks = [
+  { href: 'https://www.it-chiba.ac.jp/', label: '千葉工業大学' },
+  {
+    href: 'https://www.it-chiba.ac.jp/admissions/opencampus/',
+    label: 'オープンキャンパス',
+  },
+]
+
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 </script>
 
 <style scoped>
 .footer {
-  padding-top: var(--space-xl);
-  padding-bottom: var(--space-lg);
+  position: relative;
+  z-index: 1;
+  padding: var(--space-lg) 0 var(--space-md);
+  background-color: var(--color-bg-base);
+  border-top: 1px solid var(--color-line-subtle);
+  color: var(--color-text-primary);
 }
 
 .footer__inner {
@@ -83,7 +122,7 @@ const infoLinks = [
   gap: var(--space-lg);
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .footer__top {
     flex-direction: row;
     justify-content: space-between;
@@ -91,109 +130,102 @@ const infoLinks = [
   }
 }
 
-/* Brand */
 .footer__brand {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .footer__logo-ja {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: #fcf9f8;
+  font-family: var(--font-jp);
+  font-size: clamp(1.625rem, 3vw, 2.5rem);
+  font-weight: 700;
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .footer__logo-en {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: 400;
-  letter-spacing: 0.03em;
-  color: rgba(252, 249, 248, 0.4);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  max-width: 34em;
 }
 
-.footer__univ {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: rgba(252, 249, 248, 0.45);
-  margin-top: var(--space-xs);
-}
-
-/* Nav */
 .footer__nav {
   display: flex;
-  gap: var(--space-xl);
+  flex-wrap: wrap;
+  gap: var(--space-md) clamp(2.5rem, 6vw, 5rem);
 }
 
 .footer__nav-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 1rem;
 }
 
 .footer__nav-title {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(252, 249, 248, 0.3);
+  color: var(--color-text-tertiary);
 }
 
 .footer__nav-list {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.75rem;
 }
 
 .footer__nav-link {
-  font-family: var(--font-body);
+  font-family: var(--font-jp);
   font-size: var(--text-sm);
-  color: rgba(252, 249, 248, 0.6);
+  font-weight: 500;
+  color: var(--color-text-secondary);
   text-decoration: none;
   transition: color 200ms ease;
 }
 
 .footer__nav-link:hover {
-  color: #fcf9f8;
+  color: var(--color-text-primary);
 }
 
-/* Pillar accent line */
+.footer__ext {
+  margin-left: 0.35em;
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+}
+
+/* 3領域カラーの細いバー */
 .footer__pillars {
   display: flex;
   gap: 4px;
-  height: 2px;
 }
 
 .footer__pillar {
-  height: 100%;
+  flex: 1;
+  height: 2px;
 }
 
 .footer__pillar--media {
-  width: 33.333%;
   background-color: var(--color-media);
 }
-
 .footer__pillar--knowledge {
-  width: 33.333%;
   background-color: var(--color-knowledge);
 }
-
 .footer__pillar--design {
-  width: 33.333%;
   background-color: var(--color-design);
 }
 
-/* Bottom */
 .footer__bottom {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 900px) {
   .footer__bottom {
     flex-direction: row;
     justify-content: space-between;
@@ -201,15 +233,32 @@ const infoLinks = [
   }
 }
 
+.footer__copyright,
+.footer__top-btn {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 .footer__copyright {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: rgba(252, 249, 248, 0.3);
+  color: var(--color-text-tertiary);
 }
 
 .footer__address {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: rgba(252, 249, 248, 0.25);
+  font-family: var(--font-jp);
+  font-size: 0.8125rem;
+  color: var(--color-text-tertiary);
+}
+
+.footer__top-btn {
+  align-self: flex-start;
+  padding: 0;
+  color: var(--color-text-primary);
+  transition: color 200ms ease;
+}
+
+.footer__top-btn:hover {
+  color: var(--color-accent);
 }
 </style>

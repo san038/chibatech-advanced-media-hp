@@ -1,148 +1,135 @@
 <template>
-  <section class="news-preview section-padding bg-surface-low">
-    <div class="news-preview__inner container">
-      <div class="news-preview__header">
-        <p class="section-label">News</p>
-        <h2 class="news-preview__title text-display-md">ニュース</h2>
-      </div>
-
-      <!-- Loading state -->
-      <div
-        v-if="pending"
-        class="news-preview__loading"
-        aria-live="polite"
-        aria-busy="true"
-      >
-        <div v-for="i in 3" :key="i" class="news-preview__skeleton">
-          <div class="skeleton-line skeleton-line--date" />
-          <div class="skeleton-line skeleton-line--title" />
-          <div
-            class="skeleton-line skeleton-line--title skeleton-line--short"
-          />
-        </div>
-      </div>
-
-      <!-- Error / fallback state -->
-      <div
-        v-else-if="error || articles.length === 0"
-        class="news-preview__fallback"
-      >
-        <p class="news-preview__fallback-text">
-          現在、掲載中の記事はありません。
-        </p>
-      </div>
-
-      <!-- Articles list -->
-      <div v-else class="news-preview__list">
-        <NuxtLink
-          v-for="article in articles.slice(0, 3)"
-          :key="article.slug"
-          :to="`/news/${article.slug}`"
-          class="news-preview__item"
+  <!-- トップ「Updates」セクションの左列: ニュース一覧 -->
+  <div class="news-preview">
+    <div class="news-preview__head">
+      <h3 class="news-preview__heading">
+        News<template v-if="!pending && articles.length">
+          — {{ String(Math.min(articles.length, LIMIT)).padStart(2, "0") }}</template
         >
-          <div
-            v-if="article.imageUrl"
-            class="news-preview__thumb-wrap"
-            aria-hidden="true"
-          >
-            <img
-              class="news-preview__thumb"
-              :src="article.imageUrl"
-              alt=""
-              width="240"
-              height="150"
-              loading="lazy"
-              decoding="async"
-            >
-          </div>
+      </h3>
+      <NuxtLink to="/news" class="news-preview__more">
+        すべてのニュース <span aria-hidden="true">→</span>
+      </NuxtLink>
+    </div>
+
+    <!-- Loading state -->
+    <div
+      v-if="pending"
+      class="news-preview__loading"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div v-for="i in 3" :key="i" class="news-preview__skeleton">
+        <div class="skeleton-line skeleton-line--date" />
+        <div class="skeleton-line skeleton-line--title" />
+      </div>
+    </div>
+
+    <!-- Error / fallback state -->
+    <p
+      v-else-if="error || articles.length === 0"
+      class="news-preview__fallback"
+    >
+      現在、掲載中のニュースはありません。
+    </p>
+
+    <!-- Articles list -->
+    <ul v-else class="news-preview__list">
+      <li v-for="article in articles.slice(0, LIMIT)" :key="article.slug">
+        <NuxtLink :to="`/news/${article.slug}`" class="news-preview__item">
           <time
             class="news-preview__date"
             :datetime="formatDateIso(article.date)"
           >
             {{ formatDate(article.date) }}
           </time>
-          <h3 class="news-preview__article-title">{{ article.title }}</h3>
-          <p v-if="article.excerpt" class="news-preview__desc">
-            {{ article.excerpt }}
-          </p>
+          <span class="news-preview__article-title">{{ article.title }}</span>
           <span class="news-preview__arrow" aria-hidden="true">→</span>
         </NuxtLink>
-      </div>
-
-      <div class="news-preview__footer">
-        <NuxtLink to="/news" class="link-arrow"> すべての記事を見る </NuxtLink>
-      </div>
-    </div>
-  </section>
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script setup lang="ts">
+const LIMIT = 5;
 const { articles, pending, error } = useNews();
 
 const formatDate = (dateStr: string): string => {
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return dateStr;
-  }
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}.${m}.${day}`;
 };
 
 const formatDateIso = (dateStr: string): string => {
-  try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return "";
-    return d.toISOString().split("T")[0];
-  } catch {
-    return "";
-  }
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().split("T")[0];
 };
 </script>
 
 <style scoped>
-.news-preview__inner {
+.news-preview {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  min-width: 0;
 }
 
-.news-preview__header {
+.news-preview__head {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-bottom: 1rem;
 }
 
-.news-preview__title {
-  color: var(--color-on-surface);
+.news-preview__heading,
+.news-preview__more {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.news-preview__heading {
+  color: var(--color-text-secondary);
+}
+
+.news-preview__more {
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.news-preview__more span {
+  color: var(--color-accent);
+}
+
+.news-preview__more:hover {
+  color: var(--color-accent-bright);
 }
 
 /* Loading */
-.news-preview__loading {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-}
-
 .news-preview__skeleton {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: var(--space-lg) 0;
-  border-top: 1px solid var(--color-surface);
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--color-line-subtle);
 }
 
 .skeleton-line {
   height: 1rem;
   background: linear-gradient(
     90deg,
-    var(--color-surface) 0%,
-    var(--color-surface-lowest) 50%,
-    var(--color-surface) 100%
+    var(--color-bg-raised) 0%,
+    var(--color-bg-elevated) 50%,
+    var(--color-bg-raised) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
@@ -154,11 +141,7 @@ const formatDateIso = (dateStr: string): string => {
 }
 
 .skeleton-line--title {
-  width: 100%;
-}
-
-.skeleton-line--short {
-  width: 65%;
+  width: 80%;
 }
 
 @keyframes shimmer {
@@ -172,178 +155,67 @@ const formatDateIso = (dateStr: string): string => {
 
 /* Fallback */
 .news-preview__fallback {
-  padding: var(--space-lg) 0;
-}
-
-.news-preview__fallback-text {
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--color-line-subtle);
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: var(--color-on-surface-muted);
+  color: var(--color-text-tertiary);
   line-height: 1.8;
 }
 
 /* List */
-.news-preview__list {
-  display: flex;
-  flex-direction: column;
-}
-
 .news-preview__item {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.5rem;
-  padding: var(--space-lg) 0;
-  border-top: 1px solid var(--color-surface);
+  grid-template-columns: 6.5rem minmax(0, 1fr) 1rem;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding: 1.4rem 0;
+  border-top: 1px solid var(--color-line-subtle);
   text-decoration: none;
-  position: relative;
-  transition: background-color 200ms ease;
-}
-
-.news-preview__thumb-wrap {
-  width: 100%;
-  max-height: 140px;
-  aspect-ratio: 16 / 10;
-  overflow: hidden;
-  background: var(--color-surface-lowest);
-  margin-bottom: 0.25rem;
-}
-
-.news-preview__thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.news-preview__item:last-child {
-  border-bottom: 1px solid var(--color-surface);
-}
-
-@media (min-width: 768px) {
-  .news-preview__item {
-    grid-template-columns: 120px 1fr 24px;
-    grid-template-rows: auto auto;
-    align-items: start;
-    gap: 0.5rem var(--space-md);
-  }
-
-  .news-preview__item:not(:has(.news-preview__thumb-wrap)) .news-preview__date {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .news-preview__item:not(:has(.news-preview__thumb-wrap)) .news-preview__article-title {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .news-preview__item:not(:has(.news-preview__thumb-wrap)) .news-preview__desc {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  .news-preview__item:not(:has(.news-preview__thumb-wrap)) .news-preview__arrow {
-    grid-column: 3;
-    grid-row: 1 / span 2;
-    align-self: center;
-  }
-
-  .news-preview__item:has(.news-preview__thumb-wrap) {
-    grid-template-columns: 112px 1fr 24px;
-    grid-template-rows: auto auto auto;
-    gap: 0.35rem var(--space-md);
-  }
-
-  .news-preview__item:has(.news-preview__thumb-wrap) .news-preview__thumb-wrap {
-    grid-row: 1 / span 3;
-    grid-column: 1;
-    max-height: none;
-    height: 100%;
-    min-height: 5.5rem;
-    margin-bottom: 0;
-    align-self: stretch;
-  }
-
-  .news-preview__item:has(.news-preview__thumb-wrap) .news-preview__date {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .news-preview__item:has(.news-preview__thumb-wrap) .news-preview__article-title {
-    grid-column: 2;
-    grid-row: 2;
-  }
-
-  .news-preview__item:has(.news-preview__thumb-wrap) .news-preview__desc {
-    grid-column: 2;
-    grid-row: 3;
-  }
-
-  .news-preview__item:has(.news-preview__thumb-wrap) .news-preview__arrow {
-    grid-column: 3;
-    grid-row: 1 / span 3;
-    align-self: center;
-  }
+  color: var(--color-text-primary);
 }
 
 .news-preview__date {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--color-on-surface-faint);
-  letter-spacing: 0.04em;
-  padding-top: 0.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--color-text-tertiary);
 }
 
 .news-preview__article-title {
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: 600;
-  color: var(--color-on-surface);
-  line-height: 1.4;
-  letter-spacing: -0.01em;
+  font-family: var(--font-jp);
+  font-size: 0.9375rem;
+  line-height: 1.6;
   transition: color 200ms ease;
 }
 
 .news-preview__item:hover .news-preview__article-title {
-  color: var(--color-link);
+  color: var(--color-accent-bright);
 }
-
-.news-preview__desc {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  color: var(--color-on-surface-muted);
-  line-height: 1.6;
-
-  /* 2-line clamp */
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 
 .news-preview__arrow {
+  font-family: var(--font-mono);
   font-size: var(--text-sm);
-  color: var(--color-on-surface-faint);
+  color: var(--color-text-tertiary);
   transition:
     transform 200ms ease,
     color 200ms ease;
-  align-self: center;
 }
 
 .news-preview__item:hover .news-preview__arrow {
   transform: translateX(4px);
-  color: var(--color-link);
+  color: var(--color-accent);
 }
 
 @media (max-width: 767px) {
+  .news-preview__item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+    padding: 1.1rem 0;
+  }
+
   .news-preview__arrow {
     display: none;
   }
-}
-
-/* Footer */
-.news-preview__footer {
-  padding-top: var(--space-md);
 }
 </style>

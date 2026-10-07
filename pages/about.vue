@@ -321,7 +321,7 @@ const designTopic = [
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
-  border-radius: 3px;
+  border-radius: 0;
   background-color: var(--color-surface);
 }
 
@@ -438,7 +438,7 @@ const designTopic = [
   font-weight: 500;
   letter-spacing: 0.02em;
   padding: 0.32rem 0.75rem;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid;
 }
 
