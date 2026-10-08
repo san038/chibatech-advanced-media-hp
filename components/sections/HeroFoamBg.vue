@@ -334,11 +334,12 @@ function projectCam(c: Vec3): Proj | null {
 }
 
 // ダイアグラムの投影中心の目標値。
-// 横長: 通常・フォーカスとも右寄せ（見出し／コース紹介は左）。
+// 横長: 通常は右寄せ（見出しは左下）、コースフォーカス中は左寄せ（コース紹介は右）。
+//       updateFocus で補間するため、スクロールに合わせて右から左へ移動する。
 // 縦長: 見出し・コース紹介を下に置くため、上寄せ。
 function viewTarget(fd: FocusKey | null): { x: number; y: number } {
   const wide = cssW > cssH * 1.1;
-  if (wide) return fd == null ? { x: 0.66, y: 0.46 } : { x: 0.68, y: 0.5 };
+  if (wide) return fd == null ? { x: 0.66, y: 0.46 } : { x: 0.32, y: 0.5 };
   if (fd == null) return { x: 0.5, y: 0.34 };
   // VISION は本文が長いので、リングをさらに上へ
   return fd === "all" ? { x: 0.5, y: 0.22 } : { x: 0.5, y: 0.3 };

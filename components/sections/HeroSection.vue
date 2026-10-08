@@ -384,7 +384,7 @@ onUnmounted(() => {
   flex-direction: column;
   margin: 0 0 0 -0.04em;
   font-family: var(--font-jp);
-  font-size: clamp(2.5rem, 7.6vw, 7rem);
+  font-size: clamp(2.25rem, 5.6vw, 5.25rem);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.06em;
@@ -695,7 +695,7 @@ onUnmounted(() => {
   }
 
   .hero__headline {
-    font-size: clamp(2.25rem, 10.4vw, 3.25rem);
+    font-size: clamp(2rem, 8.8vw, 2.75rem);
   }
 
   .hero__copy {

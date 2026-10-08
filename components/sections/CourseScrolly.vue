@@ -221,18 +221,18 @@ onUnmounted(() => {
   min-height: 100svh;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-end;
   padding: calc(72px + var(--space-md)) var(--layout-margin) var(--space-xl);
   color: var(--color-text-primary);
 }
 
-/* 左側を暗くしてテキストを読ませ、右側はダイアグラムを見せる */
+/* 右側を暗くしてテキストを読ませ、左側はダイアグラムを見せる */
 .course-scrolly__scrim {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: linear-gradient(
-    90deg,
+    270deg,
     rgba(11, 13, 14, 0.92) 0%,
     rgba(11, 13, 14, 0.72) 32%,
     rgba(11, 13, 14, 0.2) 56%,
